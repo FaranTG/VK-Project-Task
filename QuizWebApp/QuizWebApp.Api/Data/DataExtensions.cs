@@ -14,4 +14,15 @@ public static class DataExtensions
             options => options.UseNpgsql(connectionString)
         );
     }
+
+    public static void MigrateQuizDatabase(this WebApplication app)
+    {
+        using IServiceScope scope = app.Services.CreateScope();
+        QuizContext dbContext = scope.ServiceProvider.GetRequiredService<QuizContext>();
+
+        if (dbContext.Database.GetPendingMigrations().Any())
+        {
+            dbContext.Database.Migrate();
+        }
+    }
 }
