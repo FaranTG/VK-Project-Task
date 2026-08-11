@@ -1,6 +1,4 @@
-﻿using QuizWebApp.Shared;
-
-namespace QuizWebApp.Api.Data.Models;
+﻿namespace QuizWebApp.Api.Data.Models;
 
 public class User
 {
