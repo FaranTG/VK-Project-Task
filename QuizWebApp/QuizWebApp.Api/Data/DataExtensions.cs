@@ -11,7 +11,7 @@ public static class DataExtensions
     {
         string connectionStringName = "Quiz";
         string connectionString = builder.Configuration.GetConnectionString(connectionStringName)
-            ?? throw new InvalidOperationException($"Connection string with name '{connectionStringName}' does not exists");
+            ?? throw new InvalidOperationException($"Connection string with name '{connectionStringName}' does not exist");
 
         builder.Services.AddDbContext<QuizContext>(
             options => options.UseNpgsql(connectionString)
@@ -46,7 +46,7 @@ public static class DataExtensions
 
     private static void SeedQuizUsers(QuizContext dbContext, IPasswordHasher<User> passwordHasher)
     {
-        User initialAdmin = new User
+        User initialAdmin = new()
         {
             Name = "InitialAdmin",
             Phone = "111111111111",
@@ -55,7 +55,8 @@ public static class DataExtensions
             Role = nameof(UserRole.Organizer),
             IsApproved = true
         };
-        initialAdmin.PasswordHash = passwordHasher.HashPassword(initialAdmin, "12345");
+        string password = "12345";
+        initialAdmin.PasswordHash = passwordHasher.HashPassword(initialAdmin, password);
 
         dbContext.Users.Add(initialAdmin);
     }
