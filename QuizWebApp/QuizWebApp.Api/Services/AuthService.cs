@@ -52,13 +52,13 @@ public class AuthService : IAuthService
     {
         Claim[] claims =
         [
-            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-            new Claim(ClaimTypes.Name, user.Name),
-            new Claim(ClaimTypes.Role, user.Role)
+            new (ClaimTypes.NameIdentifier, user.Id.ToString()),
+            new (ClaimTypes.Name, user.Name),
+            new (ClaimTypes.Role, user.Role)
         ];
 
-        SymmetricSecurityKey signingSymmetricKey = new(System.Text.Encoding.UTF8.GetBytes(_jwtOptions.Secret));
-        SigningCredentials signingCredentials = new(signingSymmetricKey, SecurityAlgorithms.HmacSha256);
+        SymmetricSecurityKey signingSymmetricKey = new (System.Text.Encoding.UTF8.GetBytes(_jwtOptions.Secret));
+        SigningCredentials signingCredentials = new (signingSymmetricKey, SecurityAlgorithms.HmacSha256);
 
         JwtSecurityToken jwtToken = new
         (

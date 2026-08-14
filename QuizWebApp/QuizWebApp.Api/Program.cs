@@ -7,6 +7,8 @@ using QuizWebApp.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddValidation();
+
 builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.AddQuizDatabase();

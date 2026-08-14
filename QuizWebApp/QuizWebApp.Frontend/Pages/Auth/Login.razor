@@ -1,0 +1,63 @@
+﻿@page "/auth/login"
+@layout AuthLayout
+
+@using QuizWebApp.Frontend.FormModels
+
+@if (LoginModel is null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <div class="row vh-100">
+        <div class="col-sm-4 mx-auto my-auto border shadow-lg">
+            <h3 class="mt-3">Login | Quiz</h3>
+            <hr />
+            <EditForm Model="LoginModel" FormName="login" OnValidSubmit="LoginAsync">
+                <DataAnnotationsValidator />
+
+                <div class="mb-3">
+                    <label for="username" class="form-label">Username: </label>
+                    <InputText @bind-Value="LoginModel.Username" id="username" class="form-control" />
+                    <ValidationMessage For="() => LoginModel.Username" />
+                </div>
+                <div class="mb-3">
+                    <label for="password" class="form-label">Password: </label>
+                    <InputText @bind-Value="LoginModel.Password" type="password" id="password" class="form-control" />
+                    <ValidationMessage For="() => LoginModel.Password" />
+                </div>
+
+                <div class="mb-3">
+                    @if (_isLogging) 
+                    {
+                        <button type="button" disabled class="btn btn-secondary">Logging-in...</button>
+                    }
+                    else
+                    {
+                        <button type="submit" class="btn btn-primary">Login</button>
+                    }
+                </div>
+            </EditForm>
+        </div>
+    </div>
+}
+
+@code {
+    [SupplyParameterFromForm]
+    private LoginModel? LoginModel { get; set; }
+
+    private bool _isLogging;
+
+    protected override void OnInitialized()
+    {
+        LoginModel = new ();
+    }
+
+    private async Task LoginAsync() {
+        _isLogging = true;
+
+        await Task.Delay(3000);
+
+        _isLogging = false;
+    }
+}

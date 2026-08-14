@@ -46,7 +46,7 @@ public static class DataExtensions
 
     private static void SeedQuizUsers(QuizContext dbContext, IPasswordHasher<User> passwordHasher)
     {
-        User initialAdmin = new()
+        User initialAdmin = new ()
         {
             Name = "InitialAdmin",
             Phone = "111111111111",
