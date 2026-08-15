@@ -2,6 +2,11 @@
 @layout AuthLayout
 
 @using QuizWebApp.Frontend.FormModels
+@using QuizWebApp.Frontend.Clients
+@using QuizWebApp.Shared.DTOs
+
+@inject AuthClient AuthClient
+@inject NavigationManager NavigationManager
 
 @if (LoginModel is null)
 {
@@ -27,6 +32,12 @@ else
                     <ValidationMessage For="() => LoginModel.Password" />
                 </div>
 
+                @if (_errorMessage is not null) {
+                    <div class="mb-3 bg-danger text-white p-2">
+                        <p>@_errorMessage</p>
+                    </div>
+                }
+
                 <div class="mb-3">
                     @if (_isLogging) 
                     {
@@ -46,6 +57,7 @@ else
     [SupplyParameterFromForm]
     private LoginModel? LoginModel { get; set; }
 
+    private string? _errorMessage;
     private bool _isLogging;
 
     protected override void OnInitialized()
@@ -54,10 +66,38 @@ else
     }
 
     private async Task LoginAsync() {
+        ArgumentNullException.ThrowIfNull(LoginModel);
+
+        _errorMessage = null;
         _isLogging = true;
 
-        await Task.Delay(3000);
+        try 
+        {
+            AuthResponseDTO responseData = await AuthClient.AddUserTokenAsync(CreateLoginDTO(LoginModel));
 
-        _isLogging = false;
+            if (responseData.ErrorMessage is not null) {
+                _errorMessage = responseData.ErrorMessage;
+                return;
+            }
+
+            NavigationManager.NavigateTo("/");
+        }
+        catch (Exception exception)
+        {
+            _errorMessage = exception.Message;
+        }
+        finally
+        {
+            _isLogging = false;
+        }
+    }
+
+    private LoginDTO CreateLoginDTO(LoginModel model) {
+        if (model.Username is null || model.Password is null) 
+        {
+            throw new ArgumentException("Username or password is null");
+        }
+
+        return new (model.Username, model.Password);
     }
 }

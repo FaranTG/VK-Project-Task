@@ -1,9 +1,9 @@
 ﻿namespace QuizWebApp.Api.Configuration;
 
-public record class JwtOptions
-(
-    string Secret,
-    string Issuer,
-    string Audience,
-    int ExpireInMinutes
-);
+public class JwtOptions
+{
+    public required string Secret { get; set; }
+    public required string Issuer { get; set; }
+    public required string Audience { get; set; }
+    public int ExpireInMinutes { get; set; }
+}

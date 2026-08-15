@@ -35,4 +35,28 @@ public static class AuthExtensions
                 }
             );
     }
+
+    public static void AddQuizCors(this WebApplicationBuilder builder)
+    {
+        builder.Services.AddCors(
+            options =>
+            {
+                options.AddDefaultPolicy
+                (
+                    policy =>
+                    {
+                        string allowedOriginsName = "AllowedOrigins";
+                        string allowedOrigins = builder.Configuration.GetValue<string>(allowedOriginsName)
+                            ?? throw new InvalidOperationException($"Configuration value with name '{allowedOriginsName}' does not exist");
+
+                        string[] allowedOriginsArray = allowedOrigins.Split(';', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+                        policy
+                            .WithOrigins(allowedOriginsArray)
+                            .AllowAnyHeader()
+                            .AllowAnyMethod();
+                    }
+                );
+            } 
+        );
+    }
 }
