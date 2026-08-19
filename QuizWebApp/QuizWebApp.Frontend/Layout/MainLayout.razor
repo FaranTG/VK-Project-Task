@@ -1,4 +1,9 @@
-﻿@inherits LayoutComponentBase
+﻿@using QuizWebApp.Frontend.Auth
+
+@inherits LayoutComponentBase
+
+@inject QuizAuthStateProvider QuizAuthStateProvider
+
 <div class="page">
     <div class="sidebar">
         <NavMenu />
@@ -10,7 +15,24 @@
         </div>
 
         <article class="content px-4">
-            @Body
+            @if (QuizAuthStateProvider.IsInitializing) 
+            {
+                <p><em>Initializing state...</em></p>
+            }
+            else
+            {
+                @Body
+            }
         </article>
     </main>
 </div>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        while (QuizAuthStateProvider.IsInitializing) 
+        {
+            await Task.Delay(500);
+        }
+    }
+}

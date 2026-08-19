@@ -1,7 +1,31 @@
 ﻿@page "/"
 
+@using Microsoft.AspNetCore.Components.Authorization
+@using QuizWebApp.Frontend.Auth
+@using System.Security.Claims
+
+@inject QuizAuthStateProvider QuizAuthStateProvider
+
 <PageTitle>Home</PageTitle>
 
-<h1>Hello, world!</h1>
+<h1>@GetWelcomeMessage()</h1>
 
 Welcome to your new app.
+
+<AuthorizeView>
+    <Authorizing>
+        <p><em>Authorizing...</em></p>
+    </Authorizing>
+    <NotAuthorized>
+        <p><em>Not Authorized</em></p>
+    </NotAuthorized>
+    <Authorized>
+        <p><em>Authorized: @context.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name)?.Value</em></p>
+    </Authorized>
+</AuthorizeView>
+
+@code {
+    private string GetWelcomeMessage() => QuizAuthStateProvider.IsLoggedIn ? 
+        $"Hello, {QuizAuthStateProvider.User!.Name}!" 
+        : "Hello, Anonymous!";
+}

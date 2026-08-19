@@ -1,7 +1,7 @@
 ﻿namespace QuizWebApp.Shared.DTOs;
 
-public record class AuthResponseDTO
+public record AuthResponseDTO
 (
-    string? Token,
+    LoggedInUser? User,
     string? ErrorMessage
 );

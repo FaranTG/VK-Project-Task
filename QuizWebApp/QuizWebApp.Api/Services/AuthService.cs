@@ -7,12 +7,15 @@ using Microsoft.IdentityModel.Tokens;
 using QuizWebApp.Api.Configuration;
 using QuizWebApp.Api.Data;
 using QuizWebApp.Api.Data.Models;
+using QuizWebApp.Shared;
 using QuizWebApp.Shared.DTOs;
 
 namespace QuizWebApp.Api.Services;
 
 public class AuthService : IAuthService
 {
+    private const string InvalidCredentialsMessage = "Invalid username or password.";
+
     private readonly QuizContext _context;
     private readonly IPasswordHasher<User> _passwordHasher;
     private readonly JwtOptions _jwtOptions;
@@ -30,22 +33,28 @@ public class AuthService : IAuthService
             .AsNoTracking()
             .FirstOrDefaultAsync(user => user.Email == data.Username);
 
-        const string invalidCredentialsMessage = "Invalid username or password.";
-
         if (user is null)
         {
-            return new AuthResponseDTO(null, invalidCredentialsMessage);
+            return new AuthResponseDTO(null, InvalidCredentialsMessage);
         }
 
         PasswordVerificationResult passwordCheckResult = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, data.Password);
         
         if (passwordCheckResult == PasswordVerificationResult.Failed)
         {
-            return new AuthResponseDTO(null, invalidCredentialsMessage);
+            return new AuthResponseDTO(null, InvalidCredentialsMessage);
         }
 
         string jwtToken = GenerateJwtToken(user);
-        return new AuthResponseDTO(jwtToken, null);
+        LoggedInUser loggedInUser = new 
+        (
+            user.Id,
+            user.Name,
+            user.Role,
+            jwtToken
+        );
+
+        return new AuthResponseDTO(loggedInUser, null);
     }
 
     private string GenerateJwtToken(User user)

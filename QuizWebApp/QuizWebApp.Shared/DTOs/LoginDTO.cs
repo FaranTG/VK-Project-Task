@@ -2,7 +2,7 @@
 
 namespace QuizWebApp.Shared.DTOs;
 
-public record class LoginDTO
+public record LoginDTO
 (
     [Required]
     string Username,
