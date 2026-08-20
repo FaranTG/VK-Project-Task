@@ -17,8 +17,9 @@ builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection("Jwt"));
 builder.AddJwtAuthentication();
 builder.AddQuizCors();
 
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddAuthorization();
+
+builder.AddQuizSwagger();
 
 var app = builder.Build();
 
@@ -34,6 +35,10 @@ if (app.Environment.IsDevelopment())
 app.UseAuthentication();
 app.UseCors();
 
-app.MapAuthEndpoints();
+app.UseAuthorization();
+
+app
+    .MapAuthEndpoints()
+    .MapTopicEndpoints();
 
 app.Run();
