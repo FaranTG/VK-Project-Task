@@ -20,7 +20,7 @@ public class QuizAuthStateProvider : AuthenticationStateProvider
     public QuizAuthStateProvider(IJSRuntime jsRuntime)
     {
         _jsRuntime = jsRuntime;
-        SetAuthStateTask();
+        _authStateTask = CreateAuthStateTask();
     }
 
     public override Task<AuthenticationState> GetAuthenticationStateAsync() => _authStateTask;
@@ -36,7 +36,7 @@ public class QuizAuthStateProvider : AuthenticationStateProvider
             }
 
             LoggedInUser user = LoggedInUser.LoadFromJson(userData);
-            if (user.Id == 0)
+            if (user is null || user.Id == 0)
             {
                 return;
             }
@@ -53,7 +53,7 @@ public class QuizAuthStateProvider : AuthenticationStateProvider
     {
         User = user;
 
-        SetAuthStateTask();
+        _authStateTask = CreateAuthStateTask();
         NotifyAuthenticationStateChanged(_authStateTask);
         
         await _jsRuntime.InvokeVoidAsync("localStorage.setItem", UserDataKey, user.ToJson());
@@ -63,19 +63,19 @@ public class QuizAuthStateProvider : AuthenticationStateProvider
     {
         User = null;
 
-        SetAuthStateTask();
+        _authStateTask = CreateAuthStateTask();
         NotifyAuthenticationStateChanged(_authStateTask);
 
         await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", UserDataKey);
     }
 
-    private void SetAuthStateTask()
+    private Task<AuthenticationState> CreateAuthStateTask()
     {
         ClaimsIdentity identity = IsLoggedIn ? new (User!.ToClaims(), AuthType) : new ();
 
         ClaimsPrincipal principal = new (identity);
         AuthenticationState authState = new (principal);
 
-        _authStateTask = Task.FromResult(authState);
+        return Task.FromResult(authState);
     }
 }

@@ -1,26 +1,5 @@
-﻿@using QuizWebApp.Frontend.Auth
-
-@inherits LayoutComponentBase
-
-@inject QuizAuthStateProvider QuizAuthStateProvider
+﻿@inherits LayoutComponentBase
 
 <div class="container">
-    @if (QuizAuthStateProvider.IsInitializing)
-    {
-        <p><em>Initializing state...</em></p>
-    }
-    else
-    {
-        @Body
-    }
+    @Body
 </div>
-
-@code {
-    protected override async Task OnInitializedAsync()
-    {
-        while (QuizAuthStateProvider.IsInitializing) 
-        {
-            await Task.Delay(500);
-        }
-    }
-}
