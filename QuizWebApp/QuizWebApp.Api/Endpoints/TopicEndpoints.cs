@@ -36,6 +36,7 @@ public static class TopicEndpoints
             Results.Ok(
                 await dbContext.Topics
                     .AsNoTracking()
+                    .OrderBy(topic => topic.Id)
                     .Select(
                         topic => new TopicInfoDTO
                         (
