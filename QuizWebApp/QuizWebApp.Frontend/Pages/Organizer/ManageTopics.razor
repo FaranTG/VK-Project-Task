@@ -1,0 +1,182 @@
+﻿@page "/organizer/manage-topics"
+
+@using QuizWebApp.Shared.DTOs.Topic
+@using QuizWebApp.Frontend.FormModels
+@using QuizWebApp.Frontend.Clients
+
+@inject TopicsClient TopicsClient
+
+@if (_topics is null || TopicModel is null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <h3>ManageTopics</h3>
+    <hr />
+    <div class="row">
+        <div class="col-sm-4">
+            <EditForm Model="TopicModel" OnValidSubmit="SaveTopicAsync">
+                <DataAnnotationsValidator />
+
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="m-0">@TopicCardTitle</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="topicName" class="form-label">Name: </label>
+                            <InputText @bind-Value="TopicModel.Name" id="topicName" class="form-control" />
+                            <ValidationMessage For="() => TopicModel.Name" />
+                        </div>
+
+                        @if (_errorMessage is not null)
+                        {
+                            <div class="d-flex justify-content-between align-items-center gap-2 border border-danger border-1 p-1">
+                                <p class="m-0">@_errorMessage</p>
+                                <button class="btn btn-sm btn-danger" @onclick="() => _errorMessage = null">x</button>
+                            </div>
+                        }
+                    </div>
+                    <div class="card-footer d-flex justify-content-between align-items-center">
+                        @if (_isBusy)
+                        {
+                            <button type="button" disabled class="btn btn-sm btn-secondary">
+                                Cancel
+                            </button>
+                            <button type="button" disabled class="btn btn-sm btn-secondary">
+                                Saving Topic...
+                            </button>
+                        }
+                        else
+                        {
+                            <button type="button" class="btn btn-sm btn-secondary" @onclick="ClearModel">
+                                Cancel
+                            </button>
+                            <button type="submit" class="btn btn-sm btn-primary">
+                                Save
+                            </button>
+                        }
+                    </div>
+                </div>
+            </EditForm>
+        </div>
+        <div class="col-sm-7 ms-auto">
+            <table class="table table-striped table-bordered table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>#</th>
+                        <th>Id</th>
+                        <th>Name</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (_topics.Length == 0)
+                    {
+                        <tr>
+                            <td colspan="4">
+                                <p class="text-danger h5"><em>No topics found.</em></p>
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        int rowNumber = 1;
+                        @foreach (TopicInfoDTO topicData in _topics)
+                        {
+                            <tr>
+                                <td>@(rowNumber++)</td>
+                                <td>@topicData.Id</td>
+                                <td>@topicData.Name</td>
+                                <td>
+                                    <div class="d-flex">
+                                        <button type="button" class="btn btn-sm btn-primary" @onclick="() => SetTopic(topicData)">
+                                            Edit
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+
+@code {
+    private TopicModel? TopicModel { get; set; }
+
+    private TopicInfoDTO[]? _topics;
+    private string? _errorMessage;
+    private int? _id;
+    private bool _isBusy;
+
+    private string TopicCardTitle => _id is null ? "New Topic" : $"Edit Topic with Id {_id}";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadTopicsAsync();
+
+        TopicModel = new () 
+        {
+            Name = string.Empty
+        };
+    }
+
+    private void SetTopic(TopicInfoDTO topicData)
+    {
+        ArgumentNullException.ThrowIfNull(TopicModel);
+
+        _id = topicData.Id;
+        TopicModel.Name = topicData.Name;
+    }
+
+    private async Task SaveTopicAsync()
+    {
+        try
+        {
+            ArgumentNullException.ThrowIfNull(TopicModel);
+
+            _isBusy = true;
+            TopicSaveDTO newTopic = new TopicSaveDTO
+            (
+                TopicModel.Name
+            );
+
+            if (_id is null)
+            {
+                await TopicsClient.AddTopicAsync(newTopic);
+            }
+            else
+            {
+                await TopicsClient.UpdateTopicAsync(_id.Value, newTopic);
+            }
+            
+            ClearModel();
+            await LoadTopicsAsync();
+        }
+        catch (Exception exception)
+        {
+            _errorMessage = exception.Message;
+        }
+        finally
+        {
+            _isBusy = false;
+        }
+    }
+
+    private async Task LoadTopicsAsync()
+    {
+        _topics = await TopicsClient.GetTopicsAsync();
+    }
+
+    private void ClearModel()
+    {
+        ArgumentNullException.ThrowIfNull(TopicModel);
+
+        _id = null;
+        TopicModel.Name = string.Empty;
+    }
+}

@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+using QuizWebApp.Frontend.Auth;
 
 namespace QuizWebApp.Frontend.Clients;
 
@@ -12,9 +13,32 @@ public static class ClientsExtensions
 
         Uri baseUri = new (quizApiUrl);
 
+        builder.Services.AddTransient<AuthorizationMessageHandler>();
+
+        AddAuthClient(builder, baseUri);
+        AddTopicsClient(builder, baseUri);
+    }
+
+    private static void AddAuthClient(WebAssemblyHostBuilder builder, Uri baseUri)
+    {
         builder.Services.AddScoped
         (
             sp => new AuthClient(new HttpClient { BaseAddress = baseUri })
+        );
+    }
+
+    private static void AddTopicsClient(WebAssemblyHostBuilder builder, Uri baseUri)
+    {
+        builder.Services.AddScoped
+        (
+            sp =>
+            {
+                AuthorizationMessageHandler handler = sp.GetRequiredService<AuthorizationMessageHandler>();
+                handler.InnerHandler = new HttpClientHandler();
+
+                HttpClient httpClient = new (handler) { BaseAddress = baseUri };
+                return new TopicsClient(httpClient);
+            }  
         );
     }
 }

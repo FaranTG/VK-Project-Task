@@ -21,7 +21,7 @@ else
         <div class="col-sm-4 mx-auto my-auto border shadow-lg">
             <h3 class="mt-3">Login | Quiz</h3>
             <hr />
-            <EditForm Model="LoginModel" FormName="login" OnValidSubmit="LoginAsync">
+            <EditForm Model="LoginModel" OnValidSubmit="LoginAsync">
                 <DataAnnotationsValidator />
 
                 <div class="mb-3">
@@ -57,7 +57,6 @@ else
 }
 
 @code {
-    [SupplyParameterFromForm]
     private LoginModel? LoginModel { get; set; }
 
     private string? _errorMessage;
