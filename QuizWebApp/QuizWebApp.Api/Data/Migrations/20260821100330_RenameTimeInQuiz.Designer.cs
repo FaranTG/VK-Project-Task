@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using QuizWebApp.Api.Data;
@@ -11,9 +12,11 @@ using QuizWebApp.Api.Data;
 namespace QuizWebApp.Api.Data.Migrations
 {
     [DbContext(typeof(QuizContext))]
-    partial class QuizContextModelSnapshot : ModelSnapshot
+    [Migration("20260821100330_RenameTimeInQuiz")]
+    partial class RenameTimeInQuiz
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

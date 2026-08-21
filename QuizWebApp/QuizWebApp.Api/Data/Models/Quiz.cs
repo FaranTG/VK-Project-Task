@@ -12,7 +12,7 @@ public class Quiz
 
     public int QuestionsNumber { get; set; }
 
-    public int Time { get; set; }
+    public int TimeInMinutes { get; set; }
 
     public bool IsActive { get; set; }
 
