@@ -16,5 +16,5 @@ public class Quiz
 
     public bool IsActive { get; set; }
 
-    public ICollection<Question>? Questions { get; set; }
+    public required ICollection<Question> Questions { get; set; }
 }

@@ -8,12 +8,13 @@ namespace QuizWebApp.Api.Endpoints;
 
 public static class TopicEndpoints
 {
-    const string GetTopicEndpointName = "GetTopic";
+    private const string GetTopicEndpointName = "GetTopic";
+    private const string ApiRoute = "/api/topics";
 
     public static IEndpointRouteBuilder MapTopicEndpoints(this IEndpointRouteBuilder app)
     {
         RouteGroupBuilder commonRouteGroup = app
-            .MapGroup("/api/topics")
+            .MapGroup(ApiRoute)
             .RequireAuthorization();
 
         MapTopicGetEndpoint(commonRouteGroup);

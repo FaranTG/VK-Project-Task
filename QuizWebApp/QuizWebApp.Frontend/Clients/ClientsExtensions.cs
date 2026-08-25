@@ -14,9 +14,10 @@ public static class ClientsExtensions
         Uri baseUri = new (quizApiUrl);
 
         builder.Services.AddTransient<AuthorizationMessageHandler>();
-
+        
         AddAuthClient(builder, baseUri);
         AddTopicsClient(builder, baseUri);
+        AddQuizzesClient(builder, baseUri);
     }
 
     private static void AddAuthClient(WebAssemblyHostBuilder builder, Uri baseUri)
@@ -31,14 +32,23 @@ public static class ClientsExtensions
     {
         builder.Services.AddScoped
         (
-            sp =>
-            {
-                AuthorizationMessageHandler handler = sp.GetRequiredService<AuthorizationMessageHandler>();
-                handler.InnerHandler = new HttpClientHandler();
-
-                HttpClient httpClient = new (handler) { BaseAddress = baseUri };
-                return new TopicsClient(httpClient);
-            }  
+            sp => new TopicsClient(CreateAuthorizedClient(sp, baseUri))
         );
+    }
+
+    private static void AddQuizzesClient(WebAssemblyHostBuilder builder, Uri baseUri)
+    {
+        builder.Services.AddScoped
+        (
+            sp => new QuizzesClient(CreateAuthorizedClient(sp, baseUri))
+        );
+    }
+
+    private static HttpClient CreateAuthorizedClient(IServiceProvider serviceProvider, Uri baseUri)
+    {
+        AuthorizationMessageHandler handler = serviceProvider.GetRequiredService<AuthorizationMessageHandler>();
+        handler.InnerHandler = new HttpClientHandler();
+
+        return new (handler) { BaseAddress = baseUri };
     }
 }

@@ -10,5 +10,5 @@ public class Question
 
     public Quiz? Quiz { get; set; }
 
-    public ICollection<AnswerOption>? Options { get; set; }
+    public required ICollection<AnswerOption> Options { get; set; }
 }

@@ -3,5 +3,6 @@
 public record AuthResponseDTO
 (
     LoggedInUser? User,
+    
     string? ErrorMessage
 );

@@ -39,6 +39,7 @@ app.UseAuthorization();
 
 app
     .MapAuthEndpoints()
-    .MapTopicEndpoints();
+    .MapTopicEndpoints()
+    .MapQuizEndpoints();
 
 app.Run();
