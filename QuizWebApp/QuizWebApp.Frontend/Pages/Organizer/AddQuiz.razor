@@ -1,7 +1,214 @@
 ﻿@page "/organizer/add-quiz"
 
-<h3>AddQuiz</h3>
+@using QuizWebApp.Shared.DTOs.Topic
+@using QuizWebApp.Shared.DTOs.Quiz
+@using QuizWebApp.Shared.DTOs.Question
+@using QuizWebApp.Shared.DTOs.AnswerOption
+@using QuizWebApp.Frontend.FormModels
+@using QuizWebApp.Frontend.Clients
+
+@inject TopicsClient TopicsClient
+@inject QuizzesClient QuizzesClient
+@inject IJSRuntime JSRuntime
+@inject NavigationManager NavigationManager
+
+@if (_quizModel is null || _topics is null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <h3>AddQuiz</h3>
+    <hr />
+    <EditForm Model="_quizModel" OnValidSubmit="SaveQuizAsync">
+        <DataAnnotationsValidator />
+        <div class="row">
+            <div class="col-sm-6">
+                <div class="mb-3">
+                    <label for="name" class="form-label">Name: </label>
+                    <InputText @bind-Value="_quizModel.Name" id="name" class="form-control" />
+                    <ValidationMessage For="() => _quizModel.Name" />
+                </div>
+            </div>
+            <div class="col-sm-3">
+                <div class="mb-3">
+                    <label for="topic" class="form-label">Topic: </label>
+                    <InputSelect @bind-Value="_quizModel.TopicId" id="topic"  class="form-select">
+                        <option value="0">Select Topic...</option>
+
+                        @foreach (TopicInfoDTO topicInfo in _topics)
+                        {
+                            <option value="@topicInfo.Id">@topicInfo.Name</option>
+                        }
+                    </InputSelect>
+                    <ValidationMessage For="() => _quizModel.TopicId" />
+                </div>
+            </div>
+            <div class="col-sm-3">
+                <div class="mb-3">
+                    <label for="timeInMinutes" class="form-label">Time in minutes: </label>
+                    <InputNumber @bind-Value="_quizModel.TimeInMinutes" id="timeInMinutes" class="form-control" />
+                    <ValidationMessage For="() => _quizModel.TimeInMinutes" />
+                </div>
+            </div>
+
+            <hr />
+            
+            <h4>Questions</h4>
+            <ol>
+                @foreach (QuestionModel question in _quizModel.Questions)
+                {
+                    Guid randomId = Guid.NewGuid();
+                    <li class="shadow p-3 mb-3">
+                        <textarea @bind="question.Text" class="form-control" rows="3"></textarea>
+                        <h6>Options</h6>
+                        <ol>
+                            @foreach (AnswerOptionModel option in question.Options)
+                            {
+                                <li class="p-2 mb-2">
+                                    <div class="input-group">
+                                        <div class="input-group-text">
+                                            <input name="question_option_@randomId" class="form-check-input mt-0" 
+                                                type="radio" checked="@option.IsCorrect"
+                                                @onclick="() => SetCorrectOption(question, option)">
+                                        </div>
+                                        <input @bind="option.Text" type="text" class="form-control">
+                                        <button class="btn btn-danger" type="button" 
+                                            @onclick="() => question.Options.Remove(option)">
+                                            Delete
+                                        </button>
+                                    </div>
+                                </li>
+                            }
+                        </ol>
+                        <div class="d-flex justify-content-end">
+                            <button type="button" class="btn btn-sm btn-primary" 
+                                @onclick="() => question.Options.Add(new AnswerOptionModel() { Text = string.Empty })">
+                                Add new option
+                            </button>
+                        </div>
+                    </li>
+                }
+            </ol>
+            <div class="mb-3 d-flex justify-content-center">
+                <button type="button" class="btn btn-sm btn-primary" 
+                    @onclick="() => _quizModel.Questions.Add(CreateEmptyQuestion())">
+                    Add new question
+                </button>
+            </div>
+
+            <hr />
+            
+            <div class="mb-3">
+                <div class="form-check form-switch">
+                    <label class="form-check-label" for="isActive">Is active: </label>
+                    <InputCheckbox @bind-Value="_quizModel.IsActive" id="isActive" class="form-check-input" type="checkbox" role="switch" />
+                </div>
+            </div>
+            <div class="mb-3">
+                <button type="submit" class="btn btn-sm btn-success">
+                    Save
+                </button>
+            </div>
+        </div>
+    </EditForm>
+}
 
 @code {
+    private QuizModel? _quizModel;
+    private TopicInfoDTO[]? _topics;
 
+    protected override async Task OnInitializedAsync()
+    {
+        _quizModel = new QuizModel()
+        {
+            Name = string.Empty,
+            Questions = new List<QuestionModel>()
+            {
+                CreateEmptyQuestion()
+            }
+        };
+
+        _topics = await TopicsClient.GetTopicsAsync();
+    }
+
+    private async Task SaveQuizAsync()
+    {
+        ArgumentNullException.ThrowIfNull(_quizModel);
+
+        string? validationResult = _quizModel.Validate();
+        if (!string.IsNullOrEmpty(validationResult))
+        {
+            await ShowAlertAsync(validationResult);
+            return;
+        } 
+
+        await QuizzesClient.AddQuizAsync(CreateQuizSaveDTO(_quizModel));
+
+        NavigationManager.NavigateTo("organizer/manage-quizzes");
+    }
+
+    private async Task ShowAlertAsync(string message, string title = "Error") =>
+        await JSRuntime.InvokeVoidAsync("alert", $"{title}\n{message}");
+
+    private QuestionModel CreateEmptyQuestion()
+    {
+        return new QuestionModel()
+        {
+            Text = string.Empty,
+            Options = new List<AnswerOptionModel>()
+            {
+                new AnswerOptionModel()
+                {
+                    Text = string.Empty,
+                    IsCorrect = true
+                },
+                new AnswerOptionModel()
+                {
+                    Text = string.Empty,
+                    IsCorrect = false
+                }
+            }
+        };
+    }
+
+    private void SetCorrectOption(QuestionModel question, AnswerOptionModel correctOption)
+    {
+        foreach (AnswerOptionModel option in question.Options)
+        {
+            option.IsCorrect = false;
+        }
+
+        correctOption.IsCorrect = true;
+    }
+
+    private QuizSaveDTO CreateQuizSaveDTO(QuizModel model)
+    {
+        return new QuizSaveDTO
+        (
+            model.Name,
+            model.TopicId,
+            model.TimeInMinutes,
+            model.IsActive,
+            model.Questions
+                .Select
+                (
+                    questionModel => new QuestionSaveDTO
+                    (
+                        questionModel.Text,
+                        questionModel.Options
+                            .Select
+                            (
+                                optionModel => new AnswerOptionSaveDTO
+                                (
+                                    optionModel.Text,
+                                    optionModel.IsCorrect
+                                )
+                            )
+                            .ToList()
+                    )
+                )
+                .ToList()
+        );
+    } 
 }
