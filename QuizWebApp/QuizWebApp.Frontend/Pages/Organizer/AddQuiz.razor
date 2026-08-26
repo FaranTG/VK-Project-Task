@@ -18,7 +18,7 @@
 }
 else
 {
-    <h3>AddQuiz</h3>
+    <h3>Add Quiz</h3>
     <hr />
     <EditForm Model="_quizModel" OnValidSubmit="SaveQuizAsync">
         <DataAnnotationsValidator />
@@ -73,7 +73,7 @@ else
                                                 @onclick="() => SetCorrectOption(question, option)">
                                         </div>
                                         <input @bind="option.Text" type="text" class="form-control">
-                                        <button class="btn btn-danger" type="button" 
+                                        <button class="btn btn-sm btn-danger" type="button" 
                                             @onclick="() => question.Options.Remove(option)">
                                             Delete
                                         </button>
@@ -91,7 +91,7 @@ else
                 }
             </ol>
             <div class="mb-3 d-flex justify-content-center">
-                <button type="button" class="btn btn-sm btn-primary" 
+                <button type="button" class="btn btn-primary" 
                     @onclick="() => _quizModel.Questions.Add(CreateEmptyQuestion())">
                     Add new question
                 </button>
@@ -106,7 +106,7 @@ else
                 </div>
             </div>
             <div class="mb-3">
-                <button type="submit" class="btn btn-sm btn-success">
+                <button type="submit" class="btn btn-success">
                     Save
                 </button>
             </div>

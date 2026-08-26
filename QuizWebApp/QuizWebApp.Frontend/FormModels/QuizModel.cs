@@ -7,7 +7,7 @@ public class QuizModel
     [Required][StringLength(100)]
     public required string Name { get; set; }
 
-    [Range(1, int.MaxValue)]
+    [Range(1, int.MaxValue, ErrorMessage = "The Topic field is required.")]
     public int TopicId { get; set; }
 
     [Range(1, 120)]

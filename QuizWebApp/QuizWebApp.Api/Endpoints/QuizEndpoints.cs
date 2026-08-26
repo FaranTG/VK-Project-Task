@@ -19,9 +19,7 @@ public static class QuizEndpoints
             .MapGroup(ApiRoute)
             .RequireAuthorization();
 
-        /*
         MapQuizGetEndpoint(commonRouteGroup);
-        */
         MapQuizGetByIdEndpoint(commonRouteGroup);
 
         RouteGroupBuilder organizerRouteGroup = commonRouteGroup
@@ -39,7 +37,24 @@ public static class QuizEndpoints
 
     private static void MapQuizGetEndpoint(IEndpointRouteBuilder app)
     {
-        throw new NotImplementedException();
+        app.MapGet("/", async (QuizContext dbContext) =>
+            await dbContext.Quizzes
+                .AsNoTracking()
+                .Select
+                (
+                    quiz => new QuizBriefInfoDTO
+                    (
+                        quiz.Id,
+                        quiz.Name,
+                        quiz.TopicId,
+                        quiz.Topic!.Name,
+                        quiz.QuestionsNumber,
+                        quiz.TimeInMinutes,
+                        quiz.IsActive
+                    )
+                )
+                .ToListAsync()
+        );
     }
 
     private static void MapQuizGetByIdEndpoint(IEndpointRouteBuilder app)

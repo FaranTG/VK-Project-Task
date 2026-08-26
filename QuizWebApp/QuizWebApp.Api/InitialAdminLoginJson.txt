@@ -1,0 +1,4 @@
+{
+  "username": "initialadmin@quiz.ru",
+  "password": "12345"
+}

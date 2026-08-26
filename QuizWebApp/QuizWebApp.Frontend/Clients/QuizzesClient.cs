@@ -7,8 +7,8 @@ public class QuizzesClient(HttpClient httpClient)
 {
     private const string ApiRoute = "/api/quizzes";
 
-    public async Task<QuizInfoDTO[]> GetQuizzesAsync()
-        => await httpClient.GetFromJsonAsync<QuizInfoDTO[]>(ApiRoute)
+    public async Task<QuizBriefInfoDTO[]> GetQuizzesAsync()
+        => await httpClient.GetFromJsonAsync<QuizBriefInfoDTO[]>(ApiRoute)
         ?? throw new InvalidOperationException("Could not find quizzes list.");
     
     public async Task<QuizInfoDTO> GetQuizByIdAsync(Guid id)
