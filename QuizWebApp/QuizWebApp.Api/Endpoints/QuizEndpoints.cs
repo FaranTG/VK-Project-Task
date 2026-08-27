@@ -50,7 +50,10 @@ public static class QuizEndpoints
                         quiz.Topic!.Name,
                         quiz.QuestionsNumber,
                         quiz.TimeInMinutes,
-                        quiz.IsActive
+                        quiz.IsActive,
+                        quiz.Questions
+                            .Select(question => question.Text)
+                            .ToList()
                     )
                 )
                 .ToListAsync()
@@ -166,27 +169,32 @@ public static class QuizEndpoints
             quiz.QuestionsNumber,
             quiz.TimeInMinutes,
             quiz.IsActive,
-            quiz.Questions
-                .Select
-                (
-                    question => new QuestionInfoDTO
-                    (
-                        question.Id,
-                        question.Text,
-                        question.Options
-                            .Select
-                            (
-                                option => new AnswerOptionInfoDTO
-                                (
-                                    option.Id,
-                                    option.Text,
-                                    option.IsCorrect
-                                )
-                            )
-                            .ToList()
-                    )
-                )
-                .ToList()
+            CreateQuestionInfoDTOList(quiz.Questions)
         );
+    }
+
+    private static List<QuestionInfoDTO> CreateQuestionInfoDTOList(ICollection<Question> questions)
+    {
+        return questions
+            .Select
+            (
+                question => new QuestionInfoDTO
+                (
+                    question.Id,
+                    question.Text,
+                    question.Options
+                        .Select
+                        (
+                            option => new AnswerOptionInfoDTO
+                            (
+                                option.Id,
+                                option.Text,
+                                option.IsCorrect
+                            )
+                        )
+                        .ToList()
+                )
+            )
+            .ToList();
     }
 }

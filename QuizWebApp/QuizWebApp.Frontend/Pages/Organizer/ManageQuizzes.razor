@@ -1,6 +1,7 @@
 ﻿@page "/organizer/manage-quizzes"
 
 @using QuizWebApp.Frontend.Clients
+@using QuizWebApp.Frontend.Components
 @using QuizWebApp.Shared.DTOs.Quiz
 @using QuizWebApp.Shared.DTOs.Topic
 
@@ -60,8 +61,8 @@ else
                             <td>@quizInfo.TimeInMinutes</td>
                             <td>
                                 <div class="d-flex justify-content-around">
-                                    <button type="button" class="btn btn-sm btn-primary">
-                                        View detailed information
+                                    <button type="button" class="btn btn-sm btn-primary" @onclick="() => ViewQuestions(quizInfo)">
+                                        View questions
                                     </button>
                                     <button type="button" class="btn btn-sm btn-warning">
                                         Edit
@@ -74,13 +75,29 @@ else
             </tbody>
         </table>
     </div>
+
+    @if (_showQuestionsModal && _viewingQuestions is not null)
+    {
+        <QuizModal Title="Questions list" ActionButtonText="Ok" Size="ModalSize.Large"
+            OnActionButtonClicked="() => _showQuestionsModal = false"
+            OnCancelClicked="() => _showQuestionsModal = false">
+            @foreach (string questionText in _viewingQuestions)
+            {
+                <div class="mb-3 shadow p-2 border">
+                    @questionText
+                </div>
+            }
+        </QuizModal>
+    }
 }
 
 @code {
     private QuizBriefInfoDTO[]? _quizzes;
     private QuizBriefInfoDTO[]? _filteredQuizzes;
     private TopicInfoDTO[]? _topics;
+    private string[]? _viewingQuestions;
     private int _selectedTopic;
+    private bool _showQuestionsModal;
 
     protected override async Task OnInitializedAsync()
     {
@@ -102,5 +119,11 @@ else
         _filteredQuizzes = _quizzes
             .Where(quizInfo => quizInfo.TopicId ==  _selectedTopic)
             .ToArray();
+    }
+
+    private void ViewQuestions(QuizBriefInfoDTO quizInfo)
+    {
+        _viewingQuestions = quizInfo.Questions.ToArray();
+        _showQuestionsModal = true;
     }
 }

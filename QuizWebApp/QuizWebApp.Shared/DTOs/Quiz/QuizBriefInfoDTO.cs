@@ -14,5 +14,7 @@ public record class QuizBriefInfoDTO
 
     int TimeInMinutes,
 
-    bool IsActive
+    bool IsActive,
+    
+    List<string> Questions
 );
