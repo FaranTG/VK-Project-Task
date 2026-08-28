@@ -6,14 +6,14 @@
 
 @inject TopicsClient TopicsClient
 
+<SectionContent SectionName="pageTitle">Manage Topics</SectionContent>
+
 @if (_topics is null || TopicModel is null)
 {
     <p><em>Loading...</em></p>
 }
 else
 {
-    <h3>Manage Topics</h3>
-    <hr />
     <div class="row">
         <div class="col-sm-4">
             <EditForm Model="TopicModel" OnValidSubmit="SaveTopicAsync">
@@ -21,7 +21,7 @@ else
 
                 <div class="card">
                     <div class="card-header">
-                        <h4 class="m-0">@TopicCardTitle</h4>
+                        <h5 class="m-0">@TopicCardTitle</h5>
                     </div>
                     <div class="card-body">
                         <div class="mb-3">
@@ -76,7 +76,7 @@ else
                     {
                         <tr>
                             <td colspan="4">
-                                <p class="text-danger h5"><em>No topics found.</em></p>
+                                <p class="h5 text-center text-danger"><em>No topics found.</em></p>
                             </td>
                         </tr>
                     }

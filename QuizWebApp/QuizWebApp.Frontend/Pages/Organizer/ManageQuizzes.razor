@@ -8,16 +8,14 @@
 @inject QuizzesClient QuizzesClient
 @inject TopicsClient TopicsClient
 
+<SectionContent SectionName="pageTitle">Manage Quizzes</SectionContent>
+
 @if (_topics is null || _quizzes is null || _filteredQuizzes is null)
 {
     <p><em>Loading...</em></p>
 }
 else
 {
-    <h3>Manage Quizzes</h3>
-
-    <hr />
-
     <div class="mb-3 row">
         <div class="col-sm-3 ms-auto">
             <label for="selectTopic" class="form-label">Topic Filter: </label>
@@ -47,7 +45,7 @@ else
                 {
                     <tr>
                         <td colspan="6">
-                            <p class="text-danger h5"><em>No quizzes found.</em></p>
+                            <p class="h5 text-danger text-center"><em>No quizzes found.</em></p>
                         </td>
                     </tr>
                 }
@@ -63,10 +61,10 @@ else
                             <th>@quizInfo.IsActive</th>
                             <td>
                                 <div class="d-flex justify-content-around">
-                                    <button type="button" class="btn btn-sm btn-primary" @onclick="() => ViewQuestions(quizInfo)">
+                                    <button type="button" class="btn btn-sm btn-secondary" @onclick="() => ViewQuestions(quizInfo)">
                                         View questions
                                     </button>
-                                    <a role="button" class="btn btn-sm btn-warning" href="organizer/edit-quiz/@quizInfo.Id">
+                                    <a role="button" class="btn btn-sm btn-primary" href="organizer/edit-quiz/@quizInfo.Id">
                                         Edit
                                     </a>
                                 </div>

@@ -13,14 +13,14 @@
 @inject IJSRuntime JSRuntime
 @inject NavigationManager NavigationManager
 
+<SectionContent SectionName="pageTitle">@Title</SectionContent>
+
 @if (_quizModel is null || _topics is null)
 {
     <p><em>Loading...</em></p>
 }
 else
 {
-    <h3>@Title</h3>
-    <hr />
     <EditForm Model="_quizModel" OnValidSubmit="SaveQuizAsync">
         <DataAnnotationsValidator />
         <div class="row">
@@ -55,13 +55,13 @@ else
 
             <hr />
             
-            <h4>Questions</h4>
+            <h5 class="mb-3 fw-bold">Questions</h5>
             <ol>
                 @foreach (QuestionModel question in _quizModel.Questions)
                 {
-                    <li class="shadow p-3 mb-3">
-                        <textarea @bind="question.Text" class="form-control" rows="3"></textarea>
-                        <h6>Options</h6>
+                    <li class="p-3 mb-3 rounded" style="background-color: rgba(21, 25, 29, 0.08);">
+                        <textarea @bind="question.Text" class="form-control mb-3" rows="3"></textarea>
+                        <h6 class="fw-bold">Options</h6>
                         <ol>
                             @foreach (AnswerOptionModel option in question.Options)
                             {
@@ -81,7 +81,7 @@ else
                                 </li>
                             }
                         </ol>
-                        <div class="d-flex justify-content-end">
+                        <div class="mt-3 d-flex justify-content-end">
                             <button type="button" class="btn btn-sm btn-primary" 
                                 @onclick="() => question.Options.Add(new AnswerOptionModel() { Text = string.Empty })">
                                 Add new option
@@ -98,17 +98,19 @@ else
             </div>
 
             <hr />
-            
-            <div class="mb-3">
-                <div class="form-check form-switch">
-                    <label class="form-check-label" for="isActive">Is active: </label>
-                    <InputCheckbox @bind-Value="_quizModel.IsActive" id="isActive" class="form-check-input" type="checkbox" role="switch" />
+
+            <div class="row mb-5 align-items-center">
+                <div class="col-sm-2 ms-auto d-flex justify-content-end">
+                    <div class="form-check form-switch">
+                        <label class="form-check-label" for="isActive">Is active? </label>
+                        <InputCheckbox @bind-Value="_quizModel.IsActive" id="isActive" class="form-check-input" type="checkbox" role="switch" />
+                    </div>
                 </div>
-            </div>
-            <div class="mb-3">
-                <button type="submit" class="btn btn-success">
-                    Save
-                </button>
+                <div class="col-sm-3 d-grid me-auto">
+                    <button type="submit" class="btn btn-success">
+                        Save
+                    </button>
+                </div>
             </div>
         </div>
     </EditForm>
