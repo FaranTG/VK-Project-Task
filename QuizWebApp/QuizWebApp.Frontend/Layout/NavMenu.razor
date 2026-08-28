@@ -48,13 +48,13 @@
                         </NavLink>
                     </div>
                 </AuthorizeView>
+                <div class="nav-item px-3">
+                    <a role="button" class="nav-link" href="javascript:void(0)" @onclick="LogoutAsync">
+                        Logout
+                    </a>
+                </div>
             </Authorized>
         </AuthorizeView>
-        <div class="nav-item px-3">
-            <a role="button" class="nav-link" @onclick="LogoutAsync">
-                Logout
-            </a>
-        </div>
     </nav>
 </div>
 
