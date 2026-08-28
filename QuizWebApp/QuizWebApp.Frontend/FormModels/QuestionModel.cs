@@ -10,6 +10,10 @@ public class QuestionModel
     [Required][MinLength(2)][MaxLength(8)]
     public required List<AnswerOptionModel> Options { get; set; }
 
+    public string OptionName => $"question_option_{OptionNameId}";
+
+    private Guid OptionNameId { get; } = Guid.NewGuid();
+    
     public string? Validate()
     {
         if (string.IsNullOrWhiteSpace(Text))
@@ -31,17 +35,15 @@ public class QuestionModel
         foreach (AnswerOptionModel option in Options)
         {
             string? validationResult = option.Validate();
-            if (validationResult is null)
+            if (validationResult is not null)
             {
-                if (option.IsCorrect)
-                {
-                    ++correctOptionsCount;
-                }
-
-                continue;
+                return validationResult;
             }
 
-            return validationResult;
+            if (option.IsCorrect)
+            {
+                ++correctOptionsCount;
+            }
         }
 
         if (correctOptionsCount != 1)

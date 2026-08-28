@@ -38,6 +38,7 @@ else
                     <th>Topic</th>
                     <th>Number of questions</th>
                     <th>Time in minutes</th>
+                    <th>Is active</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -45,7 +46,7 @@ else
                 @if (_filteredQuizzes.Length == 0)
                 {
                     <tr>
-                        <td colspan="5">
+                        <td colspan="6">
                             <p class="text-danger h5"><em>No quizzes found.</em></p>
                         </td>
                     </tr>
@@ -59,14 +60,15 @@ else
                             <td>@quizInfo.Topic</td>
                             <td>@quizInfo.QuestionsNumber</td>
                             <td>@quizInfo.TimeInMinutes</td>
+                            <th>@quizInfo.IsActive</th>
                             <td>
                                 <div class="d-flex justify-content-around">
                                     <button type="button" class="btn btn-sm btn-primary" @onclick="() => ViewQuestions(quizInfo)">
                                         View questions
                                     </button>
-                                    <button type="button" class="btn btn-sm btn-warning">
+                                    <a role="button" class="btn btn-sm btn-warning" href="organizer/edit-quiz/@quizInfo.Id">
                                         Edit
-                                    </button>
+                                    </a>
                                 </div>
                             </td>
                         </tr>

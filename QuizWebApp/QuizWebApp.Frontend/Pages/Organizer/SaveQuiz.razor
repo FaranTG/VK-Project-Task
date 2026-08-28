@@ -1,4 +1,5 @@
 ﻿@page "/organizer/add-quiz"
+@page "/organizer/edit-quiz/{id:guid}"
 
 @using QuizWebApp.Shared.DTOs.Topic
 @using QuizWebApp.Shared.DTOs.Quiz
@@ -18,7 +19,7 @@
 }
 else
 {
-    <h3>Add Quiz</h3>
+    <h3>@Title</h3>
     <hr />
     <EditForm Model="_quizModel" OnValidSubmit="SaveQuizAsync">
         <DataAnnotationsValidator />
@@ -58,7 +59,6 @@ else
             <ol>
                 @foreach (QuestionModel question in _quizModel.Questions)
                 {
-                    Guid randomId = Guid.NewGuid();
                     <li class="shadow p-3 mb-3">
                         <textarea @bind="question.Text" class="form-control" rows="3"></textarea>
                         <h6>Options</h6>
@@ -68,9 +68,9 @@ else
                                 <li class="p-2 mb-2">
                                     <div class="input-group">
                                         <div class="input-group-text">
-                                            <input name="question_option_@randomId" class="form-check-input mt-0" 
+                                            <input name="@question.OptionName" class="form-check-input mt-0" 
                                                 type="radio" checked="@option.IsCorrect"
-                                                @onclick="() => SetCorrectOption(question, option)">
+                                                @onchange="() => SetCorrectOption(question, option)">
                                         </div>
                                         <input @bind="option.Text" type="text" class="form-control">
                                         <button class="btn btn-sm btn-danger" type="button" 
@@ -115,21 +115,36 @@ else
 }
 
 @code {
+    [Parameter]
+    public Guid? Id { get; set; }
+
     private QuizModel? _quizModel;
     private TopicInfoDTO[]? _topics;
+    private Guid? _lastProcessedId;
+
+    private string Title => IsEditCase ? $"Edit Quiz" : "New Quiz";
+    private bool IsEditCase => Id.HasValue && Id.Value != Guid.Empty;
 
     protected override async Task OnInitializedAsync()
     {
-        _quizModel = new QuizModel()
-        {
-            Name = string.Empty,
-            Questions = new List<QuestionModel>()
-            {
-                CreateEmptyQuestion()
-            }
-        };
-
         _topics = await TopicsClient.GetTopicsAsync();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (_quizModel is null || _lastProcessedId != Id)
+        {
+            _lastProcessedId = Id;
+
+            if (IsEditCase)
+            {
+                await FillQuiz();
+            }
+            else
+            {
+                CreateEmptyQuiz();
+            }
+        }
     }
 
     private async Task SaveQuizAsync()
@@ -143,13 +158,74 @@ else
             return;
         } 
 
-        await QuizzesClient.AddQuizAsync(CreateQuizSaveDTO(_quizModel));
+        if (IsEditCase)
+        {
+            await QuizzesClient.UpdateQuizAsync(Id!.Value, CreateQuizSaveDTO(_quizModel));
+        }
+        else
+        {
+            await QuizzesClient.AddQuizAsync(CreateQuizSaveDTO(_quizModel));
+        }
 
         NavigationManager.NavigateTo("organizer/manage-quizzes");
     }
 
     private async Task ShowAlertAsync(string message, string title = "Error") =>
         await JSRuntime.InvokeVoidAsync("alert", $"{title}\n{message}");
+    
+    private void SetCorrectOption(QuestionModel question, AnswerOptionModel correctOption)
+    {
+        foreach (AnswerOptionModel option in question.Options)
+        {
+            option.IsCorrect = false;
+        }
+
+        correctOption.IsCorrect = true;
+    }
+
+    private void CreateEmptyQuiz()
+    {
+        _quizModel = new QuizModel()
+        {
+            Name = string.Empty,
+            Questions = new List<QuestionModel>()
+            {
+                CreateEmptyQuestion()
+            }
+        };
+    }
+    
+    private async Task FillQuiz()
+    {
+        QuizInfoDTO quizInfo = await QuizzesClient.GetQuizByIdAsync(Id!.Value);
+
+        _quizModel = new QuizModel()
+        {
+            Name = quizInfo.Name,
+            TopicId = quizInfo.TopicId,
+            TimeInMinutes = quizInfo.TimeInMinutes,
+            IsActive = quizInfo.IsActive,
+            Questions = quizInfo.Questions
+                .Select
+                (
+                    questionInfo => new QuestionModel()
+                    {
+                        Text = questionInfo.Text,
+                        Options = questionInfo.Options
+                            .Select
+                            (
+                                optionInfo => new AnswerOptionModel()
+                                {
+                                    Text = optionInfo.Text,
+                                    IsCorrect = optionInfo.IsCorrect
+                                }
+                            )
+                            .ToList()
+                    }
+                )
+                .ToList()
+        };
+    }
 
     private QuestionModel CreateEmptyQuestion()
     {
@@ -170,16 +246,6 @@ else
                 }
             }
         };
-    }
-
-    private void SetCorrectOption(QuestionModel question, AnswerOptionModel correctOption)
-    {
-        foreach (AnswerOptionModel option in question.Options)
-        {
-            option.IsCorrect = false;
-        }
-
-        correctOption.IsCorrect = true;
     }
 
     private QuizSaveDTO CreateQuizSaveDTO(QuizModel model)
