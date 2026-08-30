@@ -1,0 +1,153 @@
+﻿@page "/auth/register"
+@layout AuthLayout
+
+@using QuizWebApp.Frontend.Components
+@using QuizWebApp.Frontend.FormModels
+@using QuizWebApp.Frontend.Clients
+@using QuizWebApp.Shared.DTOs.User
+@using QuizWebApp.Frontend.Auth
+@using QuizWebApp.Shared
+
+@inject AuthClient AuthClient
+@inject QuizAuthStateProvider QuizAuthStateProvider
+@inject NavigationManager NavigationManager
+
+@if (UserModel is null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <div class="row vh-100">
+        <div class="col-sm-4 mx-auto my-auto border shadow-lg">
+            <h3 class="mt-3 fw-bold">Register | Quiz</h3>
+            <hr />
+            <EditForm Model="UserModel" OnValidSubmit="RegisterAsync">
+                <DataAnnotationsValidator />
+
+                <div class="mb-3">
+                    <label for="name" class="form-label">Name: </label>
+                    <InputText @bind-Value="UserModel.Name" id="name" class="form-control" />
+                    <ValidationMessage For="() => UserModel.Name" />
+                </div>
+                <div class="mb-3">
+                    <label for="phone" class="form-label">Phone: </label>
+                    <InputText @bind-Value="UserModel.Phone" id="phone" class="form-control" />
+                    <ValidationMessage For="() => UserModel.Phone" />
+                </div>
+                <div class="mb-3">
+                    <label for="email" class="form-label">Email: </label>
+                    <InputText @bind-Value="UserModel.Email" id="email" class="form-control" />
+                    <ValidationMessage For="() => UserModel.Email" />
+                </div>
+                <div class="mb-3">
+                    <label for="password" class="form-label">Password: </label>
+                    <InputText @bind-Value="UserModel.Password" type="password" id="password" class="form-control" />
+                    <ValidationMessage For="() => UserModel.Password" />
+                </div>
+
+                @if (_errorMessage is not null) {
+                    <div class="mb-3 bg-danger text-white p-2">
+                        <p>@_errorMessage</p>
+                    </div>
+                }
+
+                <div class="mb-3 d-flex justify-content-between">
+                    @if (_isLogging) 
+                    {
+                        <button type="button" disabled class="btn btn-secondary">Registering-in...</button>
+                    }
+                    else
+                    {
+                        <a role="button" class="btn btn-outline-primary" href="auth/login">Login</a>
+                        <button type="submit" class="btn btn-primary">Register</button>
+                    }
+                </div>
+            </EditForm>
+        </div>
+    </div>
+
+    @if (_showSuccessAlert)
+    {
+        <QuizModal Title="Success" ActionButtonText="Ok"
+            OnActionButtonClicked="OnModalClosed" OnCancelClicked="OnModalClosed">
+            <p class="h5 text-success">
+                Your account has been created successfully.<br />
+                You will be able to login once Organizer approves your account.
+            </p>
+        </QuizModal>
+    }
+}
+
+@code {
+    private UserModel? UserModel { get; set; }
+
+    private string? _errorMessage;
+    private bool _isLogging;
+    private bool _showSuccessAlert;
+
+    protected override void OnInitialized()
+    {
+        if (QuizAuthStateProvider.IsLoggedIn)
+        {
+            NavigationManager.NavigateTo("", replace: true);
+            return;
+        }
+
+        CreateEmptyUser();
+    }
+
+    private async Task RegisterAsync() {
+        ArgumentNullException.ThrowIfNull(UserModel);
+
+        _errorMessage = null;
+        _isLogging = true;
+
+        try 
+        {
+            QuizApiResponse<UserInfoDTO> responseData = await AuthClient.RegisterUserAsync(CreateUserSaveDTO(UserModel));
+
+            if (!responseData.IsSuccess) {
+                _errorMessage = responseData.ErrorMessage;
+                return;
+            }
+
+            _showSuccessAlert = true;
+        }
+        catch (Exception exception)
+        {
+            _errorMessage = exception.Message;
+        }
+        finally
+        {
+            _isLogging = false;
+        }
+    }
+
+    private void OnModalClosed()
+    {
+        CreateEmptyUser();
+        NavigationManager.NavigateTo("auth/login");
+    }
+
+    private void CreateEmptyUser()
+    {
+        UserModel = new UserModel()
+        {
+            Name = string.Empty,
+            Phone = string.Empty,
+            Email = string.Empty,
+            Password = string.Empty
+        };
+    }
+
+    private UserSaveDTO CreateUserSaveDTO(UserModel model) {
+        return new UserSaveDTO
+        (
+            model.Name,
+            model.Phone,
+            model.Email,
+            model.Password
+        );
+    }
+}

@@ -59,12 +59,11 @@ public static class DataExtensions
             Name = initialAdminOptions.Name,
             Phone = initialAdminOptions.Phone,
             Email = initialAdminOptions.Email,
-            PasswordHash = "somerandomhash",
+            PasswordHash = string.Empty,
             Role = nameof(UserRole.Organizer),
             IsApproved = true
         };
-        string password = initialAdminOptions.Password;
-        initialAdmin.PasswordHash = passwordHasher.HashPassword(initialAdmin, password);
+        initialAdmin.PasswordHash = passwordHasher.HashPassword(initialAdmin, initialAdminOptions.Password);
 
         dbContext.Users.Add(initialAdmin);
     }

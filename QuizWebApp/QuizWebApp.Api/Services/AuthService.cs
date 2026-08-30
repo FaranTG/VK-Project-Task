@@ -9,6 +9,7 @@ using QuizWebApp.Api.Data;
 using QuizWebApp.Api.Data.Models;
 using QuizWebApp.Shared;
 using QuizWebApp.Shared.DTOs;
+using QuizWebApp.Shared.DTOs.User;
 
 namespace QuizWebApp.Api.Services;
 
@@ -16,29 +17,34 @@ public class AuthService : IAuthService
 {
     private const string InvalidCredentialsMessage = "Invalid username or password.";
 
-    private readonly QuizContext _context;
+    private readonly QuizContext _dbContext;
     private readonly IPasswordHasher<User> _passwordHasher;
     private readonly JwtOptions _jwtOptions;
 
-    public AuthService(QuizContext context, IPasswordHasher<User> passwordHasher, IOptions<JwtOptions> jwtOptions)
+    public AuthService(QuizContext dbContext, IPasswordHasher<User> passwordHasher, IOptions<JwtOptions> jwtOptions)
     {
-        _context = context;
+        _dbContext = dbContext;
         _passwordHasher = passwordHasher;
         _jwtOptions = jwtOptions.Value;
     }
 
-    public async Task<AuthResponseDTO> LoginAsync(LoginDTO data)
+    public async Task<AuthResponseDTO> LoginAsync(LoginDTO loginData)
     {
-        User? user = await _context.Users
+        User? user = await _dbContext.Users
             .AsNoTracking()
-            .FirstOrDefaultAsync(user => user.Email == data.Username);
+            .FirstOrDefaultAsync(user => user.Email == loginData.Username);
 
         if (user is null)
         {
             return new AuthResponseDTO(null, InvalidCredentialsMessage);
         }
 
-        PasswordVerificationResult passwordCheckResult = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, data.Password);
+        if (!user.IsApproved)
+        {
+            return new AuthResponseDTO(null, "Your account is not approved yet.");
+        }
+
+        PasswordVerificationResult passwordCheckResult = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, loginData.Password);
         
         if (passwordCheckResult == PasswordVerificationResult.Failed)
         {
@@ -55,6 +61,46 @@ public class AuthService : IAuthService
         );
 
         return new AuthResponseDTO(loggedInUser, null);
+    }
+
+    public async Task<QuizApiResponse<UserInfoDTO>> RegisterAsync(UserSaveDTO userData)
+    {
+        if (await _dbContext.Users.AnyAsync(user => user.Email == userData.Email))
+        {
+            return QuizApiResponse<UserInfoDTO>.Fail("Email already exists.");
+        }
+
+        User user = new ()
+        {
+            Name = userData.Name,
+            Phone = userData.Phone,
+            Email = userData.Email,
+            PasswordHash = string.Empty,
+            Role = UserRole.Participant.ToString()
+        };
+        user.PasswordHash = _passwordHasher.HashPassword(user, userData.Password);
+
+        _dbContext.Users.Add(user);
+        try
+        {
+            await _dbContext.SaveChangesAsync();
+
+            UserInfoDTO userInfo = new
+            (
+                user.Id,
+                user.Name,
+                user.Phone,
+                user.Email,
+                user.Role,
+                user.IsApproved
+            );
+
+            return QuizApiResponse<UserInfoDTO>.Success(userInfo);
+        }
+        catch (Exception exception)
+        {
+            return QuizApiResponse<UserInfoDTO>.Fail(exception.Message);
+        }
     }
 
     private string GenerateJwtToken(User user)

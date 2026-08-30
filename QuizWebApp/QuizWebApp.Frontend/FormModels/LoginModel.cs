@@ -4,9 +4,9 @@ namespace QuizWebApp.Frontend.FormModels;
 
 public class LoginModel
 {
-    [Required, EmailAddress, DataType(DataType.EmailAddress)]
+    [Required][EmailAddress][DataType(DataType.EmailAddress)][StringLength(100)]
     public string? Username { get; set; }
 
-    [Required]
+    [Required][StringLength(100)]
     public string? Password { get; set; }
 }

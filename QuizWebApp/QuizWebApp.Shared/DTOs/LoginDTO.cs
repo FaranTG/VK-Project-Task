@@ -4,7 +4,7 @@ namespace QuizWebApp.Shared.DTOs;
 
 public record LoginDTO
 (
-    [Required][StringLength(50)]
+    [Required][EmailAddress][DataType(DataType.EmailAddress)][StringLength(100)]
     string Username,
 
     [Required][StringLength(100)]
