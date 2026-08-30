@@ -3,12 +3,17 @@
 @using QuizWebApp.Shared.DTOs.Topic
 @using QuizWebApp.Frontend.FormModels
 @using QuizWebApp.Frontend.Clients
+@using QuizWebApp.Shared.ApiResponses
 
 @inject TopicsClient TopicsClient
 
 <SectionContent SectionName="pageTitle">Manage Topics</SectionContent>
 
-@if (_topics is null || TopicModel is null)
+@if (_loadErrorMessage is not null)
+{
+    <p class="h5 text-center text-danger"><em>Error: @_loadErrorMessage</em></p>
+}
+else if (_topics is null || TopicModel is null)
 {
     <p><em>Loading...</em></p>
 }
@@ -30,11 +35,11 @@ else
                             <ValidationMessage For="() => TopicModel.Name" />
                         </div>
 
-                        @if (_errorMessage is not null)
+                        @if (_formErrorMessage is not null)
                         {
                             <div class="d-flex justify-content-between align-items-center gap-2 border border-danger border-1 p-1">
-                                <p class="m-0">@_errorMessage</p>
-                                <button class="btn btn-sm btn-danger" @onclick="() => _errorMessage = null">Close</button>
+                                <p class="m-0">@_formErrorMessage</p>
+                                <button type="button" class="btn btn-sm btn-danger" @onclick="() => _formErrorMessage = null">Close</button>
                             </div>
                         }
                     </div>
@@ -109,7 +114,8 @@ else
     private TopicModel? TopicModel { get; set; }
 
     private TopicInfoDTO[]? _topics;
-    private string? _errorMessage;
+    private string? _loadErrorMessage;
+    private string? _formErrorMessage;
     private int? _id;
     private bool _isBusy;
 
@@ -119,57 +125,78 @@ else
     {
         await LoadTopicsAsync();
 
-        TopicModel = new () 
-        {
-            Name = string.Empty
-        };
+        TopicModel = new () { Name = string.Empty };
     }
 
     private void SetTopic(TopicInfoDTO topicData)
     {
         ArgumentNullException.ThrowIfNull(TopicModel);
 
+        _formErrorMessage = null;
         _id = topicData.Id;
         TopicModel.Name = topicData.Name;
     }
 
     private async Task SaveTopicAsync()
     {
-        try
-        {
-            ArgumentNullException.ThrowIfNull(TopicModel);
+        ArgumentNullException.ThrowIfNull(TopicModel);
 
-            _isBusy = true;
-            TopicSaveDTO newTopic = new TopicSaveDTO
-            (
-                TopicModel.Name
-            );
+        _formErrorMessage = null;
+        _isBusy = true;
 
-            if (_id is null)
-            {
-                await TopicsClient.AddTopicAsync(newTopic);
-            }
-            else
-            {
-                await TopicsClient.UpdateTopicAsync(_id.Value, newTopic);
-            }
-            
-            ClearModel();
-            await LoadTopicsAsync();
-        }
-        catch (Exception exception)
+        TopicSaveDTO newTopic = new TopicSaveDTO(TopicModel.Name);
+        
+        bool isSuccess = await TrySendRequstAsync(newTopic);
+        if (!isSuccess)
         {
-            _errorMessage = exception.Message;
+            return;
         }
-        finally
+
+        ClearModel();
+        await LoadTopicsAsync();
+        
+        _isBusy = false;
+    }
+
+    private async Task<bool> TrySendRequstAsync(TopicSaveDTO newTopic)
+    {
+        if (_id is null)
         {
-            _isBusy = false;
+            QuizApiResponse<TopicInfoDTO>? response = await TopicsClient.AddTopicAsync(newTopic);
+
+            if (response.IsFailure)
+            {
+                _formErrorMessage = response.ErrorMessage;
+                _isBusy = false;
+                return false;
+            }
         }
+        else
+        {
+            QuizApiResponse? response = await TopicsClient.UpdateTopicAsync(_id.Value, newTopic);
+
+            if (response.IsFailure)
+            {
+                _formErrorMessage = response.ErrorMessage;
+                _isBusy = false;
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private async Task LoadTopicsAsync()
     {
-        _topics = await TopicsClient.GetTopicsAsync();
+        QuizApiResponse<TopicInfoDTO[]>? response = await TopicsClient.GetTopicsAsync();
+
+        if (response.IsSuccess)
+        {
+            _topics = response.Data;
+            return;
+        }
+
+        _loadErrorMessage = response.ErrorMessage;
     }
 
     private void ClearModel()
@@ -178,5 +205,6 @@ else
 
         _id = null;
         TopicModel.Name = string.Empty;
+        _formErrorMessage = null;
     }
 }

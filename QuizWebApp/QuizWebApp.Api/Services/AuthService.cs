@@ -7,6 +7,7 @@ using Microsoft.IdentityModel.Tokens;
 using QuizWebApp.Api.Configuration;
 using QuizWebApp.Api.Data;
 using QuizWebApp.Api.Data.Models;
+using QuizWebApp.Api.Services.Interfaces;
 using QuizWebApp.Shared;
 using QuizWebApp.Shared.ApiResponses;
 using QuizWebApp.Shared.DTOs.User;

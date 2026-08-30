@@ -1,4 +1,5 @@
 ﻿using System.Net.Http.Json;
+using QuizWebApp.Shared.ApiResponses;
 using QuizWebApp.Shared.DTOs.Topic;
 
 namespace QuizWebApp.Frontend.Clients;
@@ -6,21 +7,42 @@ namespace QuizWebApp.Frontend.Clients;
 public class TopicsClient(HttpClient httpClient)
 {
     private const string ApiRoute = "/api/topics";
+    private const string NoResponseMessage = "No response from server.";
 
-    public async Task<TopicInfoDTO[]> GetTopicsAsync()
-        => await httpClient.GetFromJsonAsync<TopicInfoDTO[]>(ApiRoute)
-        ?? throw new InvalidOperationException("Could not find topics list.");
+    public async Task<QuizApiResponse<TopicInfoDTO[]>> GetTopicsAsync()
+    {
+        HttpResponseMessage response = await httpClient.GetAsync(ApiRoute);
+
+        QuizApiResponse<TopicInfoDTO[]>? responseData = await response.Content.ReadFromJsonAsync<QuizApiResponse<TopicInfoDTO[]>>();
+        
+        return responseData
+            ?? QuizApiResponse<TopicInfoDTO[]>.Fail(NoResponseMessage);
+    }
     
-    public async Task<TopicInfoDTO> GetTopicByIdAsync(int id)
-        => await httpClient.GetFromJsonAsync<TopicInfoDTO>($"{ApiRoute}/{id}")
-        ?? throw new InvalidOperationException("Could not find topic.");
+    public async Task<QuizApiResponse<TopicInfoDTO>> GetTopicByIdAsync(int id)
+    {
+        HttpResponseMessage response = await httpClient.GetAsync($"{ApiRoute}/{id}");
+
+        QuizApiResponse<TopicInfoDTO>? responseData = await response.Content.ReadFromJsonAsync<QuizApiResponse<TopicInfoDTO>>();
+        return responseData
+            ?? QuizApiResponse<TopicInfoDTO>.Fail(NoResponseMessage);
+    }
     
-    public async Task AddTopicAsync(TopicSaveDTO newTopic)
-        => await httpClient.PostAsJsonAsync(ApiRoute, newTopic);
+    public async Task<QuizApiResponse<TopicInfoDTO>> AddTopicAsync(TopicSaveDTO newTopic)
+    {
+        HttpResponseMessage response = await httpClient.PostAsJsonAsync(ApiRoute, newTopic);
 
-    public async Task UpdateTopicAsync(int id, TopicSaveDTO newTopic)
-        => await httpClient.PutAsJsonAsync($"{ApiRoute}/{id}", newTopic);
+        QuizApiResponse<TopicInfoDTO>? responseData = await response.Content.ReadFromJsonAsync<QuizApiResponse<TopicInfoDTO>>();
+        return responseData
+            ?? QuizApiResponse<TopicInfoDTO>.Fail(NoResponseMessage);
+    }
 
-    public async Task DeleteTopicAsync(int id)
-        => await httpClient.DeleteAsync($"{ApiRoute}/{id}");
+    public async Task<QuizApiResponse> UpdateTopicAsync(int id, TopicSaveDTO newTopic)
+    {
+        HttpResponseMessage response = await httpClient.PutAsJsonAsync($"{ApiRoute}/{id}", newTopic);
+
+        QuizApiResponse? responseData = await response.Content.ReadFromJsonAsync<QuizApiResponse>();
+        return responseData
+            ?? QuizApiResponse.Fail(NoResponseMessage);
+    }
 }

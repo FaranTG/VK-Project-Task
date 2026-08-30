@@ -102,7 +102,12 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        _topics = await TopicsClient.GetTopicsAsync();
+        Shared.ApiResponses.QuizApiResponse<TopicInfoDTO[]> response = await TopicsClient.GetTopicsAsync();
+
+        if (response.IsSuccess)
+        {
+            _topics =  response.Data;
+        }
         _quizzes = await QuizzesClient.GetQuizzesAsync();
         _filteredQuizzes = _quizzes;
     }

@@ -1,6 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
-using QuizWebApp.Api.Data;
-using QuizWebApp.Api.Data.Models;
+﻿using QuizWebApp.Api.Services.Interfaces;
+using QuizWebApp.Shared.ApiResponses;
 using QuizWebApp.Shared.DTOs.Topic;
 using QuizWebApp.Shared.Enums;
 
@@ -25,7 +24,6 @@ public static class TopicEndpoints
             .RequireAuthorization(policy => policy.RequireRole(nameof(UserRole.Organizer)));
 
         MapTopicPostEndpoint(organizerRouteGroup);
-        MapTopicDeleteEndpoint(organizerRouteGroup);
         MapTopicUpdateEndpoint(organizerRouteGroup);
 
         return app;
@@ -33,94 +31,50 @@ public static class TopicEndpoints
 
     private static void MapTopicGetEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapGet("/", async (QuizContext dbContext) => 
-            Results.Ok(
-                await dbContext.Topics
-                    .AsNoTracking()
-                    .OrderBy(topic => topic.Id)
-                    .Select(
-                        topic => new TopicInfoDTO
-                        (
-                            topic.Id,
-                            topic.Name
-                        )
-                    )
-                    .ToListAsync()
-            )
+        app.MapGet("/", async (ITopicService topicService) => 
+            Results.Ok(await topicService.GetTopicsAsync())
         );
     }
 
     private static void MapTopicGetByIdEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapGet("/{id:int}", async (int id, QuizContext dbContext) =>
+        app.MapGet("/{id:int}", async (int id, ITopicService topicService) =>
         {
-            Topic? topic = await dbContext.Topics
-                .AsNoTracking()
-                .FirstOrDefaultAsync(topic => topic.Id == id);
+            QuizApiResponse<TopicInfoDTO> response = await topicService.GetTopicByIdAsync(id);
 
-            return topic is null ?
-                Results.NotFound()
-                : Results.Ok(
-                    new TopicInfoDTO
-                    (
-                        topic.Id,
-                        topic.Name
-                    )
-                );
+            return response.IsSuccess 
+                ? Results.Ok(response)
+                : Results.NotFound(response);
         })
         .WithName(GetTopicEndpointName);
     }
 
     private static void MapTopicPostEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapPost("/", async (TopicSaveDTO newTopicData, QuizContext dbContext) => 
+        app.MapPost("/", async (TopicSaveDTO newTopicData, ITopicService topicService) => 
         {
-            Topic topic = new ()
-            {
-                Name = newTopicData.Name
-            };
+            QuizApiResponse<TopicInfoDTO> response = await topicService.CreateTopicAsync(newTopicData);
 
-            dbContext.Topics.Add(topic);
-            await dbContext.SaveChangesAsync();
-
-            TopicInfoDTO createdTopicData = new
-            (
-                topic.Id,
-                topic.Name
-            );
-
-            return Results.CreatedAtRoute(GetTopicEndpointName, new { id = createdTopicData.Id }, createdTopicData);
+            return response.IsSuccess 
+                ? Results.CreatedAtRoute(GetTopicEndpointName, new { id = response.Data!.Id }, response)
+                : Results.BadRequest(response); 
         });
     }
 
     private static void MapTopicUpdateEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapPut("/{id:int}", async (int id, TopicSaveDTO newTopicData, QuizContext dbContext) =>
+        app.MapPut("/{id:int}", async (int id, TopicSaveDTO newTopicData, ITopicService topicService) =>
         {
-            Topic? topic = await dbContext.Topics.FindAsync(id);
+            QuizApiResponse response = await topicService.UpdateTopicAsync(id, newTopicData);
 
-            if (topic is null)
+            if (response.IsFailure)
             {
-                return Results.NotFound();
+                return response.ErrorMessage == "Topic not found."
+                    ? Results.NotFound(response)
+                    : Results.BadRequest(response);
             }
 
-            topic.Name = newTopicData.Name;
-            
-            await dbContext.SaveChangesAsync();
-
-            return Results.NoContent();
-        });
-    }
-
-    private static void MapTopicDeleteEndpoint(IEndpointRouteBuilder app)
-    {
-        app.MapDelete("/{id:int}", async (int id, QuizContext dbContext) =>
-        {
-            await dbContext.Topics
-                .Where(topic => topic.Id == id)
-                .ExecuteDeleteAsync();
-                
-            return Results.NoContent();
+            return Results.Ok(response);
         });
     }
 }

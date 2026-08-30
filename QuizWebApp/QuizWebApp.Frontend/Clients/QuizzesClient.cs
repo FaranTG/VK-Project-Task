@@ -20,7 +20,4 @@ public class QuizzesClient(HttpClient httpClient)
 
     public async Task UpdateQuizAsync(Guid id, QuizSaveDTO newQuiz)
         => await httpClient.PutAsJsonAsync($"{ApiRoute}/{id}", newQuiz);
-
-    public async Task DeleteQuizAsync(Guid id)
-        => await httpClient.DeleteAsync($"{ApiRoute}/{id}");
 }
