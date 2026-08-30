@@ -16,7 +16,7 @@ public class QuizAuthStateProvider : AuthenticationStateProvider
     private readonly NavigationManager _navigationManager;
     private Task<AuthenticationState> _authStateTask;
 
-    public LoggedInUser? User { get; private set; }
+    public LoggedInUserInfo? User { get; private set; }
     public bool IsLoggedIn => User?.Id > 0;
     public bool IsInitializing { get; private set; } = true;
 
@@ -40,7 +40,7 @@ public class QuizAuthStateProvider : AuthenticationStateProvider
                 return;
             }
 
-            LoggedInUser user = LoggedInUser.LoadFromJson(userData);
+            LoggedInUserInfo user = LoggedInUserInfo.LoadFromJson(userData);
             if (user is null || user.Id == 0)
             {
                 RedirectToLogin();
@@ -62,7 +62,7 @@ public class QuizAuthStateProvider : AuthenticationStateProvider
         }
     }
 
-    public async Task SetLoginAsync(LoggedInUser user)
+    public async Task SetLoginAsync(LoggedInUserInfo user)
     {
         User = user;
 

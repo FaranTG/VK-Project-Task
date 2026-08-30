@@ -1,5 +1,4 @@
 ﻿using QuizWebApp.Api.Services;
-using QuizWebApp.Shared.DTOs;
 using QuizWebApp.Shared.DTOs.User;
 
 namespace QuizWebApp.Api.Endpoints;
@@ -10,7 +9,7 @@ public static class AuthEndpoints
 
     public static IEndpointRouteBuilder MapAuthEndpoints(this IEndpointRouteBuilder app)
     {
-        app.MapPost($"{ApiRoute}/login", async (LoginDTO data, IAuthService authService) => 
+        app.MapPost($"{ApiRoute}/login", async (UserLoginDTO data, IAuthService authService) => 
             Results.Ok(await authService.LoginAsync(data))
         );
 

@@ -3,7 +3,7 @@ using System.Text.Json;
 
 namespace QuizWebApp.Shared;
 
-public record LoggedInUser
+public record LoggedInUserInfo
 (
     int Id,
     string Name,
@@ -21,6 +21,6 @@ public record LoggedInUser
         new (nameof(Token), Token)
     ];
 
-    public static LoggedInUser LoadFromJson(string json) => JsonSerializer.Deserialize<LoggedInUser>(json)
+    public static LoggedInUserInfo LoadFromJson(string json) => JsonSerializer.Deserialize<LoggedInUserInfo>(json)
         ?? throw new InvalidOperationException("Cannot convert the parameter from json to LoggedInUser.");
 }

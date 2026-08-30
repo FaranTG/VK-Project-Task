@@ -3,9 +3,10 @@
 
 @using QuizWebApp.Frontend.FormModels
 @using QuizWebApp.Frontend.Clients
-@using QuizWebApp.Shared.DTOs
+@using QuizWebApp.Shared.DTOs.User
 @using QuizWebApp.Frontend.Auth
 @using QuizWebApp.Shared
+@using QuizWebApp.Shared.ApiResponses
 
 @inject AuthClient AuthClient
 @inject QuizAuthStateProvider QuizAuthStateProvider
@@ -71,7 +72,11 @@ else
             return;
         }
 
-        LoginModel = new ();
+        LoginModel = new ()
+        {
+            Username = string.Empty,
+            Password = string.Empty
+        };
     }
 
     private async Task LoginAsync() {
@@ -82,15 +87,15 @@ else
 
         try 
         {
-            AuthResponseDTO responseData = await AuthClient.AddUserTokenAsync(CreateLoginDTO(LoginModel));
+            QuizApiResponse<LoggedInUserInfo> response = await AuthClient.AddUserTokenAsync(CreateLoginDTO(LoginModel));
 
-            if (responseData.ErrorMessage is not null) {
-                _errorMessage = responseData.ErrorMessage;
+            if (response.IsFailure) {
+                _errorMessage = response.ErrorMessage;
                 return;
             }
 
-            ArgumentNullException.ThrowIfNull(responseData.User);
-            LoggedInUser user = responseData.User;
+            ArgumentNullException.ThrowIfNull(response.Data);
+            LoggedInUserInfo user = response.Data;
             await QuizAuthStateProvider.SetLoginAsync(user);
 
             NavigationManager.NavigateTo("/");
@@ -105,7 +110,7 @@ else
         }
     }
 
-    private LoginDTO CreateLoginDTO(LoginModel model) {
+    private UserLoginDTO CreateLoginDTO(LoginModel model) {
         if (model.Username is null || model.Password is null) 
         {
             throw new ArgumentException("Username or password is null");

@@ -1,8 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace QuizWebApp.Shared.DTOs;
+namespace QuizWebApp.Shared.DTOs.User;
 
-public record LoginDTO
+public record UserLoginDTO
 (
     [Required][EmailAddress][DataType(DataType.EmailAddress)][StringLength(100)]
     string Username,

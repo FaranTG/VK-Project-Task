@@ -1,10 +1,10 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using QuizWebApp.Api.Data;
 using QuizWebApp.Api.Data.Models;
-using QuizWebApp.Shared;
 using QuizWebApp.Shared.DTOs.AnswerOption;
 using QuizWebApp.Shared.DTOs.Question;
 using QuizWebApp.Shared.DTOs.Quiz;
+using QuizWebApp.Shared.Enums;
 
 namespace QuizWebApp.Api.Endpoints;
 

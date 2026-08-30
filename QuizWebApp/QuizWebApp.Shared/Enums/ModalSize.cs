@@ -1,4 +1,4 @@
-﻿namespace QuizWebApp.Shared;
+﻿namespace QuizWebApp.Shared.Enums;
 
 public enum ModalSize
 {

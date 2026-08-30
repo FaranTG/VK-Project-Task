@@ -2,7 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using QuizWebApp.Api.Configuration;
 using QuizWebApp.Api.Data.Models;
-using QuizWebApp.Shared;
+using QuizWebApp.Shared.Enums;
 
 namespace QuizWebApp.Api.Data;
 

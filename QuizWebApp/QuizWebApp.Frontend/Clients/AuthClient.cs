@@ -1,6 +1,6 @@
 ﻿using System.Net.Http.Json;
 using QuizWebApp.Shared;
-using QuizWebApp.Shared.DTOs;
+using QuizWebApp.Shared.ApiResponses;
 using QuizWebApp.Shared.DTOs.User;
 
 namespace QuizWebApp.Frontend.Clients;
@@ -10,19 +10,19 @@ public class AuthClient(HttpClient httpClient)
     private const string ApiRoute = "/api/auth";
     private const string NoResponseMessage = "No response from server.";
 
-    public async Task<AuthResponseDTO> AddUserTokenAsync(LoginDTO userLogin)
+    public async Task<QuizApiResponse<LoggedInUserInfo>> AddUserTokenAsync(UserLoginDTO userLogin)
     {
         HttpResponseMessage response = await httpClient.PostAsJsonAsync($"{ApiRoute}/login", userLogin);
-        AuthResponseDTO? result = await response.Content.ReadFromJsonAsync<AuthResponseDTO>();
-        return result
-            ?? new AuthResponseDTO(null, NoResponseMessage);
+        QuizApiResponse<LoggedInUserInfo>? responseData = await response.Content.ReadFromJsonAsync<QuizApiResponse<LoggedInUserInfo>>();
+        return responseData
+            ?? QuizApiResponse<LoggedInUserInfo>.Fail(NoResponseMessage);
     }
 
-    public async Task<QuizApiResponse<UserInfoDTO>> RegisterUserAsync(UserSaveDTO data)
+    public async Task<QuizApiResponse> RegisterUserAsync(UserSaveDTO saveData)
     {
-        HttpResponseMessage response = await httpClient.PostAsJsonAsync($"{ApiRoute}/register", data);
-        QuizApiResponse<UserInfoDTO>? result = await response.Content.ReadFromJsonAsync<QuizApiResponse<UserInfoDTO>>();
-        return result
-            ?? QuizApiResponse<UserInfoDTO>.Fail(NoResponseMessage);
+        HttpResponseMessage response = await httpClient.PostAsJsonAsync($"{ApiRoute}/register", saveData);
+        QuizApiResponse? responseData = await response.Content.ReadFromJsonAsync<QuizApiResponse>();
+        return responseData
+            ?? QuizApiResponse.Fail(NoResponseMessage);
     }
 }

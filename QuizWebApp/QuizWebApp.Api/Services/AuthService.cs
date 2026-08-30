@@ -8,8 +8,9 @@ using QuizWebApp.Api.Configuration;
 using QuizWebApp.Api.Data;
 using QuizWebApp.Api.Data.Models;
 using QuizWebApp.Shared;
-using QuizWebApp.Shared.DTOs;
+using QuizWebApp.Shared.ApiResponses;
 using QuizWebApp.Shared.DTOs.User;
+using QuizWebApp.Shared.Enums;
 
 namespace QuizWebApp.Api.Services;
 
@@ -28,7 +29,7 @@ public class AuthService : IAuthService
         _jwtOptions = jwtOptions.Value;
     }
 
-    public async Task<AuthResponseDTO> LoginAsync(LoginDTO loginData)
+    public async Task<QuizApiResponse<LoggedInUserInfo>> LoginAsync(UserLoginDTO loginData)
     {
         User? user = await _dbContext.Users
             .AsNoTracking()
@@ -36,23 +37,23 @@ public class AuthService : IAuthService
 
         if (user is null)
         {
-            return new AuthResponseDTO(null, InvalidCredentialsMessage);
+            return QuizApiResponse<LoggedInUserInfo>.Fail(InvalidCredentialsMessage);
         }
 
         if (!user.IsApproved)
         {
-            return new AuthResponseDTO(null, "Your account is not approved yet.");
+            return QuizApiResponse<LoggedInUserInfo>.Fail("Your account is not approved yet.");
         }
 
         PasswordVerificationResult passwordCheckResult = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, loginData.Password);
         
         if (passwordCheckResult == PasswordVerificationResult.Failed)
         {
-            return new AuthResponseDTO(null, InvalidCredentialsMessage);
+            return QuizApiResponse<LoggedInUserInfo>.Fail(InvalidCredentialsMessage);
         }
 
         string jwtToken = GenerateJwtToken(user);
-        LoggedInUser loggedInUser = new 
+        LoggedInUserInfo loggedInUser = new 
         (
             user.Id,
             user.Name,
@@ -60,14 +61,14 @@ public class AuthService : IAuthService
             jwtToken
         );
 
-        return new AuthResponseDTO(loggedInUser, null);
+        return QuizApiResponse<LoggedInUserInfo>.Success(loggedInUser);
     }
 
-    public async Task<QuizApiResponse<UserInfoDTO>> RegisterAsync(UserSaveDTO userData)
+    public async Task<QuizApiResponse> RegisterAsync(UserSaveDTO userData)
     {
         if (await _dbContext.Users.AnyAsync(user => user.Email == userData.Email))
         {
-            return QuizApiResponse<UserInfoDTO>.Fail("Email already exists.");
+            return QuizApiResponse.Fail("Email already exists.");
         }
 
         User user = new ()
@@ -76,7 +77,7 @@ public class AuthService : IAuthService
             Phone = userData.Phone,
             Email = userData.Email,
             PasswordHash = string.Empty,
-            Role = UserRole.Participant.ToString()
+            Role = nameof(UserRole.Participant)
         };
         user.PasswordHash = _passwordHasher.HashPassword(user, userData.Password);
 
@@ -85,21 +86,11 @@ public class AuthService : IAuthService
         {
             await _dbContext.SaveChangesAsync();
 
-            UserInfoDTO userInfo = new
-            (
-                user.Id,
-                user.Name,
-                user.Phone,
-                user.Email,
-                user.Role,
-                user.IsApproved
-            );
-
-            return QuizApiResponse<UserInfoDTO>.Success(userInfo);
+            return QuizApiResponse.Success();
         }
         catch (Exception exception)
         {
-            return QuizApiResponse<UserInfoDTO>.Fail(exception.Message);
+            return QuizApiResponse.Fail(exception.Message);
         }
     }
 

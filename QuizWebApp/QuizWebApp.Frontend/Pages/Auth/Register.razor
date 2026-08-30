@@ -6,7 +6,7 @@
 @using QuizWebApp.Frontend.Clients
 @using QuizWebApp.Shared.DTOs.User
 @using QuizWebApp.Frontend.Auth
-@using QuizWebApp.Shared
+@using QuizWebApp.Shared.ApiResponses
 
 @inject AuthClient AuthClient
 @inject QuizAuthStateProvider QuizAuthStateProvider
@@ -105,9 +105,9 @@ else
 
         try 
         {
-            QuizApiResponse<UserInfoDTO> responseData = await AuthClient.RegisterUserAsync(CreateUserSaveDTO(UserModel));
+            QuizApiResponse responseData = await AuthClient.RegisterUserAsync(CreateUserSaveDTO(UserModel));
 
-            if (!responseData.IsSuccess) {
+            if (responseData.IsFailure) {
                 _errorMessage = responseData.ErrorMessage;
                 return;
             }
