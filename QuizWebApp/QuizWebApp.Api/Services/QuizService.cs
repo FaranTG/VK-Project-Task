@@ -2,6 +2,7 @@
 using QuizWebApp.Api.Data;
 using QuizWebApp.Api.Data.Models;
 using QuizWebApp.Api.Services.Interfaces;
+using QuizWebApp.Api.Validation;
 using QuizWebApp.Shared.ApiResponses;
 using QuizWebApp.Shared.DTOs.AnswerOption;
 using QuizWebApp.Shared.DTOs.Question;
@@ -77,6 +78,12 @@ public class QuizService : IQuizService
     {
         try
         {
+            string? validationError = newQuizData.Validate();
+            if (validationError is not null)
+            {
+                return QuizApiResponse<QuizInfoDTO>.Fail(validationError);
+            }
+
             if (await _dbContext.Quizzes.AnyAsync(quiz => quiz.Name == newQuizData.Name))
             {
                 return QuizApiResponse<QuizInfoDTO>.Fail(DuplicateMessage);
@@ -108,6 +115,12 @@ public class QuizService : IQuizService
     {
         try
         {
+            string? validationError = newQuizData.Validate();
+            if (validationError is not null)
+            {
+                return QuizApiResponse.Fail(validationError);
+            }
+
             Quiz? quiz = await _dbContext.Quizzes.FindAsync(id);
 
             if (quiz is null)
