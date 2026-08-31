@@ -5,6 +5,8 @@ namespace QuizWebApp.Api.Services.Interfaces;
 
 public interface ITopicService
 {
+    public const string NotFoundMessage = "Topic not found.";
+
     Task<QuizApiResponse<TopicInfoDTO[]>> GetTopicsAsync();
 
     Task<QuizApiResponse<TopicInfoDTO>> GetTopicByIdAsync(int id);

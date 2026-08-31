@@ -1,8 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
-using QuizWebApp.Api.Data;
-using QuizWebApp.Api.Data.Models;
-using QuizWebApp.Shared.DTOs.AnswerOption;
-using QuizWebApp.Shared.DTOs.Question;
+﻿using QuizWebApp.Api.Services.Interfaces;
+using QuizWebApp.Shared.ApiResponses;
 using QuizWebApp.Shared.DTOs.Quiz;
 using QuizWebApp.Shared.Enums;
 
@@ -27,9 +24,6 @@ public static class QuizEndpoints
             .RequireAuthorization(policy => policy.RequireRole(nameof(UserRole.Organizer)));
 
         MapQuizPostEndpoint(organizerRouteGroup);
-        /*
-        MapQuizDeleteEndpoint(organizerRouteGroup);
-        */
         MapQuizUpdateEndpoint(organizerRouteGroup);
 
         return app;
@@ -37,164 +31,50 @@ public static class QuizEndpoints
 
     private static void MapQuizGetEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapGet("/", async (QuizContext dbContext) =>
-            await dbContext.Quizzes
-                .AsNoTracking()
-                .Select
-                (
-                    quiz => new QuizBriefInfoDTO
-                    (
-                        quiz.Id,
-                        quiz.Name,
-                        quiz.TopicId,
-                        quiz.Topic!.Name,
-                        quiz.QuestionsNumber,
-                        quiz.TimeInMinutes,
-                        quiz.IsActive,
-                        quiz.Questions
-                            .Select(question => question.Text)
-                            .ToList()
-                    )
-                )
-                .ToListAsync()
+        app.MapGet("/", async (IQuizService quizService) =>
+            Results.Ok(await quizService.GetQuizzesAsync())
         );
     }
 
     private static void MapQuizGetByIdEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapGet("/{id:guid}", async (Guid id, QuizContext dbContext) =>
+        app.MapGet("/{id:guid}", async (Guid id, IQuizService quizService) =>
         {
-            Quiz? quiz = await dbContext.Quizzes
-                .AsNoTracking()
-                .Include(quiz => quiz.Questions)
-                    .ThenInclude(question => question.Options)
-                .AsSplitQuery()
-                .FirstOrDefaultAsync(quiz => quiz.Id == id);
+            QuizApiResponse<QuizInfoDTO> response = await quizService.GetQuizByIdAsync(id);
 
-            return quiz is null ?
-                Results.NotFound()
-                : Results.Ok(
-                    CreateQuizInfoDTO(quiz)
-                );
+            return response.IsSuccess 
+                ? Results.Ok(response)
+                : Results.NotFound(response);
         })
         .WithName(GetQuizEndpointName);
     }
 
     private static void MapQuizPostEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapPost("/", async (QuizSaveDTO newQuizDTO, QuizContext dbContext) => 
+        app.MapPost("/", async (QuizSaveDTO newQuizData, IQuizService quizService) => 
         {
-            Quiz quiz = new ()
-            {
-                Name = newQuizDTO.Name,
-                TopicId = newQuizDTO.TopicId,
-                QuestionsNumber = newQuizDTO.Questions.Count,
-                TimeInMinutes = newQuizDTO.TimeInMinutes,
-                IsActive = newQuizDTO.IsActive,
-                Questions = CreateQuestionList(newQuizDTO.Questions)
-            };
+            QuizApiResponse<QuizInfoDTO> response = await quizService.CreateQuizAsync(newQuizData);
 
-            dbContext.Quizzes.Add(quiz);
-            await dbContext.SaveChangesAsync();
-
-            QuizInfoDTO createdQuizInfoDTO = CreateQuizInfoDTO(quiz);
-
-            return Results.CreatedAtRoute(GetQuizEndpointName, new { id = createdQuizInfoDTO.Id }, createdQuizInfoDTO);
+            return response.IsSuccess 
+                ? Results.CreatedAtRoute(GetQuizEndpointName, new { id = response.Data!.Id }, response)
+                : Results.BadRequest(response);
         });
     }
 
     private static void MapQuizUpdateEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapPut("/{id:guid}", async (Guid id, QuizSaveDTO newQuizDTO, QuizContext dbContext) =>
+        app.MapPut("/{id:guid}", async (Guid id, QuizSaveDTO newQuizData, IQuizService quizService) =>
         {
-            Quiz? quiz = await dbContext.Quizzes.FindAsync(id);
-
-            if (quiz is null)
+            QuizApiResponse response = await quizService.UpdateQuizAsync(id, newQuizData);
+            
+            if (response.IsFailure)
             {
-                return Results.NotFound();
+                return response.ErrorMessage == IQuizService.NotFoundMessage
+                    ? Results.NotFound(response)
+                    : Results.BadRequest(response);
             }
 
-            await dbContext.Questions
-                .Where(question => question.QuizId == id)
-                .ExecuteDeleteAsync();
-            
-            quiz.Name = newQuizDTO.Name;
-            quiz.TopicId = newQuizDTO.TopicId;
-            quiz.QuestionsNumber = newQuizDTO.Questions.Count;
-            quiz.TimeInMinutes = newQuizDTO.TimeInMinutes;
-            quiz.IsActive = newQuizDTO.IsActive;
-            quiz.Questions = CreateQuestionList(newQuizDTO.Questions);
-            
-            await dbContext.SaveChangesAsync();
-
-            return Results.NoContent();
+            return Results.Ok(response);
         });
-    }
-
-    private static void MapQuizDeleteEndpoint(IEndpointRouteBuilder app)
-    {
-        throw new NotImplementedException();
-    }
-
-    private static ICollection<Question> CreateQuestionList(List<QuestionSaveDTO> saveDTOList)
-    {
-        return saveDTOList
-            .Select
-            (
-                questionSaveDTO => new Question
-                {
-                    Text = questionSaveDTO.Text,
-                    Options = questionSaveDTO.Options
-                        .Select
-                        (
-                            optionSaveDTO => new AnswerOption
-                            {
-                                Text = optionSaveDTO.Text,
-                                IsCorrect = optionSaveDTO.IsCorrect
-                            }
-                        )
-                        .ToList()
-                }
-            )
-            .ToList();
-    }
-
-    private static QuizInfoDTO CreateQuizInfoDTO(Quiz quiz)
-    {
-        return new
-        (
-            quiz.Id,
-            quiz.Name,
-            quiz.TopicId,
-            quiz.QuestionsNumber,
-            quiz.TimeInMinutes,
-            quiz.IsActive,
-            CreateQuestionInfoDTOList(quiz.Questions)
-        );
-    }
-
-    private static List<QuestionInfoDTO> CreateQuestionInfoDTOList(ICollection<Question> questions)
-    {
-        return questions
-            .Select
-            (
-                question => new QuestionInfoDTO
-                (
-                    question.Id,
-                    question.Text,
-                    question.Options
-                        .Select
-                        (
-                            option => new AnswerOptionInfoDTO
-                            (
-                                option.Id,
-                                option.Text,
-                                option.IsCorrect
-                            )
-                        )
-                        .ToList()
-                )
-            )
-            .ToList();
     }
 }

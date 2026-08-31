@@ -18,6 +18,8 @@ namespace QuizWebApp.Api.Services;
 public class AuthService : IAuthService
 {
     private const string InvalidCredentialsMessage = "Invalid username or password.";
+    private const string DuplicateMessage = "Email already exists.";
+    private const string ApprovalMessage = "Your account is not approved yet.";
 
     private readonly QuizContext _dbContext;
     private readonly IPasswordHasher<User> _passwordHasher;
@@ -43,7 +45,7 @@ public class AuthService : IAuthService
 
         if (!user.IsApproved)
         {
-            return QuizApiResponse<LoggedInUserInfo>.Fail("Your account is not approved yet.");
+            return QuizApiResponse<LoggedInUserInfo>.Fail(ApprovalMessage);
         }
 
         PasswordVerificationResult passwordCheckResult = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, loginData.Password);
@@ -69,7 +71,7 @@ public class AuthService : IAuthService
     {
         if (await _dbContext.Users.AnyAsync(user => user.Email == userData.Email))
         {
-            return QuizApiResponse.Fail("Email already exists.");
+            return QuizApiResponse.Fail(DuplicateMessage);
         }
 
         User user = new ()
@@ -112,7 +114,7 @@ public class AuthService : IAuthService
             issuer: _jwtOptions.Issuer, 
             audience: _jwtOptions.Audience, 
             claims: claims,
-            notBefore: DateTime.UtcNow, 
+            notBefore: null, 
             expires: DateTime.UtcNow.AddMinutes(_jwtOptions.ExpireInMinutes),
             signingCredentials: signingCredentials
         );

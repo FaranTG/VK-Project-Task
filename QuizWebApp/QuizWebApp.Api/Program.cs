@@ -13,6 +13,7 @@ builder.Services.AddValidation();
 builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ITopicService, TopicService>();
+builder.Services.AddScoped<IQuizService, QuizService>();
 builder.AddQuizDatabase();
 
 builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection("Jwt"));

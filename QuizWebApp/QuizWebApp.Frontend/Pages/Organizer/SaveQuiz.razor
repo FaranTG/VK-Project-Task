@@ -7,6 +7,7 @@
 @using QuizWebApp.Shared.DTOs.AnswerOption
 @using QuizWebApp.Frontend.FormModels
 @using QuizWebApp.Frontend.Clients
+@using QuizWebApp.Shared.ApiResponses
 
 @inject TopicsClient TopicsClient
 @inject QuizzesClient QuizzesClient
@@ -15,7 +16,11 @@
 
 <SectionContent SectionName="pageTitle">@Title</SectionContent>
 
-@if (_quizModel is null || _topics is null)
+@if (_loadErrorMessage is not null)
+{
+    <p class="h5 text-center text-danger"><em>Error: @_loadErrorMessage</em></p>
+}
+else if (_quizModel is null || _topics is null)
 {
     <p><em>Loading...</em></p>
 }
@@ -98,7 +103,7 @@ else
             </div>
 
             <hr />
-
+        
             <div class="row mb-5 align-items-center">
                 <div class="col-sm-2 ms-auto d-flex justify-content-end">
                     <div class="form-check form-switch">
@@ -122,6 +127,7 @@ else
 
     private QuizModel? _quizModel;
     private TopicInfoDTO[]? _topics;
+    private string? _loadErrorMessage;
     private Guid? _lastProcessedId;
 
     private string Title => IsEditCase ? $"Edit Quiz" : "New Quiz";
@@ -129,12 +135,15 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        Shared.ApiResponses.QuizApiResponse<TopicInfoDTO[]> response = await TopicsClient.GetTopicsAsync();
+        QuizApiResponse<TopicInfoDTO[]> topicsResponse = await TopicsClient.GetTopicsAsync();
 
-        if (response.IsSuccess)
+        if (topicsResponse.IsFailure)
         {
-            _topics =  response.Data;
+            _loadErrorMessage = topicsResponse.ErrorMessage;
+            return;
         }
+
+        _topics =  topicsResponse.Data;
     }
 
     protected override async Task OnParametersSetAsync()
@@ -165,16 +174,39 @@ else
             return;
         } 
 
-        if (IsEditCase)
+        bool isSuccess = await TrySendRequstAsync(CreateQuizSaveDTO(_quizModel));
+        if (!isSuccess)
         {
-            await QuizzesClient.UpdateQuizAsync(Id!.Value, CreateQuizSaveDTO(_quizModel));
-        }
-        else
-        {
-            await QuizzesClient.AddQuizAsync(CreateQuizSaveDTO(_quizModel));
+            return;
         }
 
         NavigationManager.NavigateTo("organizer/manage-quizzes");
+    }
+
+    private async Task<bool> TrySendRequstAsync(QuizSaveDTO newQuiz)
+    {
+        if (IsEditCase)
+        {
+            QuizApiResponse response = await QuizzesClient.UpdateQuizAsync(Id!.Value, newQuiz);
+            
+            if (response.IsFailure)
+            {
+                await ShowAlertAsync(response.ErrorMessage!);
+                return false;
+            }
+        }
+        else
+        {
+            QuizApiResponse<QuizInfoDTO> response = await QuizzesClient.AddQuizAsync(newQuiz);
+            
+            if (response.IsFailure)
+            {
+                await ShowAlertAsync(response.ErrorMessage!);
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private async Task ShowAlertAsync(string message, string title = "Error") =>
@@ -204,7 +236,15 @@ else
     
     private async Task FillQuiz()
     {
-        QuizInfoDTO quizInfo = await QuizzesClient.GetQuizByIdAsync(Id!.Value);
+        QuizApiResponse<QuizInfoDTO> quizResponse = await QuizzesClient.GetQuizByIdAsync(Id!.Value);
+        
+        if (quizResponse.IsFailure)
+        {
+            _loadErrorMessage = quizResponse.ErrorMessage;
+            return;
+        }
+        
+        QuizInfoDTO quizInfo = quizResponse.Data!;
 
         _quizModel = new QuizModel()
         {

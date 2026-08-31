@@ -9,6 +9,8 @@ namespace QuizWebApp.Api.Services;
 
 public class TopicService : ITopicService
 {
+    private const string DuplicateMessage = "A topic with this name already exists.";
+
     private readonly QuizContext _dbContext;
 
     public TopicService(QuizContext dbContext)
@@ -50,8 +52,8 @@ public class TopicService : ITopicService
                 .FirstOrDefaultAsync(topic => topic.Id == id);
 
             return topic is null
-            ? QuizApiResponse<TopicInfoDTO>.Fail("Topic not found.")
-            : QuizApiResponse<TopicInfoDTO>.Success(topic);
+                ? QuizApiResponse<TopicInfoDTO>.Fail(ITopicService.NotFoundMessage)
+                : QuizApiResponse<TopicInfoDTO>.Success(topic);
         }
         catch (Exception exception)
         {
@@ -65,7 +67,7 @@ public class TopicService : ITopicService
         {
             if (await _dbContext.Topics.AnyAsync(topic => topic.Name == newTopicData.Name))
             {
-                return QuizApiResponse<TopicInfoDTO>.Fail("A topic with this name already exists.");
+                return QuizApiResponse<TopicInfoDTO>.Fail(DuplicateMessage);
             }
 
             Topic topic = new ()  { Name = newTopicData.Name };
@@ -90,12 +92,12 @@ public class TopicService : ITopicService
 
             if (topic is null)
             {
-                return QuizApiResponse.Fail("Topic not found.");
+                return QuizApiResponse.Fail(ITopicService.NotFoundMessage);
             }
 
             if (await _dbContext.Topics.AnyAsync(topic => topic.Name == newTopicData.Name && topic.Id != id))
             {
-                return QuizApiResponse.Fail("A topic with this name already exists.");
+                return QuizApiResponse.Fail(DuplicateMessage);
             }
 
             topic.Name = newTopicData.Name;

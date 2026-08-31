@@ -5,13 +5,18 @@
 @using QuizWebApp.Shared.DTOs.Quiz
 @using QuizWebApp.Shared.DTOs.Topic
 @using QuizWebApp.Shared.Enums
+@using QuizWebApp.Shared.ApiResponses
 
 @inject QuizzesClient QuizzesClient
 @inject TopicsClient TopicsClient
 
 <SectionContent SectionName="pageTitle">Manage Quizzes</SectionContent>
 
-@if (_topics is null || _quizzes is null || _filteredQuizzes is null)
+@if (_loadErrorMessage is not null)
+{
+    <p class="h5 text-center text-danger"><em>Error: @_loadErrorMessage</em></p>
+}
+else if (_topics is null || _quizzes is null || _filteredQuizzes is null)
 {
     <p><em>Loading...</em></p>
 }
@@ -59,13 +64,13 @@ else
                             <td>@quizInfo.Topic</td>
                             <td>@quizInfo.QuestionsNumber</td>
                             <td>@quizInfo.TimeInMinutes</td>
-                            <th>@quizInfo.IsActive</th>
+                            <td>@(quizInfo.IsActive ? "Yes" : "No")</td>
                             <td>
                                 <div class="d-flex justify-content-around">
                                     <button type="button" class="btn btn-sm btn-secondary" @onclick="() => ViewQuestions(quizInfo)">
                                         View questions
                                     </button>
-                                    <a role="button" class="btn btn-sm btn-primary" href="organizer/edit-quiz/@quizInfo.Id">
+                                    <a class="btn btn-sm btn-primary" href="organizer/edit-quiz/@quizInfo.Id">
                                         Edit
                                     </a>
                                 </div>
@@ -97,18 +102,30 @@ else
     private QuizBriefInfoDTO[]? _filteredQuizzes;
     private TopicInfoDTO[]? _topics;
     private string[]? _viewingQuestions;
+    private string? _loadErrorMessage;
     private int _selectedTopic;
     private bool _showQuestionsModal;
 
     protected override async Task OnInitializedAsync()
     {
-        Shared.ApiResponses.QuizApiResponse<TopicInfoDTO[]> response = await TopicsClient.GetTopicsAsync();
-
-        if (response.IsSuccess)
+        QuizApiResponse<TopicInfoDTO[]> topicsResponse = await TopicsClient.GetTopicsAsync();
+        
+        if (topicsResponse.IsFailure)
         {
-            _topics =  response.Data;
+            _loadErrorMessage = topicsResponse.ErrorMessage;
+            return;
         }
-        _quizzes = await QuizzesClient.GetQuizzesAsync();
+
+        QuizApiResponse<QuizBriefInfoDTO[]> quizzesResponse = await QuizzesClient.GetQuizzesAsync();
+        
+        if (quizzesResponse.IsFailure)
+        {
+            _loadErrorMessage = quizzesResponse.ErrorMessage;
+            return;
+        }
+
+        _topics =  topicsResponse.Data;
+        _quizzes =  quizzesResponse.Data;
         _filteredQuizzes = _quizzes;
     }
 

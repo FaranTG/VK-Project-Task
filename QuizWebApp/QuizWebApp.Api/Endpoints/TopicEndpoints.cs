@@ -69,7 +69,7 @@ public static class TopicEndpoints
 
             if (response.IsFailure)
             {
-                return response.ErrorMessage == "Topic not found."
+                return response.ErrorMessage == ITopicService.NotFoundMessage
                     ? Results.NotFound(response)
                     : Results.BadRequest(response);
             }
