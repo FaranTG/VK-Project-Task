@@ -1,4 +1,6 @@
 ﻿using QuizWebApp.Api.Services.Interfaces;
+using QuizWebApp.Shared;
+using QuizWebApp.Shared.ApiResponses;
 using QuizWebApp.Shared.DTOs.User;
 
 namespace QuizWebApp.Api.Endpoints;
@@ -11,13 +13,23 @@ public static class AuthEndpoints
     {
         RouteGroupBuilder authRouteGroup = app.MapGroup(ApiRoute);
 
-        authRouteGroup.MapPost("/login", async (UserLoginDTO data, IAuthService authService) => 
-            Results.Ok(await authService.LoginAsync(data))
-        );
+        authRouteGroup.MapPost("/login", async (UserLoginDTO data, IAuthService authService) =>
+        {
+            QuizApiResponse<LoggedInUserInfo> response = await authService.LoginAsync(data);
+
+            return response.IsSuccess 
+                ? Results.Ok(response)
+                : Results.BadRequest(response);
+        });
 
         authRouteGroup.MapPost("/register", async (UserSaveDTO data, IAuthService authService) =>
-            Results.Ok(await authService.RegisterAsync(data))
-        );
+        {
+            QuizApiResponse response = await authService.RegisterAsync(data);
+
+            return response.IsSuccess 
+                ? Results.Ok(response)
+                : Results.BadRequest(response);
+        });
 
         return app;
     }

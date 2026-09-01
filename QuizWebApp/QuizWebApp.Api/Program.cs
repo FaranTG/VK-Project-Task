@@ -14,6 +14,7 @@ builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ITopicService, TopicService>();
 builder.Services.AddScoped<IQuizService, QuizService>();
+builder.Services.AddScoped<IUserService, UserService>();
 builder.AddQuizDatabase();
 
 builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection("Jwt"));
@@ -43,6 +44,7 @@ app.UseAuthorization();
 app
     .MapAuthEndpoints()
     .MapTopicEndpoints()
-    .MapQuizEndpoints();
+    .MapQuizEndpoints()
+    .MapUserEndpoints();
 
 app.Run();

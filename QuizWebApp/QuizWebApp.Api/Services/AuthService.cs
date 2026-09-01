@@ -34,59 +34,67 @@ public class AuthService : IAuthService
 
     public async Task<QuizApiResponse<LoggedInUserInfo>> LoginAsync(UserLoginDTO loginData)
     {
-        User? user = await _dbContext.Users
-            .AsNoTracking()
-            .FirstOrDefaultAsync(user => user.Email == loginData.Username);
-
-        if (user is null)
+        try
         {
-            return QuizApiResponse<LoggedInUserInfo>.Fail(InvalidCredentialsMessage);
-        }
+            User? user = await _dbContext.Users
+                .AsNoTracking()
+                .FirstOrDefaultAsync(user => user.Email == loginData.Username);
 
-        if (!user.IsApproved)
+            if (user is null)
+            {
+                return QuizApiResponse<LoggedInUserInfo>.Fail(InvalidCredentialsMessage);
+            }
+
+            if (!user.IsApproved)
+            {
+                return QuizApiResponse<LoggedInUserInfo>.Fail(ApprovalMessage);
+            }
+
+            PasswordVerificationResult passwordCheckResult = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, loginData.Password);
+            
+            if (passwordCheckResult == PasswordVerificationResult.Failed)
+            {
+                return QuizApiResponse<LoggedInUserInfo>.Fail(InvalidCredentialsMessage);
+            }
+
+            string jwtToken = GenerateJwtToken(user);
+            LoggedInUserInfo loggedInUser = new 
+            (
+                user.Id,
+                user.Name,
+                user.Role,
+                jwtToken
+            );
+
+            return QuizApiResponse<LoggedInUserInfo>.Success(loggedInUser);
+        }
+        catch (Exception exception)
         {
-            return QuizApiResponse<LoggedInUserInfo>.Fail(ApprovalMessage);
+            return QuizApiResponse<LoggedInUserInfo>.Fail(exception.Message);
         }
-
-        PasswordVerificationResult passwordCheckResult = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, loginData.Password);
-        
-        if (passwordCheckResult == PasswordVerificationResult.Failed)
-        {
-            return QuizApiResponse<LoggedInUserInfo>.Fail(InvalidCredentialsMessage);
-        }
-
-        string jwtToken = GenerateJwtToken(user);
-        LoggedInUserInfo loggedInUser = new 
-        (
-            user.Id,
-            user.Name,
-            user.Role,
-            jwtToken
-        );
-
-        return QuizApiResponse<LoggedInUserInfo>.Success(loggedInUser);
     }
 
     public async Task<QuizApiResponse> RegisterAsync(UserSaveDTO userData)
     {
-        if (await _dbContext.Users.AnyAsync(user => user.Email == userData.Email))
-        {
-            return QuizApiResponse.Fail(DuplicateMessage);
-        }
-
-        User user = new ()
-        {
-            Name = userData.Name,
-            Phone = userData.Phone,
-            Email = userData.Email,
-            PasswordHash = string.Empty,
-            Role = nameof(UserRole.Participant)
-        };
-        user.PasswordHash = _passwordHasher.HashPassword(user, userData.Password);
-
-        _dbContext.Users.Add(user);
         try
         {
+            if (await _dbContext.Users.AnyAsync(user => user.Email == userData.Email))
+            {
+                return QuizApiResponse.Fail(DuplicateMessage);
+            }
+
+            User user = new ()
+            {
+                Name = userData.Name,
+                Phone = userData.Phone,
+                Email = userData.Email,
+                PasswordHash = string.Empty,
+                Role = nameof(UserRole.Participant)
+            };
+            user.PasswordHash = _passwordHasher.HashPassword(user, userData.Password);
+
+            _dbContext.Users.Add(user);
+       
             await _dbContext.SaveChangesAsync();
 
             return QuizApiResponse.Success();
