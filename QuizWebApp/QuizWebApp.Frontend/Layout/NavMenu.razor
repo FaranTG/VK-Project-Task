@@ -26,6 +26,11 @@
             <Authorized>
                 <AuthorizeView Roles="@nameof(UserRole.Organizer)" Context="organizerContext">
                     <div class="nav-item px-3">
+                        <NavLink class="nav-link" href="organizer/manage-users">
+                            Manage Users
+                        </NavLink>
+                    </div>
+                    <div class="nav-item px-3">
                         <NavLink class="nav-link" href="organizer/manage-topics">
                             Manage Topics
                         </NavLink>

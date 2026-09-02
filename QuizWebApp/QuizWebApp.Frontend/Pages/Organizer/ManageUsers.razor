@@ -1,0 +1,100 @@
+﻿@page "/organizer/manage-users"
+
+@using Microsoft.AspNetCore.Components.QuickGrid
+@using QuizWebApp.Frontend.Clients
+@using QuizWebApp.Shared.DTOs.User
+@using QuizWebApp.Shared.DTOs.Common
+@using QuizWebApp.Shared.ApiResponses
+
+@inject UsersClient UsersClient
+
+<SectionContent SectionName="pageTitle">Manage Users</SectionContent>
+
+@if (_loadErrorMessage is not null)
+{
+    <p class="h5 text-center text-danger"><em>Error: @_loadErrorMessage</em></p>
+}
+
+<div class="row">
+    <div class="col-sm-4 ms-auto mb-3">
+        <label class="form-label" for="filter">Filter by approved status:</label>
+        <select class="form-select" @bind="_filter" id="filter" @bind:after="OnFilterChangedAsync">
+            @foreach (UserApprovedFilter filter in Enum.GetValues<UserApprovedFilter>())
+            {
+                <option value="@filter">@filter</option>
+            }
+        </select>
+    </div>
+</div>
+<div class="row">
+    <QuickGrid ItemsProvider="_usersProvider" Pagination="_paginationState" Class="table table-striped table-bordered table-hover mb-3" @ref="_grid">
+        <PropertyColumn Property="user => user.Id" />
+        <PropertyColumn Property="user => user.Name" />
+        <PropertyColumn Property="user => user.Phone" />
+        <PropertyColumn Property="user => user.Email" />
+        <PropertyColumn Property="user => user.Role" />
+        <TemplateColumn Title="Is Approved?">
+            <div class="form-check form-switch">
+                <label class="form-check-label" for="u_@context.Id">
+                    @(context.IsApproved ? "Yes" : "No")
+                </label>
+                <input id="u_@context.Id" class="form-check-input" type="checkbox" role="switch"
+                    checked="@context.IsApproved" @onchange="() => OnUserApprovedToggleAsync(context.Id)"/>
+            </div>
+        </TemplateColumn>
+    </QuickGrid>
+    <Paginator State="_paginationState" />
+</div>
+
+
+@code {
+    private const int DefaultPageSize = 10;
+
+    private QuickGrid<UserInfoDTO>? _grid;
+    private GridItemsProvider<UserInfoDTO>? _usersProvider;
+    private string? _loadErrorMessage;
+    private PaginationState _paginationState = new PaginationState { ItemsPerPage = DefaultPageSize };
+    private UserApprovedFilter _filter = UserApprovedFilter.All;
+
+    protected override void OnInitialized()
+    {
+        _usersProvider = async request =>
+        {
+            int pageSize = request.Count ?? DefaultPageSize;
+            int pageNumber = request.StartIndex / pageSize + 1;
+            PaginationDTO paginationData = new PaginationDTO(pageNumber, pageSize);
+            QuizApiResponse<PagedInfoArray<UserInfoDTO>> response = await UsersClient.GetUsersAsync(_filter, paginationData);
+
+            if (response.IsSuccess)
+            {
+                return GridItemsProviderResult.From(response.Data!.Records, response.Data.TotalCount);
+            }
+
+            _loadErrorMessage = response.ErrorMessage;
+            return GridItemsProviderResult.From(Array.Empty<UserInfoDTO>(), 0);
+        };
+    }
+
+    private async Task OnUserApprovedToggleAsync(int id)
+    {
+        QuizApiResponse response = await UsersClient.ToggleUserApprovedStatusAsync(id);
+
+        if (response.IsSuccess)
+        {
+            ArgumentNullException.ThrowIfNull(_grid);
+            await _grid.RefreshDataAsync();
+            return;
+        }
+
+        _loadErrorMessage = response.ErrorMessage;
+        StateHasChanged();
+    }
+
+    private async Task OnFilterChangedAsync()
+    {
+        ArgumentNullException.ThrowIfNull(_grid);
+
+        await _paginationState.SetCurrentPageIndexAsync(0);
+        await _grid.RefreshDataAsync();
+    }
+}
