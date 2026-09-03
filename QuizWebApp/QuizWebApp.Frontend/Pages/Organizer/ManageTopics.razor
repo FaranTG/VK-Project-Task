@@ -6,6 +6,7 @@
 @using QuizWebApp.Shared.ApiResponses
 
 @inject TopicsClient TopicsClient
+@inject IAppState AppState
 
 <SectionContent SectionName="pageTitle">Manage Topics</SectionContent>
 
@@ -44,24 +45,12 @@ else
                         }
                     </div>
                     <div class="card-footer d-flex justify-content-between align-items-center">
-                        @if (_isBusy)
-                        {
-                            <button type="button" disabled class="btn btn-sm btn-secondary">
-                                Cancel
-                            </button>
-                            <button type="button" disabled class="btn btn-sm btn-secondary">
-                                Saving Topic...
-                            </button>
-                        }
-                        else
-                        {
-                            <button type="button" class="btn btn-sm btn-secondary" @onclick="ClearModel">
-                                Cancel
-                            </button>
-                            <button type="submit" class="btn btn-sm btn-primary">
-                                Save
-                            </button>
-                        }
+                        <button type="button" class="btn btn-sm btn-secondary" @onclick="ClearModel">
+                            Cancel
+                        </button>
+                        <button type="submit" class="btn btn-sm btn-primary">
+                            Save
+                        </button>
                     </div>
                 </div>
             </EditForm>
@@ -117,7 +106,6 @@ else
     private string? _loadErrorMessage;
     private string? _formErrorMessage;
     private int? _id;
-    private bool _isBusy;
 
     private string TopicCardTitle => _id is null ? "New Topic" : $"Edit Topic with Id {_id}";
 
@@ -142,20 +130,19 @@ else
         ArgumentNullException.ThrowIfNull(TopicModel);
 
         _formErrorMessage = null;
-        _isBusy = true;
+
+        AppState.ShowLoader("Saving topic...");
 
         TopicSaveDTO newTopic = new TopicSaveDTO(TopicModel.Name);
         
         bool isSuccess = await TrySendRequstAsync(newTopic);
-        if (!isSuccess)
+        if (isSuccess)
         {
-            return;
+            ClearModel();
+            await LoadTopicsAsync();
         }
-
-        ClearModel();
-        await LoadTopicsAsync();
         
-        _isBusy = false;
+        AppState.HideLoader();
     }
 
     private async Task<bool> TrySendRequstAsync(TopicSaveDTO newTopic)
@@ -167,7 +154,6 @@ else
             if (response.IsFailure)
             {
                 _formErrorMessage = response.ErrorMessage;
-                _isBusy = false;
                 return false;
             }
         }
@@ -178,25 +164,29 @@ else
             if (response.IsFailure)
             {
                 _formErrorMessage = response.ErrorMessage;
-                _isBusy = false;
                 return false;
             }
         }
-
+        
         return true;
     }
 
     private async Task LoadTopicsAsync()
     {
+        AppState.ShowLoader("Fetching topics...");
+        
         QuizApiResponse<TopicInfoDTO[]>? response = await TopicsClient.GetTopicsAsync();
 
         if (response.IsSuccess)
         {
             _topics = response.Data;
-            return;
+        }
+        else
+        {
+            _loadErrorMessage = response.ErrorMessage;
         }
 
-        _loadErrorMessage = response.ErrorMessage;
+        AppState.HideLoader();
     }
 
     private void ClearModel()

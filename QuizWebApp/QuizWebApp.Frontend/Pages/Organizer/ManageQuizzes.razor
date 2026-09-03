@@ -9,6 +9,7 @@
 
 @inject QuizzesClient QuizzesClient
 @inject TopicsClient TopicsClient
+@inject IAppState AppState
 
 <SectionContent SectionName="pageTitle">Manage Quizzes</SectionContent>
 
@@ -108,25 +109,33 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        QuizApiResponse<TopicInfoDTO[]> topicsResponse = await TopicsClient.GetTopicsAsync();
-        
-        if (topicsResponse.IsFailure)
+        AppState.ShowLoader("Fetching quizzes and topics...");
+        try
         {
-            _loadErrorMessage = topicsResponse.ErrorMessage;
-            return;
-        }
+            QuizApiResponse<TopicInfoDTO[]> topicsResponse = await TopicsClient.GetTopicsAsync();
+            
+            if (topicsResponse.IsFailure)
+            {
+                _loadErrorMessage = topicsResponse.ErrorMessage;
+                return;
+            }
 
-        QuizApiResponse<QuizBriefInfoDTO[]> quizzesResponse = await QuizzesClient.GetQuizzesAsync();
-        
-        if (quizzesResponse.IsFailure)
+            QuizApiResponse<QuizBriefInfoDTO[]> quizzesResponse = await QuizzesClient.GetQuizzesAsync();
+            
+            if (quizzesResponse.IsFailure)
+            {
+                _loadErrorMessage = quizzesResponse.ErrorMessage;
+                return;
+            }
+
+            _topics =  topicsResponse.Data;
+            _quizzes =  quizzesResponse.Data;
+            _filteredQuizzes = _quizzes;
+        }
+        finally
         {
-            _loadErrorMessage = quizzesResponse.ErrorMessage;
-            return;
+            AppState.HideLoader();
         }
-
-        _topics =  topicsResponse.Data;
-        _quizzes =  quizzesResponse.Data;
-        _filteredQuizzes = _quizzes;
     }
 
     private void OnSelectedTopicChanged()

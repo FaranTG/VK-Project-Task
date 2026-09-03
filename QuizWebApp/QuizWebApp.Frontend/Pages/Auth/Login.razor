@@ -11,6 +11,7 @@
 @inject AuthClient AuthClient
 @inject QuizAuthStateProvider QuizAuthStateProvider
 @inject NavigationManager NavigationManager
+@inject IAppState AppState
 
 @if (LoginModel is null)
 {
@@ -43,15 +44,8 @@ else
                 }
 
                 <div class="mb-3 d-flex justify-content-between">
-                    @if (_isLogging) 
-                    {
-                        <button type="button" disabled class="btn btn-secondary">Logging-in...</button>
-                    }
-                    else
-                    {
-                        <button type="submit" class="btn btn-primary">Login</button>
-                        <a role="button" class="btn btn-outline-primary" href="auth/register">Register</a>
-                    }
+                    <button type="submit" class="btn btn-primary">Login</button>
+                    <a class="btn btn-outline-primary" href="auth/register">Register</a>
                 </div>
             </EditForm>
         </div>
@@ -62,7 +56,6 @@ else
     private LoginModel? LoginModel { get; set; }
 
     private string? _errorMessage;
-    private bool _isLogging;
 
     protected override void OnInitialized()
     {
@@ -83,7 +76,7 @@ else
         ArgumentNullException.ThrowIfNull(LoginModel);
 
         _errorMessage = null;
-        _isLogging = true;
+        AppState.ShowLoader("Logging-in...");
 
         try 
         {
@@ -106,7 +99,7 @@ else
         }
         finally
         {
-            _isLogging = false;
+            AppState.HideLoader();
         }
     }
 

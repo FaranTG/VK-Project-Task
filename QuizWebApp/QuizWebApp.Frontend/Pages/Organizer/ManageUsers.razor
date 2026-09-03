@@ -7,6 +7,7 @@
 @using QuizWebApp.Shared.ApiResponses
 
 @inject UsersClient UsersClient
+@inject IAppState AppState
 
 <SectionContent SectionName="pageTitle">Manage Users</SectionContent>
 
@@ -60,34 +61,52 @@
     {
         _usersProvider = async request =>
         {
-            int pageSize = request.Count ?? DefaultPageSize;
-            int pageNumber = request.StartIndex / pageSize + 1;
-            PaginationDTO paginationData = new PaginationDTO(pageNumber, pageSize);
-            QuizApiResponse<PagedInfoArray<UserInfoDTO>> response = await UsersClient.GetUsersAsync(_filter, paginationData);
+            AppState.ShowLoader("Fetching users...");
 
-            if (response.IsSuccess)
+            try
             {
-                return GridItemsProviderResult.From(response.Data!.Records, response.Data.TotalCount);
-            }
+                int pageSize = request.Count ?? DefaultPageSize;
+                int pageNumber = request.StartIndex / pageSize + 1;
+                PaginationDTO paginationData = new PaginationDTO(pageNumber, pageSize);
+                QuizApiResponse<PagedInfoArray<UserInfoDTO>> response = await UsersClient.GetUsersAsync(_filter, paginationData);
 
-            _loadErrorMessage = response.ErrorMessage;
-            return GridItemsProviderResult.From(Array.Empty<UserInfoDTO>(), 0);
+                if (response.IsSuccess)
+                {
+                    return GridItemsProviderResult.From(response.Data!.Records, response.Data.TotalCount);
+                }
+
+                _loadErrorMessage = response.ErrorMessage;
+                return GridItemsProviderResult.From(Array.Empty<UserInfoDTO>(), 0);
+            }
+            finally
+            {
+                AppState.HideLoader();
+            }
         };
     }
 
     private async Task OnUserApprovedToggleAsync(int id)
     {
-        QuizApiResponse response = await UsersClient.ToggleUserApprovedStatusAsync(id);
+        AppState.ShowLoader("Updating user approved status...");
 
-        if (response.IsSuccess)
+        try
         {
-            ArgumentNullException.ThrowIfNull(_grid);
-            await _grid.RefreshDataAsync();
-            return;
-        }
+            QuizApiResponse response = await UsersClient.ToggleUserApprovedStatusAsync(id);
 
-        _loadErrorMessage = response.ErrorMessage;
-        StateHasChanged();
+            if (response.IsSuccess)
+            {
+                ArgumentNullException.ThrowIfNull(_grid);
+                await _grid.RefreshDataAsync();
+                return;
+            }
+
+            _loadErrorMessage = response.ErrorMessage;
+            StateHasChanged();
+        }
+        finally
+        {
+            AppState.HideLoader();
+        }
     }
 
     private async Task OnFilterChangedAsync()

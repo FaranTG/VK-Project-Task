@@ -13,6 +13,7 @@
 @inject QuizzesClient QuizzesClient
 @inject IJSRuntime JSRuntime
 @inject NavigationManager NavigationManager
+@inject IAppState AppState
 
 <SectionContent SectionName="pageTitle">@Title</SectionContent>
 
@@ -135,15 +136,24 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        QuizApiResponse<TopicInfoDTO[]> topicsResponse = await TopicsClient.GetTopicsAsync();
+        AppState.ShowLoader("Fetching topics...");
 
-        if (topicsResponse.IsFailure)
+        try
         {
-            _loadErrorMessage = topicsResponse.ErrorMessage;
-            return;
-        }
+            QuizApiResponse<TopicInfoDTO[]> topicsResponse = await TopicsClient.GetTopicsAsync();
 
-        _topics =  topicsResponse.Data;
+            if (topicsResponse.IsFailure)
+            {
+                _loadErrorMessage = topicsResponse.ErrorMessage;
+                return;
+            }
+
+            _topics =  topicsResponse.Data;
+        }
+        finally
+        {
+            AppState.HideLoader();
+        }
     }
 
     protected override async Task OnParametersSetAsync()
@@ -174,7 +184,12 @@ else
             return;
         } 
 
+        AppState.ShowLoader("Saving quiz...");
+
         bool isSuccess = await TrySendRequstAsync(CreateQuizSaveDTO(_quizModel));
+        
+        AppState.HideLoader();
+
         if (!isSuccess)
         {
             return;
@@ -236,42 +251,51 @@ else
     
     private async Task FillQuiz()
     {
-        QuizApiResponse<QuizInfoDTO> quizResponse = await QuizzesClient.GetQuizByIdAsync(Id!.Value);
-        
-        if (quizResponse.IsFailure)
-        {
-            _loadErrorMessage = quizResponse.ErrorMessage;
-            return;
-        }
-        
-        QuizInfoDTO quizInfo = quizResponse.Data!;
+        AppState.ShowLoader("Fetching quiz...");
 
-        _quizModel = new QuizModel()
+        try
         {
-            Name = quizInfo.Name,
-            TopicId = quizInfo.TopicId,
-            TimeInMinutes = quizInfo.TimeInMinutes,
-            IsActive = quizInfo.IsActive,
-            Questions = quizInfo.Questions
-                .Select
-                (
-                    questionInfo => new QuestionModel()
-                    {
-                        Text = questionInfo.Text,
-                        Options = questionInfo.Options
-                            .Select
-                            (
-                                optionInfo => new AnswerOptionModel()
-                                {
-                                    Text = optionInfo.Text,
-                                    IsCorrect = optionInfo.IsCorrect
-                                }
-                            )
-                            .ToList()
-                    }
-                )
-                .ToList()
-        };
+            QuizApiResponse<QuizInfoDTO> quizResponse = await QuizzesClient.GetQuizByIdAsync(Id!.Value);
+        
+            if (quizResponse.IsFailure)
+            {
+                _loadErrorMessage = quizResponse.ErrorMessage;
+                return;
+            }
+            
+            QuizInfoDTO quizInfo = quizResponse.Data!;
+
+            _quizModel = new QuizModel()
+            {
+                Name = quizInfo.Name,
+                TopicId = quizInfo.TopicId,
+                TimeInMinutes = quizInfo.TimeInMinutes,
+                IsActive = quizInfo.IsActive,
+                Questions = quizInfo.Questions
+                    .Select
+                    (
+                        questionInfo => new QuestionModel()
+                        {
+                            Text = questionInfo.Text,
+                            Options = questionInfo.Options
+                                .Select
+                                (
+                                    optionInfo => new AnswerOptionModel()
+                                    {
+                                        Text = optionInfo.Text,
+                                        IsCorrect = optionInfo.IsCorrect
+                                    }
+                                )
+                                .ToList()
+                        }
+                    )
+                    .ToList()
+            };
+        }
+        finally
+        {
+            AppState.HideLoader();
+        }
     }
 
     private QuestionModel CreateEmptyQuestion()
