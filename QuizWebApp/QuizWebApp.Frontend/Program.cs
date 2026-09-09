@@ -11,7 +11,9 @@ builder.RootComponents.Add<HeadOutlet>("head::after");
 
 builder.AddQuizAuth();
 
-builder.Services.AddSingleton<IAppState, AppState>();
+builder.Services
+    .AddSingleton<IAppState, AppState>()
+    .AddSingleton<QuizState>();
 
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
 builder.AddClients();

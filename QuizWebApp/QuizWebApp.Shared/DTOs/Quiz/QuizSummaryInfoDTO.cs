@@ -1,6 +1,6 @@
 ﻿namespace QuizWebApp.Shared.DTOs.Quiz;
 
-public record class QuizBriefInfoDTO
+public record class QuizSummaryInfoDTO
 (
     Guid Id,
 
@@ -12,5 +12,9 @@ public record class QuizBriefInfoDTO
 
     int QuestionsNumber,
 
-    int TimeInMinutes
+    int TimeInMinutes,
+
+    bool IsActive,
+    
+    List<string> Questions
 );

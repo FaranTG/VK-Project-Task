@@ -10,11 +10,14 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddValidation();
 
-builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
-builder.Services.AddScoped<IAuthService, AuthService>();
-builder.Services.AddScoped<ITopicService, TopicService>();
-builder.Services.AddScoped<IQuizService, QuizService>();
-builder.Services.AddScoped<IUserService, UserService>();
+builder.Services
+    .AddScoped<IPasswordHasher<User>, PasswordHasher<User>>()
+    .AddScoped<IAuthService, AuthService>()
+    .AddScoped<ITopicService, TopicService>()
+    .AddScoped<IQuizService, QuizService>()
+    .AddScoped<IParticipantQuizService, ParticipantQuizService>()
+    .AddScoped<IUserService, UserService>();
+
 builder.AddQuizDatabase();
 
 builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection("Jwt"));
@@ -45,6 +48,7 @@ app
     .MapAuthEndpoints()
     .MapTopicEndpoints()
     .MapQuizEndpoints()
+    .MapParticipantQuizEndpoints()
     .MapUserEndpoints();
 
 app.Run();

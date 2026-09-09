@@ -9,14 +9,14 @@ public class QuizzesClient(HttpClient httpClient)
     private const string ApiRoute = "/api/quizzes";
     private const string NoResponseMessage = "No response from server.";
 
-    public async Task<QuizApiResponse<QuizBriefInfoDTO[]>> GetQuizzesAsync()
+    public async Task<QuizApiResponse<QuizSummaryInfoDTO[]>> GetQuizzesAsync()
     {
         HttpResponseMessage response = await httpClient.GetAsync(ApiRoute);
 
-        QuizApiResponse<QuizBriefInfoDTO[]>? responseData = await response.Content.ReadFromJsonAsync<QuizApiResponse<QuizBriefInfoDTO[]>>();
+        QuizApiResponse<QuizSummaryInfoDTO[]>? responseData = await response.Content.ReadFromJsonAsync<QuizApiResponse<QuizSummaryInfoDTO[]>>();
         
         return responseData
-            ?? QuizApiResponse<QuizBriefInfoDTO[]>.Fail(NoResponseMessage);
+            ?? QuizApiResponse<QuizSummaryInfoDTO[]>.Fail(NoResponseMessage);
     }
 
     public async Task<QuizApiResponse<QuizInfoDTO>> GetQuizByIdAsync(Guid id)

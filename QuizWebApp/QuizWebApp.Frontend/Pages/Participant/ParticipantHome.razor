@@ -1,0 +1,168 @@
+﻿@page "/participant/home"
+
+@using QuizWebApp.Frontend.Clients
+@using QuizWebApp.Frontend.Components
+@using QuizWebApp.Shared.ApiResponses
+@using QuizWebApp.Shared.DTOs.Topic
+@using QuizWebApp.Shared.DTOs.Quiz
+
+@inject ParticipantQuizzesClient ParticipantQuizzesClient
+@inject TopicsClient TopicsClient
+@inject IAppState AppState
+@inject QuizState QuizState
+@inject NavigationManager NavigationManager
+
+<PageTitle>Home</PageTitle>
+<SectionContent SectionName="pageTitle">Home</SectionContent>
+
+@if (_loadErrorMessage is not null)
+{
+    <p class="h5 text-center text-danger"><em>Error: @_loadErrorMessage</em></p>
+}
+else if (_topics is null || _quizzes is null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <div class="row mb-3">
+        <div class="col-sm-3 ms-auto">
+            <label for="selectTopic" class="form-label">Topic Filter: </label>
+            <select id="selectTopic" class="form-control" @bind="_selectedTopicId" @bind:after="OnSelectedTopicChanged">
+                <option value="0">Select Topic...</option>
+                @foreach (TopicInfoDTO topic in _topics)
+                {
+                    <option value="@topic.Id">@topic.Name</option>
+                }
+            </select>
+        </div>
+    </div>
+    <div class="row">
+        @if (_quizzes.Length == 0)
+        {
+            <p class="h5 text-center text-danger"><em>@NoFoundMessage</em></p>
+        }
+        else
+        {
+            foreach (QuizBriefInfoDTO quiz in _quizzes)
+            {
+                <div class="col-sm-4 mb-3">
+                    <div class="box p-3 rounded" style="background-color: rgba(21, 25, 29, 0.08);">
+                        <h5 class="fw-bold">@quiz.Name</h5>
+                        <hr />
+                        <table class="table">
+                            <tr>
+                                <td>
+                                    <label class="fw-bold">Topic</label>
+                                </td>
+                                <td>
+                                    @quiz.Topic
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <label class="fw-bold">Number of questions</label>
+                                </td>
+                                <td>
+                                    @quiz.QuestionsNumber
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <label class="fw-bold">Time in minutes</label>
+                                </td>
+                                <td>
+                                    @quiz.TimeInMinutes
+                                </td>
+                            </tr>
+                        </table>
+                        <hr />
+                        <button type="button" class="btn btn-sm btn-primary" @onclick="() => _selectedQuiz = quiz">Start Quiz</button>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+
+    @if (_selectedQuiz is not null)
+    {
+        string title = $"Start {_selectedQuiz.Name}?";
+        <QuizModal Title="@title" ActionButtonText="Start"
+            OnActionButtonClicked="StartSelectedQuiz"
+            OnCancelClicked="() => _selectedQuiz = null">
+            <p class="m-0 p-3">
+                Do you want to start this quiz?
+                <br />
+                You will not be able to pause it once started.
+            </p>
+        </QuizModal>
+    }
+}
+
+@code {
+    private QuizBriefInfoDTO[]? _quizzes;
+    private TopicInfoDTO[]? _topics;
+    private string? _loadErrorMessage;
+    private QuizBriefInfoDTO? _selectedQuiz;
+    private int _selectedTopicId;
+
+    private string NoFoundMessage => _selectedTopicId == 0 
+        ? "No active quizzes found." 
+        : "No active quizzes found for the selected topic.";
+
+    protected override async Task OnInitializedAsync()
+    {
+        AppState.ShowLoader("Fetching quizzes and topics...");
+        try
+        {
+            QuizApiResponse<TopicInfoDTO[]> topicsResponse = await TopicsClient.GetTopicsAsync();
+
+            if (topicsResponse.IsFailure)
+            {
+                _loadErrorMessage = topicsResponse.ErrorMessage;
+                return;
+            }
+
+            QuizApiResponse<QuizBriefInfoDTO[]> quizzesResponse = await ParticipantQuizzesClient.GetActiveQuizzesAsync(_selectedTopicId);
+
+            if (quizzesResponse.IsFailure)
+            {
+                _loadErrorMessage = quizzesResponse.ErrorMessage;
+                return;
+            }
+
+            _topics =  topicsResponse.Data;
+            _quizzes =  quizzesResponse.Data;
+        }
+        finally
+        {
+            AppState.HideLoader();
+        }
+    }
+
+    private async Task OnSelectedTopicChanged()
+    {
+        AppState.ShowLoader("Fetching quizzes...");
+
+        QuizApiResponse<QuizBriefInfoDTO[]> quizzesResponse = await ParticipantQuizzesClient.GetActiveQuizzesAsync(_selectedTopicId);
+
+        if (quizzesResponse.IsFailure)
+        {
+            _loadErrorMessage = quizzesResponse.ErrorMessage;
+        }
+        else
+        {
+            _quizzes =  quizzesResponse.Data;
+        }
+
+        AppState.HideLoader();
+    }
+
+    private void StartSelectedQuiz()
+    {
+        ArgumentNullException.ThrowIfNull(_selectedQuiz);
+
+        QuizState.SetSelectedQuiz(_selectedQuiz);
+        NavigationManager.NavigateTo("/participant/take-quiz");
+    }
+}

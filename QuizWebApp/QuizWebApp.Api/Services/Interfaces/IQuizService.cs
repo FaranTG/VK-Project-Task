@@ -7,7 +7,7 @@ public interface IQuizService
 {
     public const string NotFoundMessage = "Quiz not found.";
 
-    Task<QuizApiResponse<QuizBriefInfoDTO[]>> GetQuizzesAsync();
+    Task<QuizApiResponse<QuizSummaryInfoDTO[]>> GetQuizzesAsync();
 
     Task<QuizApiResponse<QuizInfoDTO>> GetQuizByIdAsync(Guid id);
 

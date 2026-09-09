@@ -18,6 +18,7 @@ public static class ClientsExtensions
         AddAuthClient(builder, baseUri);
         AddTopicsClient(builder, baseUri);
         AddQuizzesClient(builder, baseUri);
+        AddParticipantQuizzesClient(builder, baseUri);
         AddUsersClient(builder, baseUri);
     }
 
@@ -42,6 +43,14 @@ public static class ClientsExtensions
         builder.Services.AddScoped
         (
             sp => new QuizzesClient(CreateAuthorizedClient(sp, baseUri))
+        );
+    }
+
+    private static void AddParticipantQuizzesClient(WebAssemblyHostBuilder builder, Uri baseUri)
+    {
+        builder.Services.AddScoped
+        (
+            sp => new ParticipantQuizzesClient(CreateAuthorizedClient(sp, baseUri))
         );
     }
 

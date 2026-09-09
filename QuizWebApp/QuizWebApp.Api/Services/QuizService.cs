@@ -21,15 +21,15 @@ public class QuizService : IQuizService
         _dbContext = dbContext;
     }
 
-    public async Task<QuizApiResponse<QuizBriefInfoDTO[]>> GetQuizzesAsync()
+    public async Task<QuizApiResponse<QuizSummaryInfoDTO[]>> GetQuizzesAsync()
     {
         try
         {
-            QuizBriefInfoDTO[] quizzes = await _dbContext.Quizzes
+            QuizSummaryInfoDTO[] quizzes = await _dbContext.Quizzes
                 .AsNoTracking()
                 .Select
                 (
-                    quiz => new QuizBriefInfoDTO
+                    quiz => new QuizSummaryInfoDTO
                     (
                         quiz.Id,
                         quiz.Name,
@@ -45,11 +45,11 @@ public class QuizService : IQuizService
                 )
                 .ToArrayAsync();
             
-            return QuizApiResponse<QuizBriefInfoDTO[]>.Success(quizzes);
+            return QuizApiResponse<QuizSummaryInfoDTO[]>.Success(quizzes);
         }
         catch (Exception exception)
         {
-            return QuizApiResponse<QuizBriefInfoDTO[]>.Fail(exception.Message);
+            return QuizApiResponse<QuizSummaryInfoDTO[]>.Fail(exception.Message);
         }
     }
 

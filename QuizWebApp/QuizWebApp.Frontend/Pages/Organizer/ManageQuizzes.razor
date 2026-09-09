@@ -26,7 +26,7 @@ else
     <div class="mb-3 row">
         <div class="col-sm-3 ms-auto">
             <label for="selectTopic" class="form-label">Topic Filter: </label>
-            <select id="selectTopic" class="form-control" @bind="_selectedTopic" @bind:after="OnSelectedTopicChanged">
+            <select id="selectTopic" class="form-control" @bind="_selectedTopicId" @bind:after="OnSelectedTopicChanged">
                 <option value="0">Select Topic...</option>
                 @foreach (TopicInfoDTO topic in _topics)
                 {
@@ -58,7 +58,7 @@ else
                 }
                 else
                 {
-                    foreach (QuizBriefInfoDTO quizInfo in _filteredQuizzes)
+                    foreach (QuizSummaryInfoDTO quizInfo in _filteredQuizzes)
                     {
                         <tr>
                             <td>@quizInfo.Name</td>
@@ -99,12 +99,12 @@ else
 }
 
 @code {
-    private QuizBriefInfoDTO[]? _quizzes;
-    private QuizBriefInfoDTO[]? _filteredQuizzes;
+    private QuizSummaryInfoDTO[]? _quizzes;
+    private QuizSummaryInfoDTO[]? _filteredQuizzes;
     private TopicInfoDTO[]? _topics;
     private string[]? _viewingQuestions;
     private string? _loadErrorMessage;
-    private int _selectedTopic;
+    private int _selectedTopicId;
     private bool _showQuestionsModal;
 
     protected override async Task OnInitializedAsync()
@@ -120,7 +120,7 @@ else
                 return;
             }
 
-            QuizApiResponse<QuizBriefInfoDTO[]> quizzesResponse = await QuizzesClient.GetQuizzesAsync();
+            QuizApiResponse<QuizSummaryInfoDTO[]> quizzesResponse = await QuizzesClient.GetQuizzesAsync();
             
             if (quizzesResponse.IsFailure)
             {
@@ -142,18 +142,18 @@ else
     {
         ArgumentNullException.ThrowIfNull(_quizzes);
 
-        if (_selectedTopic == 0)
+        if (_selectedTopicId == 0)
         {
             _filteredQuizzes = _quizzes;
             return;
         }
 
         _filteredQuizzes = _quizzes
-            .Where(quizInfo => quizInfo.TopicId ==  _selectedTopic)
+            .Where(quizInfo => quizInfo.TopicId ==  _selectedTopicId)
             .ToArray();
     }
 
-    private void ViewQuestions(QuizBriefInfoDTO quizInfo)
+    private void ViewQuestions(QuizSummaryInfoDTO quizInfo)
     {
         _viewingQuestions = quizInfo.Questions.ToArray();
         _showQuestionsModal = true;
