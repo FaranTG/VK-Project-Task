@@ -17,4 +17,12 @@ public class QuizContext(DbContextOptions<QuizContext> options)
     public DbSet<AnswerOption> AnswerOptions => Set<AnswerOption>();
 
     public DbSet<Attempt> Attempts => Set<Attempt>();
+
+    public DbSet<AttemptQuestion> AttemptQuestions => Set<AttemptQuestion>();
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<AttemptQuestion>()
+            .HasKey(question => new { question.AttemptId, question.QuestionId });
+    }
 }

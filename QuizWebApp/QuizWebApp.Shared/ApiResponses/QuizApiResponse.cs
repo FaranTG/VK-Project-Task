@@ -13,16 +13,16 @@ public record QuizApiResponse
     public static QuizApiResponse Fail(string errorMessage) => new (errorMessage);
 }
 
-public record QuizApiResponse<T>
+public record QuizApiResponse<TData>
 (
-    T? Data,
+    TData? Data,
     string? ErrorMessage
 )
 {
     public bool IsSuccess => ErrorMessage is null;
     public bool IsFailure => !IsSuccess;
 
-    public static QuizApiResponse<T> Success(T Data) => new (Data, null);
+    public static QuizApiResponse<TData> Success(TData Data) => new (Data, null);
 
-    public static QuizApiResponse<T> Fail(string errorMessage) => new (default, errorMessage);
+    public static QuizApiResponse<TData> Fail(string errorMessage) => new (default, errorMessage);
 }

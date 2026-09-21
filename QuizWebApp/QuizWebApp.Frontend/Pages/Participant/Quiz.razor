@@ -1,0 +1,14 @@
+﻿@page "/participant/take-quiz"
+
+@inject QuizState QuizState
+@inject NavigationManager NavigationManager
+
+@code {
+    protected override void OnInitialized()
+    {
+        if (QuizState.SelectedQuiz is null)
+        {
+            NavigationManager.NavigateTo("/participant/home", replace: true);
+        }
+    }
+}
