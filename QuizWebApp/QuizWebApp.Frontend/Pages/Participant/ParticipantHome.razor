@@ -102,8 +102,8 @@ else
 @code {
     private QuizBriefInfoDTO[]? _quizzes;
     private TopicInfoDTO[]? _topics;
-    private string? _loadErrorMessage;
     private QuizBriefInfoDTO? _selectedQuiz;
+    private string? _loadErrorMessage;
     private int _selectedTopicId;
 
     private string NoFoundMessage => _selectedTopicId == 0 
@@ -158,11 +158,29 @@ else
         AppState.HideLoader();
     }
 
-    private void StartSelectedQuiz()
+    private async Task StartSelectedQuiz()
     {
         ArgumentNullException.ThrowIfNull(_selectedQuiz);
 
-        QuizState.SetSelectedQuiz(_selectedQuiz);
-        NavigationManager.NavigateTo("/participant/take-quiz");
+        AppState.ShowLoader("Preparing the quiz...");
+        try
+        {
+            QuizApiResponse<int> response = await ParticipantQuizzesClient.StartQuizAsync(_selectedQuiz.Id);
+
+            if (response.IsFailure)
+            {
+                _loadErrorMessage = response.ErrorMessage;
+                return;
+            }
+
+            int attemptId = response.Data;
+
+            QuizState.SetSelectedQuiz(_selectedQuiz, attemptId);
+            NavigationManager.NavigateTo("/participant/take-quiz");
+        }
+        finally
+        {
+            AppState.HideLoader();
+        }
     }
 }
