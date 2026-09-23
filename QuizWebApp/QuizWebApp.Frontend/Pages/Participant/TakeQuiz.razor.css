@@ -1,0 +1,11 @@
+.option-box
+{
+    background-color: rgba(21, 25, 29, 0.08);
+    transition: all ease 0.2s;
+}
+
+.option-box:hover
+{
+    border-radius: 10px;
+    box-shadow: 0 0 18px 1px #a8a8a8;
+}

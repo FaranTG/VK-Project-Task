@@ -134,6 +134,7 @@ public class ParticipantQuizService : IParticipantQuizService
                 .Include(attempt => attempt.Quiz)
                     .ThenInclude(quiz => quiz!.Questions)
                         .ThenInclude(question => question.Options)
+                .AsSingleQuery()
                 .FirstOrDefaultAsync(attempt => attempt.Id == responseData.AttemptId);
 
             if (attempt is null)

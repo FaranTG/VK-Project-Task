@@ -1,0 +1,246 @@
+﻿@page "/participant/take-quiz"
+
+@using QuizWebApp.Frontend.Clients
+@using QuizWebApp.Frontend.Components
+@using QuizWebApp.Shared.ApiResponses
+@using QuizWebApp.Shared.DTOs.AnswerOption
+@using QuizWebApp.Shared.DTOs.Question
+
+@inject QuizState QuizState
+@inject NavigationManager NavigationManager
+@inject ParticipantQuizzesClient ParticipantQuizzesClient
+@inject IAppState AppState
+
+<PageTitle>@QuizState.SelectedQuiz?.Name</PageTitle>
+<SectionContent SectionName="pageTitle">
+    Quiz - @QuizState.SelectedQuiz?.Name [<small>@QuizState.SelectedQuiz?.QuestionsNumber question(s)</small>]
+</SectionContent>
+
+@if (_loadErrorMessage is not null)
+{
+    <p class="h5 text-center text-danger"><em>Error: @_loadErrorMessage</em></p>
+}
+else if (_questionData is null || QuizState.SelectedQuiz is null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <div class="col-sm-12">
+        <h6>@(_completedQuestionsNumber + 1) of @QuizState.SelectedQuiz.QuestionsNumber</h6>
+        <h4 class="mt-3 mb-0 fw-bold">@_questionData.Text</h4>
+        <hr />
+        @foreach (AnswerOptionInfoDTO option in _questionData.Options)
+        {
+            <div class="d-flex gap-2 p-3 mb-3 option-box" @onclick="() => _selectedOptionId = option.Id">
+                <label for="rdo_@option.Id" class="d-block">@option.Text</label>
+                <input type="radio" class="" name="rdo_@_questionData.Id" id="rdo_@option.Id"
+                    checked="@(_selectedOptionId == option.Id)"
+                    @onchange="() => _selectedOptionId = option.Id" />
+            </div>
+        }
+        @if (_quizErrorMessage is not null)
+        {
+            <div class="d-flex justify-content-between align-items-center gap-2 border border-danger border-1 p-1">
+                <p class="m-0">@_quizErrorMessage</p>
+                <button type="button" class="btn btn-sm btn-danger" @onclick="() => _quizErrorMessage = null">Close</button>
+            </div>
+        }
+        <hr />
+        <div class="d-flex justify-content-between align-items-center">
+            <button type="button" class="btn btn-danger" @onclick="() => _showExitQuizConfirmation = true">Exit Quiz</button>
+            @if (IsLastQuestion)
+            {
+                <button type="button" class="btn btn-success" @onclick="SubmitQuizAsync">Submit Quiz</button>
+            }
+            else
+            {
+                <button type="button" class="btn btn-primary" @onclick="GoNextQuestionAsync">Save & Next</button>
+            }
+        </div>
+    </div>
+
+    @if (_submitQuizMessage is not null)
+    {
+        <QuizModal Title="Quiz Submitted" ActionButtonText="Ok"
+            OnActionButtonClicked="RedirectToMyQuizzes"
+            OnCancelClicked="RedirectToMyQuizzes">
+            <p class="text-success h5">
+                @_submitQuizMessage
+            </p>
+        </QuizModal>
+    }
+
+    @if (_showExitQuizConfirmation)
+    {
+        <QuizModal Title="Quiz Submitted" ActionButtonText="Ok"
+            OnActionButtonClicked="ExitQuizAsync"
+            OnCancelClicked="() => _showExitQuizConfirmation = false">
+            <p class="text-danger h5">
+                Do you really want to exit the quiz?
+            </p>
+        </QuizModal>
+    }
+}
+
+@code {
+    private QuestionInfoDTO? _questionData;
+    private string? _loadErrorMessage;
+    private string? _quizErrorMessage;
+    private string? _submitQuizMessage;
+    private int _selectedOptionId;
+    private int _completedQuestionsNumber;
+    private bool _showExitQuizConfirmation;
+
+    private bool IsLastQuestion => _completedQuestionsNumber == ((QuizState.SelectedQuiz?.QuestionsNumber ?? 0) - 1);
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!QuizState.IsQuizSelected)
+        {
+            NavigationManager.NavigateTo("/participant/home", replace: true);
+            return;
+        }
+
+        AppState.ShowLoader("Fetching question...");
+
+        string? errorMessage = await TryLoadNextQuestionAsync();
+        if (errorMessage is not null)
+        {
+            _loadErrorMessage = errorMessage;
+        }
+
+        AppState.HideLoader();
+    }
+
+    private async Task ExitQuizAsync()
+    {
+        AppState.ShowLoader("Exiting the quiz...");
+        try
+        {
+            QuizApiResponse response = await ParticipantQuizzesClient.ExitQuizAsync(QuizState.AttemptId);
+
+            if (response.IsFailure)
+            {
+                _showExitQuizConfirmation = false;
+                _quizErrorMessage = response.ErrorMessage;
+                return;
+            }
+
+            RedirectToMyQuizzes();
+        }
+        finally
+        {
+            AppState.HideLoader();
+        }
+    }
+
+    private async Task GoNextQuestionAsync()
+    {
+        _quizErrorMessage = null;
+
+        if (_selectedOptionId == 0)
+        {
+            _quizErrorMessage = "Option not selected.";
+            return;
+        }
+
+        AppState.ShowLoader("Sending response and fetching next question...");
+        try
+        {
+            if (!(await TrySaveQuestionResponseAsync()))
+            {
+                return;
+            }
+
+            string? errorMessage = await TryLoadNextQuestionAsync();
+            if (errorMessage is not null)
+            {
+                _quizErrorMessage = errorMessage;
+                return;
+            }
+
+            ++_completedQuestionsNumber;
+        }
+        finally
+        {
+            AppState.HideLoader();
+        }
+    }
+
+    private async Task SubmitQuizAsync()
+    {
+        _quizErrorMessage = null;
+
+        if (_selectedOptionId == 0)
+        {
+            _quizErrorMessage = "Option not selected.";
+            return;
+        }
+
+        AppState.ShowLoader("Sending response and submitting the quiz...");
+        try
+        {
+            if (!(await TrySaveQuestionResponseAsync()))
+            {
+                return;
+            }
+
+            QuizApiResponse response = await ParticipantQuizzesClient.CompleteQuizAsync(QuizState.AttemptId);
+
+            if (response.IsFailure)
+            {
+                _quizErrorMessage = response.ErrorMessage;
+                return;
+            }
+
+            _submitQuizMessage = "Quiz submitted successfully";
+        }
+        finally
+        {
+            AppState.HideLoader();
+        }
+    }
+
+    private QuestionResponseSaveDTO CreateResponseDTO()
+    {
+        ArgumentNullException.ThrowIfNull(_questionData);
+
+        return new QuestionResponseSaveDTO 
+        (
+            QuizState.AttemptId,
+            _questionData.Id,
+            _selectedOptionId
+        );
+    }
+
+    private async Task<string?> TryLoadNextQuestionAsync()
+    {
+        QuizApiResponse<QuestionInfoDTO> response = await ParticipantQuizzesClient
+            .GetQuizNextQuestionAsync(QuizState.AttemptId);
+
+        if (response.IsFailure)
+        {
+            return response.ErrorMessage;
+        }
+
+        _selectedOptionId = 0;
+        _questionData = response.Data;
+        return null;
+    }
+
+    private async Task<bool> TrySaveQuestionResponseAsync()
+    {
+        QuizApiResponse response = await ParticipantQuizzesClient
+            .SaveQuestionResponseAsync(QuizState.AttemptId, CreateResponseDTO());
+
+        _quizErrorMessage = response.ErrorMessage;
+        return _quizErrorMessage is null;
+    }
+
+    private void RedirectToMyQuizzes()
+    {
+        QuizState.ResetSelectedQuiz();
+        NavigationManager.NavigateTo("/participant/my-quizzes", replace: true);
+    }
+}
