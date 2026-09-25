@@ -10,13 +10,13 @@ using QuizWebApp.Shared.DTOs.Quiz;
 
 namespace QuizWebApp.Api.Services;
 
-public class ParticipantQuizService : IParticipantQuizService
+public class AttemptService : IAttemptService
 {
     private const string NoAccessMessage = "You do not have the user rights for this attempt.";
 
     private readonly QuizContext _dbContext;
 
-    public ParticipantQuizService(QuizContext dbContext)
+    public AttemptService(QuizContext dbContext)
     {
         _dbContext = dbContext;
     }
@@ -65,7 +65,7 @@ public class ParticipantQuizService : IParticipantQuizService
             {
                 ParticipantId = participantId,
                 QuizId = quizId,
-                Status = nameof(ParticipantQuizStatus.Started),
+                Status = nameof(AttemptStatus.Started),
                 StartTime = DateTime.UtcNow
             };
 
@@ -95,7 +95,7 @@ public class ParticipantQuizService : IParticipantQuizService
 
             if (attempt is null)
             {
-                return QuizApiResponse<QuestionInfoDTO>.Fail(IParticipantQuizService.NotFoundMessage);
+                return QuizApiResponse<QuestionInfoDTO>.Fail(IAttemptService.NotFoundMessage);
             }
 
             if (attempt.ParticipantId != participantId)
@@ -139,7 +139,7 @@ public class ParticipantQuizService : IParticipantQuizService
 
             if (attempt is null)
             {
-                return QuizApiResponse.Fail(IParticipantQuizService.NotFoundMessage);
+                return QuizApiResponse.Fail(IAttemptService.NotFoundMessage);
             }
 
             if (attempt.ParticipantId != participantId)
@@ -186,7 +186,7 @@ public class ParticipantQuizService : IParticipantQuizService
         }
     }
 
-    public async Task<QuizApiResponse> SubmitQuizAsync(int attemptId, ParticipantQuizStatus quitStatus, int participantId)
+    public async Task<QuizApiResponse> SubmitQuizAsync(int attemptId, AttemptStatus quitStatus, int participantId)
     {
         try
         {
@@ -196,7 +196,7 @@ public class ParticipantQuizService : IParticipantQuizService
 
             if (attempt is null)
             {
-                return QuizApiResponse.Fail(IParticipantQuizService.NotFoundMessage);
+                return QuizApiResponse.Fail(IAttemptService.NotFoundMessage);
             }
 
             if (attempt.ParticipantId != participantId)
@@ -204,7 +204,7 @@ public class ParticipantQuizService : IParticipantQuizService
                 return QuizApiResponse.Fail(NoAccessMessage);
             }
 
-            if (attempt.Status != nameof(ParticipantQuizStatus.Started))
+            if (attempt.Status != nameof(AttemptStatus.Started))
             {
                 return QuizApiResponse.Fail("Quiz has already been submitted.");
             }

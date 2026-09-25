@@ -8,11 +8,11 @@ using QuizWebApp.Shared.Enums;
 
 namespace QuizWebApp.Api.Endpoints;
 
-public static class ParticipantQuizEndpoints
+public static class AttemptEndpoints
 {
     private const string ApiRoute = "/api/participant";
 
-    public static IEndpointRouteBuilder MapParticipantQuizEndpoints(this IEndpointRouteBuilder app)
+    public static IEndpointRouteBuilder MapAttemptEndpoints(this IEndpointRouteBuilder app)
     {
         RouteGroupBuilder routeGroup = app
             .MapGroup(ApiRoute)
@@ -33,14 +33,14 @@ public static class ParticipantQuizEndpoints
 
     private static void MapQuizGetActiveEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapGet("/available-quizzes", async (int topicIdFilter, IParticipantQuizService quizService) =>
+        app.MapGet("/available-quizzes", async (int topicIdFilter, IAttemptService quizService) =>
             Results.Ok(await quizService.GetActiveQuizzesAsync(topicIdFilter))
         );
     }
 
     private static void MapQuizStartEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapPost("/{quizId:guid}/start", async (Guid quizId, ClaimsPrincipal principal, IParticipantQuizService quizService) =>
+        app.MapPost("/{quizId:guid}/start", async (Guid quizId, ClaimsPrincipal principal, IAttemptService quizService) =>
         {
             QuizApiResponse<int> response = await quizService.StartQuizAsync(quizId, principal.GetParticipantId());
 
@@ -52,13 +52,13 @@ public static class ParticipantQuizEndpoints
 
     private static void MapQuizNextQuestionGetEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapGet("/{attemptId:int}/next-question", async (int attemptId, ClaimsPrincipal principal, IParticipantQuizService quizService) =>
+        app.MapGet("/{attemptId:int}/next-question", async (int attemptId, ClaimsPrincipal principal, IAttemptService quizService) =>
         {
             QuizApiResponse<QuestionInfoDTO> response = await quizService.GetNextQuizQuestionAsync(attemptId, principal.GetParticipantId());
 
             if (response.IsFailure)
             {
-                return response.ErrorMessage == IParticipantQuizService.NotFoundMessage
+                return response.ErrorMessage == IAttemptService.NotFoundMessage
                     ? Results.NotFound(response)
                     : Results.BadRequest(response);
             }
@@ -69,7 +69,7 @@ public static class ParticipantQuizEndpoints
 
     private static void MapQuizResponsePostEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapPost("/{attemptId:int}/save-response", async (int attemptId, QuestionResponseSaveDTO responseData, ClaimsPrincipal principal, IParticipantQuizService quizService) =>
+        app.MapPost("/{attemptId:int}/save-response", async (int attemptId, QuestionResponseSaveDTO responseData, ClaimsPrincipal principal, IAttemptService quizService) =>
         {
             if (responseData.AttemptId != attemptId)
             {
@@ -80,7 +80,7 @@ public static class ParticipantQuizEndpoints
 
             if (response.IsFailure)
             {
-                return response.ErrorMessage == IParticipantQuizService.NotFoundMessage
+                return response.ErrorMessage == IAttemptService.NotFoundMessage
                     ? Results.NotFound(response)
                     : Results.BadRequest(response);
             }
@@ -91,21 +91,21 @@ public static class ParticipantQuizEndpoints
 
     private static void MapAllQuizSubmitEndpoints(IEndpointRouteBuilder app)
     {
-        MapQuizSubmitEndpoint(app, "complete", ParticipantQuizStatus.Completed);
-        MapQuizSubmitEndpoint(app, "auto-submit", ParticipantQuizStatus.AutoSubmitted);
-        MapQuizSubmitEndpoint(app, "exit", ParticipantQuizStatus.Exited);
+        MapQuizSubmitEndpoint(app, "complete", AttemptStatus.Completed);
+        MapQuizSubmitEndpoint(app, "auto-submit", AttemptStatus.AutoSubmitted);
+        MapQuizSubmitEndpoint(app, "exit", AttemptStatus.Exited);
     }
 
-    private static void MapQuizSubmitEndpoint(IEndpointRouteBuilder app, string endpointName, ParticipantQuizStatus quizStatus)
+    private static void MapQuizSubmitEndpoint(IEndpointRouteBuilder app, string endpointName, AttemptStatus quizStatus)
     {
         string url = "/{attemptId:int}" + $"/{endpointName}";
-        app.MapPost(url, async (int attemptId, ClaimsPrincipal principal, IParticipantQuizService quizService) =>
+        app.MapPost(url, async (int attemptId, ClaimsPrincipal principal, IAttemptService quizService) =>
         {
             QuizApiResponse response = await quizService.SubmitQuizAsync(attemptId, quizStatus, principal.GetParticipantId());
 
             if (response.IsFailure)
             {
-                return response.ErrorMessage == IParticipantQuizService.NotFoundMessage
+                return response.ErrorMessage == IAttemptService.NotFoundMessage
                     ? Results.NotFound(response)
                     : Results.BadRequest(response);
             }

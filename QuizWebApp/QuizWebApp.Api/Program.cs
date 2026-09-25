@@ -1,22 +1,11 @@
-using Microsoft.AspNetCore.Identity;
 using QuizWebApp.Api.Configuration;
 using QuizWebApp.Api.Data;
-using QuizWebApp.Api.Data.Models;
-using QuizWebApp.Api.Endpoints;
-using QuizWebApp.Api.Services;
-using QuizWebApp.Api.Services.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddValidation();
 
-builder.Services
-    .AddScoped<IPasswordHasher<User>, PasswordHasher<User>>()
-    .AddScoped<IAuthService, AuthService>()
-    .AddScoped<ITopicService, TopicService>()
-    .AddScoped<IQuizService, QuizService>()
-    .AddScoped<IParticipantQuizService, ParticipantQuizService>()
-    .AddScoped<IUserService, UserService>();
+builder.Services.AddQuizServices();
 
 builder.AddQuizDatabase();
 
@@ -44,11 +33,6 @@ app.UseCors();
 
 app.UseAuthorization();
 
-app
-    .MapAuthEndpoints()
-    .MapTopicEndpoints()
-    .MapQuizEndpoints()
-    .MapParticipantQuizEndpoints()
-    .MapUserEndpoints();
+app.MapAllQuizEndpoints();
 
 app.Run();

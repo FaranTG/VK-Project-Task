@@ -5,7 +5,7 @@ using QuizWebApp.Shared.DTOs.Quiz;
 
 namespace QuizWebApp.Api.Services.Interfaces;
 
-public interface IParticipantQuizService
+public interface IAttemptService
 {
     public const string NotFoundMessage = "Attempt not found.";
 
@@ -17,5 +17,5 @@ public interface IParticipantQuizService
 
     Task<QuizApiResponse> SaveQuestionResponseAsync(QuestionResponseSaveDTO responseData, int participantId);
 
-    Task<QuizApiResponse> SubmitQuizAsync(int attemptId, ParticipantQuizStatus quitStatus, int participantId);
+    Task<QuizApiResponse> SubmitQuizAsync(int attemptId, AttemptStatus quitStatus, int participantId);
 }

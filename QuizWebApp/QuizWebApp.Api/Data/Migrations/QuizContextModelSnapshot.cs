@@ -44,7 +44,7 @@ namespace QuizWebApp.Api.Data.Migrations
 
                     b.HasIndex("QuestionId");
 
-                    b.ToTable("AnswerOptions");
+                    b.ToTable("AnswerOptions", (string)null);
                 });
 
             modelBuilder.Entity("QuizWebApp.Api.Data.Models.Attempt", b =>
@@ -80,7 +80,7 @@ namespace QuizWebApp.Api.Data.Migrations
 
                     b.HasIndex("QuizId");
 
-                    b.ToTable("Attempts");
+                    b.ToTable("Attempts", (string)null);
                 });
 
             modelBuilder.Entity("QuizWebApp.Api.Data.Models.AttemptQuestion", b =>
@@ -95,7 +95,7 @@ namespace QuizWebApp.Api.Data.Migrations
 
                     b.HasIndex("QuestionId");
 
-                    b.ToTable("AttemptQuestions");
+                    b.ToTable("AttemptQuestions", (string)null);
                 });
 
             modelBuilder.Entity("QuizWebApp.Api.Data.Models.Question", b =>
@@ -117,7 +117,7 @@ namespace QuizWebApp.Api.Data.Migrations
 
                     b.HasIndex("QuizId");
 
-                    b.ToTable("Questions");
+                    b.ToTable("Questions", (string)null);
                 });
 
             modelBuilder.Entity("QuizWebApp.Api.Data.Models.Quiz", b =>
@@ -146,7 +146,7 @@ namespace QuizWebApp.Api.Data.Migrations
 
                     b.HasIndex("TopicId");
 
-                    b.ToTable("Quizzes");
+                    b.ToTable("Quizzes", (string)null);
                 });
 
             modelBuilder.Entity("QuizWebApp.Api.Data.Models.Topic", b =>
@@ -163,7 +163,7 @@ namespace QuizWebApp.Api.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Topics");
+                    b.ToTable("Topics", (string)null);
                 });
 
             modelBuilder.Entity("QuizWebApp.Api.Data.Models.User", b =>
@@ -199,7 +199,7 @@ namespace QuizWebApp.Api.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Users");
+                    b.ToTable("Users", (string)null);
                 });
 
             modelBuilder.Entity("QuizWebApp.Api.Data.Models.AnswerOption", b =>

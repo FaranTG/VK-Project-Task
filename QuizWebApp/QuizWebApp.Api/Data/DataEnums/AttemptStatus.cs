@@ -1,6 +1,6 @@
 ﻿namespace QuizWebApp.Api.Data.DataEnums;
 
-public enum ParticipantQuizStatus
+public enum AttemptStatus
 {
     Started,
     Completed,

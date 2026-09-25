@@ -16,10 +16,10 @@ public class Attempt
     public Quiz? Quiz { get; set; }
 
     [AllowedValues(
-        nameof(ParticipantQuizStatus.Started),
-        nameof(ParticipantQuizStatus.Completed),
-        nameof(ParticipantQuizStatus.Exited),
-        nameof(ParticipantQuizStatus.AutoSubmitted)
+        nameof(AttemptStatus.Started),
+        nameof(AttemptStatus.Completed),
+        nameof(AttemptStatus.Exited),
+        nameof(AttemptStatus.AutoSubmitted)
     )]
     public required string Status { get; set; }
 
