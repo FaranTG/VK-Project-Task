@@ -1,0 +1,64 @@
+﻿@implements IDisposable
+
+<label class="fw-bold">
+    <span class="@_timeDisplayColorClass">@_currentTimeDisplay</span>/@_totalTimeDisplay
+</label>
+
+@code {
+    [Parameter, EditorRequired]
+    public int TotalMinutes { get; set; }
+
+    [Parameter]
+    public EventCallback OnTimeElapsed { get; set; }
+
+    private const int DangerSecondsLeft = 60;
+
+    private PeriodicTimer? _timer;
+    private string? _totalTimeDisplay;
+    private string? _currentTimeDisplay;
+    private string _timeDisplayColorClass = "";
+    private DateTime _totalTime;
+    private bool _isDanger;
+
+    protected override void OnInitialized()
+    {
+        _totalTime = DateTime.UtcNow.AddMinutes(TotalMinutes).AddSeconds(1);
+        _timer = new PeriodicTimer(TimeSpan.FromSeconds(1));
+        _totalTimeDisplay = $"{TotalMinutes.ToString().PadLeft(2, '0')}:00";
+        _currentTimeDisplay = _totalTimeDisplay;
+
+        _ = HandleTimerAsync();
+    }
+
+    private async Task HandleTimerAsync()
+    {
+        ArgumentNullException.ThrowIfNull(_timer);
+
+        while (await _timer.WaitForNextTickAsync())
+        {
+            TimeSpan timeDifference = _totalTime - DateTime.UtcNow;
+
+            if (timeDifference <= TimeSpan.Zero)
+            {
+                _timer.Dispose();
+                _timer = null;
+                await OnTimeElapsed.InvokeAsync();
+                return;
+            }
+
+            if (timeDifference.TotalSeconds <= DangerSecondsLeft && !_isDanger)
+            {
+                _timeDisplayColorClass = "text-danger";
+                _isDanger = true;
+            }
+
+            _currentTimeDisplay = $"{(int)timeDifference.TotalMinutes:D2}:{timeDifference.Seconds:D2}";
+            StateHasChanged();
+        }
+    }
+
+    public void Dispose()
+    {
+        _timer?.Dispose();
+    }
+}
