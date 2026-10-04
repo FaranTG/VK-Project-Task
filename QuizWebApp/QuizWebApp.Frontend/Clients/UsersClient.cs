@@ -16,7 +16,8 @@ public class UsersClient(HttpClient httpClient)
         string requestUrl = $"{ApiRoute}?approvedFilter={approvedFilter}&pageNumber={paginationData.PageNumber}&pageSize={paginationData.PageSize}";
         HttpResponseMessage response = await httpClient.GetAsync(requestUrl);
 
-        QuizApiResponse<PagedInfoArray<UserInfoDTO>>? responseData = await response.Content.ReadFromJsonAsync<QuizApiResponse<PagedInfoArray<UserInfoDTO>>>();
+        QuizApiResponse<PagedInfoArray<UserInfoDTO>>? responseData = await response.Content
+            .ReadFromJsonAsync<QuizApiResponse<PagedInfoArray<UserInfoDTO>>>();
         
         return responseData
             ?? QuizApiResponse<PagedInfoArray<UserInfoDTO>>.Fail(NoResponseMessage);

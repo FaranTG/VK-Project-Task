@@ -1,5 +1,7 @@
 ﻿using QuizWebApp.Api.Data.DataEnums;
 using QuizWebApp.Shared.ApiResponses;
+using QuizWebApp.Shared.DTOs.Attempt;
+using QuizWebApp.Shared.DTOs.Common;
 using QuizWebApp.Shared.DTOs.Question;
 using QuizWebApp.Shared.DTOs.Quiz;
 
@@ -8,6 +10,8 @@ namespace QuizWebApp.Api.Services.Interfaces;
 public interface IAttemptService
 {
     public const string NotFoundMessage = "Attempt not found.";
+
+    Task<QuizApiResponse<PagedInfoArray<AttemptInfoDTO>>> GetAttemptsAsync(int participantId, PaginationDTO paginationData);
 
     Task<QuizApiResponse<QuizBriefInfoDTO[]>> GetActiveQuizzesAsync(int topicIdFilter);
 

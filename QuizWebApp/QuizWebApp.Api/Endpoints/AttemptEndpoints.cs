@@ -3,6 +3,7 @@ using QuizWebApp.Api.Configuration;
 using QuizWebApp.Api.Data.DataEnums;
 using QuizWebApp.Api.Services.Interfaces;
 using QuizWebApp.Shared.ApiResponses;
+using QuizWebApp.Shared.DTOs.Common;
 using QuizWebApp.Shared.DTOs.Question;
 using QuizWebApp.Shared.Enums;
 
@@ -18,6 +19,7 @@ public static class AttemptEndpoints
             .MapGroup(ApiRoute)
             .RequireAuthorization(policy => policy.RequireRole(nameof(UserRole.Participant)));
 
+        MapAttemptsGetEndpoint(routeGroup);
         MapQuizGetActiveEndpoint(routeGroup);
 
         RouteGroupBuilder quizRouteGroup = routeGroup
@@ -29,6 +31,13 @@ public static class AttemptEndpoints
         MapAllQuizSubmitEndpoints(quizRouteGroup);
 
         return app;
+    }
+
+    private static void MapAttemptsGetEndpoint(IEndpointRouteBuilder app)
+    {
+        app.MapGet("/attempts", async ([AsParameters] PaginationDTO paginationData, ClaimsPrincipal principal, IAttemptService quizService) =>
+            Results.Ok(await quizService.GetAttemptsAsync(principal.GetParticipantId(), paginationData))
+        );
     }
 
     private static void MapQuizGetActiveEndpoint(IEndpointRouteBuilder app)

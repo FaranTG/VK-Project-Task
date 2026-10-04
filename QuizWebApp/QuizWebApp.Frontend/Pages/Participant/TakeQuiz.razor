@@ -9,7 +9,7 @@
 
 @inject QuizState QuizState
 @inject NavigationManager NavigationManager
-@inject ParticipantQuizzesClient ParticipantQuizzesClient
+@inject AttemptsClient ParticipantQuizzesClient
 @inject IAppState AppState
 
 <PageTitle>@QuizState.SelectedQuiz?.Name</PageTitle>
@@ -280,6 +280,6 @@ else
     private void RedirectToMyQuizzes()
     {
         QuizState.ResetSelectedQuiz();
-        NavigationManager.NavigateTo("/participant/my-quizzes", replace: true);
+        NavigationManager.NavigateTo("/participant/my-attempts", replace: true);
     }
 }

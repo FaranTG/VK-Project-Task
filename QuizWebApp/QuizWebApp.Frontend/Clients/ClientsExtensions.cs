@@ -50,7 +50,7 @@ public static class ClientsExtensions
     {
         builder.Services.AddScoped
         (
-            sp => new ParticipantQuizzesClient(CreateAuthorizedClient(sp, baseUri))
+            sp => new AttemptsClient(CreateAuthorizedClient(sp, baseUri))
         );
     }
 

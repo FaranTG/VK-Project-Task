@@ -1,0 +1,75 @@
+﻿@page "/participant/my-attempts"
+@using Microsoft.AspNetCore.Components.QuickGrid
+@using QuizWebApp.Frontend.Clients
+@using QuizWebApp.Shared.ApiResponses
+@using QuizWebApp.Shared.DTOs.Attempt
+@using QuizWebApp.Shared.DTOs.Common
+
+@inject AttemptsClient AttemptsClient
+@inject IAppState AppState
+
+<SectionContent SectionName="pageTitle">My Attempts</SectionContent>
+
+@if (_loadErrorMessage is not null)
+{
+    <p class="h5 text-center text-danger mb-3"><em>Error: @_loadErrorMessage</em></p>
+}
+
+<div class="row">
+    <QuickGrid ItemsProvider="_attemptsProvider" Pagination="_paginationState" Class="table table-striped table-bordered table-hover mb-3">
+        <PropertyColumn Property="attempt => attempt.QuizName" Title="Quiz Name" />
+        <PropertyColumn Property="attempt => attempt.TopicName" Title="Topic Name" />
+        <PropertyColumn Property="attempt => attempt.Status" />
+        <PropertyColumn Property="attempt => attempt.StartTime" Title="Start Time" Format="@DateFormat" />
+        <TemplateColumn Title="End Time">
+            @if (context.Status == "Started")
+            {
+                <span>-</span>
+            }
+            else
+            {
+                <span>@context.EndTime.ToString(DateFormat)</span>
+            }
+        </TemplateColumn>
+        <PropertyColumn Property="attempt => attempt.Score" Class="text-center" />
+    </QuickGrid>
+    <Paginator State="_paginationState" />
+</div>
+
+@code {
+    private const string DateFormat = "dd.MM.yyyy HH:mm";
+    private const int DefaultPageSize = 10;
+
+    private GridItemsProvider<AttemptInfoDTO>? _attemptsProvider;
+    private string? _loadErrorMessage;
+
+    private PaginationState _paginationState = new PaginationState { ItemsPerPage = DefaultPageSize };
+
+    protected override void OnInitialized()
+    {
+        _attemptsProvider = async request =>
+        {
+            AppState.ShowLoader("Fetching attempts...");
+
+            try
+            {
+                int pageSize = request.Count ?? DefaultPageSize;
+                int pageNumber = request.StartIndex / pageSize + 1;
+                PaginationDTO paginationData = new PaginationDTO(pageNumber, pageSize);
+                QuizApiResponse<PagedInfoArray<AttemptInfoDTO>> response = await AttemptsClient.GetAttemptsAsync(paginationData);
+                
+                if (response.IsSuccess)
+                {
+                    return GridItemsProviderResult.From(response.Data!.Records, response.Data.TotalCount);
+                }
+
+                _loadErrorMessage = response.ErrorMessage;
+                return GridItemsProviderResult.From(Array.Empty<AttemptInfoDTO>(), 0);
+            }
+            finally
+            {
+                AppState.HideLoader();
+            }
+        };
+    }
+}

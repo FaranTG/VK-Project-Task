@@ -1,15 +1,29 @@
 ﻿using System.Net.Http.Json;
 using QuizWebApp.Shared.ApiResponses;
+using QuizWebApp.Shared.DTOs.Attempt;
+using QuizWebApp.Shared.DTOs.Common;
 using QuizWebApp.Shared.DTOs.Question;
 using QuizWebApp.Shared.DTOs.Quiz;
 
 namespace QuizWebApp.Frontend.Clients;
 
-public class ParticipantQuizzesClient(HttpClient httpClient)
+public class AttemptsClient(HttpClient httpClient)
 {
     private const string ApiRoute = "/api/participant";
     private const string QuizApiRoute = ApiRoute + "/take-quiz";
     private const string NoResponseMessage = "No response from server.";
+
+    public async Task<QuizApiResponse<PagedInfoArray<AttemptInfoDTO>>> GetAttemptsAsync(PaginationDTO paginationData)
+    {
+        string requestUrl = $"{ApiRoute}/attempts?pageNumber={paginationData.PageNumber}&pageSize={paginationData.PageSize}";
+        HttpResponseMessage response = await httpClient.GetAsync(requestUrl);
+
+        QuizApiResponse<PagedInfoArray<AttemptInfoDTO>>? responseData = await response.Content
+            .ReadFromJsonAsync<QuizApiResponse<PagedInfoArray<AttemptInfoDTO>>>();
+        
+        return responseData
+            ?? QuizApiResponse<PagedInfoArray<AttemptInfoDTO>>.Fail(NoResponseMessage);
+    }
 
     public async Task<QuizApiResponse<QuizBriefInfoDTO[]>> GetActiveQuizzesAsync(int topicIdFilter)
     {

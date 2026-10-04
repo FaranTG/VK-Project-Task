@@ -5,6 +5,8 @@ using QuizWebApp.Api.Data.Models;
 using QuizWebApp.Api.Services.Interfaces;
 using QuizWebApp.Shared.ApiResponses;
 using QuizWebApp.Shared.DTOs.AnswerOption;
+using QuizWebApp.Shared.DTOs.Attempt;
+using QuizWebApp.Shared.DTOs.Common;
 using QuizWebApp.Shared.DTOs.Question;
 using QuizWebApp.Shared.DTOs.Quiz;
 
@@ -19,6 +21,43 @@ public class AttemptService : IAttemptService
     public AttemptService(QuizContext dbContext)
     {
         _dbContext = dbContext;
+    }
+
+    public async Task<QuizApiResponse<PagedInfoArray<AttemptInfoDTO>>> GetAttemptsAsync(int participantId, PaginationDTO paginationData)
+    {
+        try
+        {
+            IQueryable<Attempt> query = _dbContext.Attempts
+                .AsNoTracking()
+                .Where(attempt => attempt.ParticipantId == participantId);
+
+            int totalCount = await query.CountAsync();
+
+            AttemptInfoDTO[] attempts = await query
+                .Include(attempt => attempt.Quiz)
+                    .ThenInclude(quiz => quiz!.Topic)
+                .OrderByDescending(attempt => attempt.Id)
+                .Skip((paginationData.PageNumber - 1) * paginationData.PageSize)
+                .Take(paginationData.PageSize)
+                .Select(attempt => new AttemptInfoDTO
+                (
+                    attempt.Id,
+                    attempt.QuizId,
+                    attempt.Quiz!.Name,
+                    attempt.Quiz.Topic!.Name,
+                    attempt.Status,
+                    attempt.StartTime,
+                    attempt.EndTime,
+                    attempt.Score
+                ))
+                .ToArrayAsync();
+            
+            return QuizApiResponse<PagedInfoArray<AttemptInfoDTO>>.Success(new PagedInfoArray<AttemptInfoDTO>(attempts, totalCount));
+        }
+        catch (Exception exception)
+        {
+            return QuizApiResponse<PagedInfoArray<AttemptInfoDTO>>.Fail(exception.Message);
+        }
     }
 
     public async Task<QuizApiResponse<QuizBriefInfoDTO[]>> GetActiveQuizzesAsync(int topicIdFilter)

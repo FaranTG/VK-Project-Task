@@ -13,7 +13,7 @@
 
 @if (_loadErrorMessage is not null)
 {
-    <p class="h5 text-center text-danger"><em>Error: @_loadErrorMessage</em></p>
+    <p class="h5 text-center text-danger mb-3"><em>Error: @_loadErrorMessage</em></p>
 }
 
 <div class="row">
@@ -54,6 +54,7 @@
     private QuickGrid<UserInfoDTO>? _grid;
     private GridItemsProvider<UserInfoDTO>? _usersProvider;
     private string? _loadErrorMessage;
+    
     private PaginationState _paginationState = new PaginationState { ItemsPerPage = DefaultPageSize };
     private UserApprovedFilter _filter = UserApprovedFilter.All;
 
