@@ -11,7 +11,8 @@ public static class WebApplicationExtensions
             .MapTopicEndpoints()
             .MapQuizEndpoints()
             .MapAttemptEndpoints()
-            .MapUserEndpoints();
+            .MapUserEndpoints()
+            .MapOrganizerEndpoints();
         
         return app;
     }

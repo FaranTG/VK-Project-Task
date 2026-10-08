@@ -1,0 +1,73 @@
+﻿@page "/organizer/home"
+@using QuizWebApp.Frontend.Clients
+@using QuizWebApp.Shared.ApiResponses
+@using QuizWebApp.Shared.DTOs.OrganizerHome
+
+@inject IAppState AppState
+@inject OrganizerClient OrganizerClient
+
+<PageTitle>Home</PageTitle>
+<SectionContent SectionName="pageTitle">Home</SectionContent>
+
+@if (_loadErrorMessage is not null)
+{
+    <p class="h5 text-center text-danger"><em>Error: @_loadErrorMessage</em></p>
+}
+else if (_summary is null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <div class="row">
+        <div class="col-sm-4">
+            <div class="box p-3 rounded h-100" style="background-color: rgba(21, 25, 29, 0.08);">
+                <h4 class="fw-bold">Topics</h4>
+                <hr />
+                <h5>@_summary.TopicsCount</h5>
+            </div>
+        </div>
+        <div class="col-sm-4">
+            <div class="box p-3 rounded" style="background-color: rgba(21, 25, 29, 0.08);">
+                <h4 class="fw-bold">Participants</h4>
+                <hr />
+                <h5>@_summary.ParticipantsCount Total</h5>
+                <h5>@_summary.ApprovedParticipantsCount Approved</h5>
+            </div>
+        </div>
+        <div class="col-sm-4">
+            <div class="box p-3 rounded" style="background-color: rgba(21, 25, 29, 0.08);">
+                <h4 class="fw-bold">Quizzes</h4>
+                <hr />
+                <h5>@_summary.QuizzesCount Total</h5>
+                <h5>@_summary.ActiveQuizzesCount Active</h5>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private OrganizerHomeSummaryDTO? _summary;
+    private string? _loadErrorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        AppState.ShowLoader("Fetching summary...");
+        try
+        {
+            QuizApiResponse<OrganizerHomeSummaryDTO> response = await OrganizerClient.GetHomeSummaryAsync();
+
+            if (response.IsFailure)
+            {
+                _loadErrorMessage = response.ErrorMessage;
+                return;
+            }
+
+            _summary = response.Data;
+        }
+        finally
+        {
+            AppState.HideLoader();
+        }
+    }
+}

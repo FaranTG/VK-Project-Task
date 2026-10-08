@@ -18,8 +18,9 @@ public static class ClientsExtensions
         AddAuthClient(builder, baseUri);
         AddTopicsClient(builder, baseUri);
         AddQuizzesClient(builder, baseUri);
-        AddParticipantQuizzesClient(builder, baseUri);
+        AddAttemptsClient(builder, baseUri);
         AddUsersClient(builder, baseUri);
+        AddOrganizerClient(builder, baseUri);
     }
 
     private static void AddAuthClient(WebAssemblyHostBuilder builder, Uri baseUri)
@@ -46,7 +47,7 @@ public static class ClientsExtensions
         );
     }
 
-    private static void AddParticipantQuizzesClient(WebAssemblyHostBuilder builder, Uri baseUri)
+    private static void AddAttemptsClient(WebAssemblyHostBuilder builder, Uri baseUri)
     {
         builder.Services.AddScoped
         (
@@ -62,10 +63,18 @@ public static class ClientsExtensions
         );
     }
 
+    private static void AddOrganizerClient(WebAssemblyHostBuilder builder, Uri baseUri)
+    {
+        builder.Services.AddScoped
+        (
+            sp => new OrganizerClient(CreateAuthorizedClient(sp, baseUri))
+        );
+    }
+
     private static HttpClient CreateAuthorizedClient(IServiceProvider serviceProvider, Uri baseUri)
     {
         AuthorizationMessageHandler handler = serviceProvider.GetRequiredService<AuthorizationMessageHandler>();
-        handler.InnerHandler = new HttpClientHandler();
+        handler.InnerHandler = new HttpClientHandler(); 
 
         return new (handler) { BaseAddress = baseUri };
     }

@@ -1,30 +1,28 @@
 ﻿@page "/"
 
-@using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
 @using QuizWebApp.Frontend.Auth
-@using System.Security.Claims
+@using QuizWebApp.Frontend.Components
+@using QuizWebApp.Shared.Enums
 
 @inject QuizAuthStateProvider QuizAuthStateProvider
 
 @attribute [Authorize]
-
-<PageTitle>Home</PageTitle>
-<SectionContent SectionName="pageTitle">Home</SectionContent>
-
-<h4>@GetWelcomeMessage()</h4>
 
 <AuthorizeView>
     <Authorizing>
         <p><em>Authorizing...</em></p>
     </Authorizing>
     <Authorized>
-        <p><em>Authorized: @context.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name)?.Value</em></p>
+        <AuthorizeView Roles="@nameof(UserRole.Organizer)" Context="organizerContext">
+            <RedirectTo Url="/organizer/home" />
+        </AuthorizeView>
+        <AuthorizeView Roles="@nameof(UserRole.Participant)" Context="participantContext">
+            <RedirectTo Url="/participant/home" />
+        </AuthorizeView>
     </Authorized>
 </AuthorizeView>
 
 @code {
-    private string GetWelcomeMessage() => QuizAuthStateProvider.IsLoggedIn ? 
-        $"Hello, {QuizAuthStateProvider.User!.Name}!" 
-        : "Authorizing...";
 }

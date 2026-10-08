@@ -15,7 +15,8 @@ public static class DependencyInjection
             .AddScoped<ITopicService, TopicService>()
             .AddScoped<IQuizService, QuizService>()
             .AddScoped<IAttemptService, AttemptService>()
-            .AddScoped<IUserService, UserService>();
+            .AddScoped<IUserService, UserService>()
+            .AddScoped<IOrganizerService, OrganizerService>();
         
         return serviceCollection;
     }

@@ -7,7 +7,6 @@
 @using QuizWebApp.Frontend.Auth
 @using QuizWebApp.Shared
 @using QuizWebApp.Shared.ApiResponses
-@using QuizWebApp.Shared.Enums
 
 @inject AuthClient AuthClient
 @inject QuizAuthStateProvider QuizAuthStateProvider
@@ -62,7 +61,7 @@ else
     {
         if (QuizAuthStateProvider.IsLoggedIn)
         {
-            NavigateToHome(replace: true);
+            NavigationManager.NavigateTo("/", replace: true);
             return;
         }
 
@@ -92,7 +91,7 @@ else
             LoggedInUserInfo user = response.Data;
             await QuizAuthStateProvider.SetLoginAsync(user);
 
-            NavigateToHome();
+            NavigationManager.NavigateTo("/");
         }
         catch (Exception exception)
         {
@@ -102,18 +101,6 @@ else
         {
             AppState.HideLoader();
         }
-    }
-
-    private void NavigateToHome(bool replace = false)
-    {
-        string homeUrl = QuizAuthStateProvider.User!.Role switch
-        {
-            nameof(UserRole.Organizer) => "/",
-            nameof(UserRole.Participant) => "/participant/home",
-            _ => "/"
-        };
-
-        NavigationManager.NavigateTo(homeUrl, replace: replace);
     }
 
     private UserLoginDTO CreateLoginDTO(LoginModel model) {
