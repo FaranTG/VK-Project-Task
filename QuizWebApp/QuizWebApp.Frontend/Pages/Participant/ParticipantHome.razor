@@ -6,7 +6,8 @@
 @using QuizWebApp.Shared.DTOs.Topic
 @using QuizWebApp.Shared.DTOs.Quiz
 
-@inject AttemptsClient ParticipantQuizzesClient
+@inject AttemptsClient AttemptsClient
+@inject QuizzesClient QuizzesClient
 @inject TopicsClient TopicsClient
 @inject IAppState AppState
 @inject QuizState QuizState
@@ -123,7 +124,7 @@ else
                 return;
             }
 
-            QuizApiResponse<QuizBriefInfoDTO[]> quizzesResponse = await ParticipantQuizzesClient.GetActiveQuizzesAsync(_selectedTopicId);
+            QuizApiResponse<QuizBriefInfoDTO[]> quizzesResponse = await QuizzesClient.GetActiveQuizzesAsync(_selectedTopicId);
 
             if (quizzesResponse.IsFailure)
             {
@@ -144,7 +145,7 @@ else
     {
         AppState.ShowLoader("Fetching quizzes...");
 
-        QuizApiResponse<QuizBriefInfoDTO[]> quizzesResponse = await ParticipantQuizzesClient.GetActiveQuizzesAsync(_selectedTopicId);
+        QuizApiResponse<QuizBriefInfoDTO[]> quizzesResponse = await QuizzesClient.GetActiveQuizzesAsync(_selectedTopicId);
 
         if (quizzesResponse.IsFailure)
         {
@@ -165,7 +166,7 @@ else
         AppState.ShowLoader("Preparing the quiz...");
         try
         {
-            QuizApiResponse<int> response = await ParticipantQuizzesClient.StartQuizAsync(_selectedQuiz.Id);
+            QuizApiResponse<int> response = await AttemptsClient.StartQuizAsync(_selectedQuiz.Id);
 
             if (response.IsFailure)
             {

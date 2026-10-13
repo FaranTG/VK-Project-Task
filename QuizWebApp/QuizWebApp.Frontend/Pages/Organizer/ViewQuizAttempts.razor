@@ -1,0 +1,86 @@
+﻿@page "/organizer/manage-quizzes/{id:guid}/attempts"
+@using Microsoft.AspNetCore.Components.QuickGrid
+@using QuizWebApp.Frontend.Clients
+@using QuizWebApp.Shared.ApiResponses
+@using QuizWebApp.Shared.DTOs.Attempt
+@using QuizWebApp.Shared.DTOs.Common
+
+@inject AttemptsClient AttemptsClient
+@inject IAppState AppState
+
+<SectionContent SectionName="pageTitle">View Quiz Attempts</SectionContent>
+
+@if (_loadErrorMessage is not null)
+{
+    <p class="h5 text-center text-danger mb-3"><em>Error: @_loadErrorMessage</em></p>
+}
+
+<div class="row">
+    <div class="mb-3 col-sm-12 d-flex gap-5 h5">
+        <p><strong>Quiz:</strong> @_quizName</p>
+        <p><strong>Topic:</strong> @_topicName</p>
+    </div>
+
+    <QuickGrid ItemsProvider="_attemptsProvider" Pagination="_paginationState" Class="table table-striped table-bordered table-hover mb-3">
+        <PropertyColumn Property="attempt => attempt.ParticipantName" Title="Participant Name" />
+        <PropertyColumn Property="attempt => attempt.Status" />
+        <PropertyColumn Property="attempt => attempt.StartTime" Title="Start Time" Format="@DateFormat" />
+        <TemplateColumn Title="End Time">
+            @if (context.Status == "Started")
+            {
+                <span>-</span>
+            }
+            else
+            {
+                <span>@context.EndTime.ToString(DateFormat)</span>
+            }
+        </TemplateColumn>
+        <PropertyColumn Property="attempt => attempt.Score" Class="text-center" />
+    </QuickGrid>
+    <Paginator State="_paginationState" />
+</div>
+
+@code {
+    [Parameter]
+    public Guid? Id { get; set; }
+
+    private const string DateFormat = "dd.MM.yyyy HH:mm";
+    private const int DefaultPageSize = 10;
+
+    private GridItemsProvider<AttemptParticipantInfoDTO>? _attemptsProvider;
+    private string? _loadErrorMessage;
+    private string? _quizName;
+    private string? _topicName;
+
+    private PaginationState _paginationState = new PaginationState { ItemsPerPage = DefaultPageSize };
+
+    protected override void OnParametersSet()
+    {
+        _attemptsProvider = async request =>
+        {
+            AppState.ShowLoader("Fetching attempts...");
+            try
+            {
+                int pageSize = request.Count ?? DefaultPageSize;
+                int pageNumber = request.StartIndex / pageSize + 1;
+                PaginationDTO paginationData = new PaginationDTO(pageNumber, pageSize);
+                QuizApiResponse<QuizAttemptsInfoDTO> response = await AttemptsClient.GetQuizAttemptsAsync(Id!.Value, paginationData);
+
+                if (response.IsSuccess)
+                {
+                    _quizName = response.Data!.QuizName;
+                    _topicName = response.Data.TopicName;
+                    StateHasChanged();
+                    return GridItemsProviderResult.From(response.Data.Attempts.Records, response.Data.Attempts.TotalCount);
+                }
+
+                _loadErrorMessage = response.ErrorMessage;
+                return GridItemsProviderResult.From(Array.Empty<AttemptParticipantInfoDTO>(), 0);
+            }
+            finally
+            {
+                AppState.HideLoader();
+            }
+        };
+    }
+}

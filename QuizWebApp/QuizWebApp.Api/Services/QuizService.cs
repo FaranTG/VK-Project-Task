@@ -53,6 +53,42 @@ public class QuizService : IQuizService
         }
     }
 
+    public async Task<QuizApiResponse<QuizBriefInfoDTO[]>> GetActiveQuizzesAsync(int topicIdFilter)
+    {
+        try
+        {
+            IQueryable<Quiz> query = _dbContext.Quizzes
+                .AsNoTracking()
+                .Where(quiz => quiz.IsActive);
+            
+            if (topicIdFilter > 0)
+            {
+                query = query.Where(quiz => quiz.TopicId == topicIdFilter);
+            }
+            
+            QuizBriefInfoDTO[] quizzes = await query
+                .Select
+                (
+                    quiz => new QuizBriefInfoDTO
+                    (
+                        quiz.Id,
+                        quiz.Name,
+                        quiz.TopicId,
+                        quiz.Topic!.Name,
+                        quiz.QuestionsNumber,
+                        quiz.TimeInMinutes
+                    )
+                )
+                .ToArrayAsync();
+            
+            return QuizApiResponse<QuizBriefInfoDTO[]>.Success(quizzes);
+        }
+        catch (Exception exception)
+        {
+            return QuizApiResponse<QuizBriefInfoDTO[]>.Fail(exception.Message);
+        }
+    }
+
     public async Task<QuizApiResponse<QuizInfoDTO>> GetQuizByIdAsync(Guid id)
     {
         try

@@ -1,6 +1,6 @@
 ﻿namespace QuizWebApp.Shared.DTOs.Attempt;
 
-public record AttemptInfoDTO
+public record AttemptQuizInfoDTO
 (
     int Id,
 

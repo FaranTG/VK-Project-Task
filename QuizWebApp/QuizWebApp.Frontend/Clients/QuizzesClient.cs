@@ -19,6 +19,16 @@ public class QuizzesClient(HttpClient httpClient)
             ?? QuizApiResponse<QuizSummaryInfoDTO[]>.Fail(NoResponseMessage);
     }
 
+    public async Task<QuizApiResponse<QuizBriefInfoDTO[]>> GetActiveQuizzesAsync(int topicIdFilter)
+    {
+        HttpResponseMessage response = await httpClient.GetAsync($"{ApiRoute}/active?topicIdFilter={topicIdFilter}");
+
+        QuizApiResponse<QuizBriefInfoDTO[]>? responseData = await response.Content.ReadFromJsonAsync<QuizApiResponse<QuizBriefInfoDTO[]>>();
+        
+        return responseData
+            ?? QuizApiResponse<QuizBriefInfoDTO[]>.Fail(NoResponseMessage);
+    }
+
     public async Task<QuizApiResponse<QuizInfoDTO>> GetQuizByIdAsync(Guid id)
     {
         HttpResponseMessage response = await httpClient.GetAsync($"{ApiRoute}/{id}");

@@ -11,18 +11,23 @@ namespace QuizWebApp.Api.Endpoints;
 
 public static class AttemptEndpoints
 {
-    private const string ApiRoute = "/api/participant";
+    private const string ApiRoute = "/api/attempts";
 
     public static IEndpointRouteBuilder MapAttemptEndpoints(this IEndpointRouteBuilder app)
     {
-        RouteGroupBuilder routeGroup = app
-            .MapGroup(ApiRoute)
+        RouteGroupBuilder organizerRouteGroup = app
+            .MapGroup($"{ApiRoute}/organizer")
+            .RequireAuthorization(policy => policy.RequireRole(nameof(UserRole.Organizer)));
+
+        MapQuizAttemptsGetEndpoint(organizerRouteGroup);
+
+        RouteGroupBuilder participantRouteGroup = app
+            .MapGroup($"{ApiRoute}/participant")
             .RequireAuthorization(policy => policy.RequireRole(nameof(UserRole.Participant)));
 
-        MapAttemptsGetEndpoint(routeGroup);
-        MapQuizGetActiveEndpoint(routeGroup);
+        MapParticipantAttemptsGetEndpoint(participantRouteGroup);
 
-        RouteGroupBuilder quizRouteGroup = routeGroup
+        RouteGroupBuilder quizRouteGroup = participantRouteGroup
             .MapGroup("/take-quiz");
         
         MapQuizStartEndpoint(quizRouteGroup);
@@ -33,25 +38,25 @@ public static class AttemptEndpoints
         return app;
     }
 
-    private static void MapAttemptsGetEndpoint(IEndpointRouteBuilder app)
+    private static void MapQuizAttemptsGetEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapGet("/attempts", async ([AsParameters] PaginationDTO paginationData, ClaimsPrincipal principal, IAttemptService quizService) =>
-            Results.Ok(await quizService.GetAttemptsAsync(principal.GetParticipantId(), paginationData))
+        app.MapGet("/quiz-info/{quizId:guid}", async (Guid quizId, [AsParameters] PaginationDTO paginationData, IAttemptService attemptService) =>
+            Results.Ok(await attemptService.GetQuizAttemptsAsync(quizId, paginationData))
         );
     }
 
-    private static void MapQuizGetActiveEndpoint(IEndpointRouteBuilder app)
+    private static void MapParticipantAttemptsGetEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapGet("/available-quizzes", async (int topicIdFilter, IAttemptService quizService) =>
-            Results.Ok(await quizService.GetActiveQuizzesAsync(topicIdFilter))
+        app.MapGet("/", async ([AsParameters] PaginationDTO paginationData, ClaimsPrincipal principal, IAttemptService attemptService) =>
+            Results.Ok(await attemptService.GetParticipantAttemptsAsync(principal.GetParticipantId(), paginationData))
         );
     }
 
     private static void MapQuizStartEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapPost("/{quizId:guid}/start", async (Guid quizId, ClaimsPrincipal principal, IAttemptService quizService) =>
+        app.MapPost("/{quizId:guid}/start", async (Guid quizId, ClaimsPrincipal principal, IAttemptService attemptService) =>
         {
-            QuizApiResponse<int> response = await quizService.StartQuizAsync(quizId, principal.GetParticipantId());
+            QuizApiResponse<int> response = await attemptService.StartQuizAsync(quizId, principal.GetParticipantId());
 
             return response.IsSuccess
                 ? Results.Ok(response)
@@ -61,9 +66,9 @@ public static class AttemptEndpoints
 
     private static void MapQuizNextQuestionGetEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapGet("/{attemptId:int}/next-question", async (int attemptId, ClaimsPrincipal principal, IAttemptService quizService) =>
+        app.MapGet("/{attemptId:int}/next-question", async (int attemptId, ClaimsPrincipal principal, IAttemptService attemptService) =>
         {
-            QuizApiResponse<QuestionInfoDTO> response = await quizService.GetNextQuizQuestionAsync(attemptId, principal.GetParticipantId());
+            QuizApiResponse<QuestionInfoDTO> response = await attemptService.GetNextQuizQuestionAsync(attemptId, principal.GetParticipantId());
 
             if (response.IsFailure)
             {
@@ -78,14 +83,14 @@ public static class AttemptEndpoints
 
     private static void MapQuizResponsePostEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapPost("/{attemptId:int}/save-response", async (int attemptId, QuestionResponseSaveDTO responseData, ClaimsPrincipal principal, IAttemptService quizService) =>
+        app.MapPost("/{attemptId:int}/save-response", async (int attemptId, QuestionResponseSaveDTO responseData, ClaimsPrincipal principal, IAttemptService attemptService) =>
         {
             if (responseData.AttemptId != attemptId)
             {
                 return Results.BadRequest(QuizApiResponse.Fail("Invalid attempt id in Response Data."));
             }
 
-            QuizApiResponse response = await quizService.SaveQuestionResponseAsync(responseData, principal.GetParticipantId());
+            QuizApiResponse response = await attemptService.SaveQuestionResponseAsync(responseData, principal.GetParticipantId());
 
             if (response.IsFailure)
             {
@@ -108,9 +113,9 @@ public static class AttemptEndpoints
     private static void MapQuizSubmitEndpoint(IEndpointRouteBuilder app, string endpointName, AttemptStatus quizStatus)
     {
         string url = "/{attemptId:int}" + $"/{endpointName}";
-        app.MapPost(url, async (int attemptId, ClaimsPrincipal principal, IAttemptService quizService) =>
+        app.MapPost(url, async (int attemptId, ClaimsPrincipal principal, IAttemptService attemptService) =>
         {
-            QuizApiResponse response = await quizService.SubmitQuizAsync(attemptId, quizStatus, principal.GetParticipantId());
+            QuizApiResponse response = await attemptService.SubmitQuizAsync(attemptId, quizStatus, principal.GetParticipantId());
 
             if (response.IsFailure)
             {

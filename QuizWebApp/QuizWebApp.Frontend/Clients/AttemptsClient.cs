@@ -3,36 +3,39 @@ using QuizWebApp.Shared.ApiResponses;
 using QuizWebApp.Shared.DTOs.Attempt;
 using QuizWebApp.Shared.DTOs.Common;
 using QuizWebApp.Shared.DTOs.Question;
-using QuizWebApp.Shared.DTOs.Quiz;
 
 namespace QuizWebApp.Frontend.Clients;
 
 public class AttemptsClient(HttpClient httpClient)
 {
-    private const string ApiRoute = "/api/participant";
-    private const string QuizApiRoute = ApiRoute + "/take-quiz";
+    private const string ApiRoute = "/api/attempts";
+    private const string OrganizerApiRoute = ApiRoute + "/organizer";
+    private const string ParticipantApiRoute = ApiRoute + "/participant";
+    private const string QuizApiRoute = ParticipantApiRoute + "/take-quiz";
     private const string NoResponseMessage = "No response from server.";
 
-    public async Task<QuizApiResponse<PagedInfoArray<AttemptInfoDTO>>> GetAttemptsAsync(PaginationDTO paginationData)
+    public async Task<QuizApiResponse<QuizAttemptsInfoDTO>> GetQuizAttemptsAsync(Guid quizId, PaginationDTO paginationData)
     {
-        string requestUrl = $"{ApiRoute}/attempts?pageNumber={paginationData.PageNumber}&pageSize={paginationData.PageSize}";
+        string requestUrl = $"{OrganizerApiRoute}/quiz-info/{quizId}?pageNumber={paginationData.PageNumber}&pageSize={paginationData.PageSize}";
         HttpResponseMessage response = await httpClient.GetAsync(requestUrl);
 
-        QuizApiResponse<PagedInfoArray<AttemptInfoDTO>>? responseData = await response.Content
-            .ReadFromJsonAsync<QuizApiResponse<PagedInfoArray<AttemptInfoDTO>>>();
+        QuizApiResponse<QuizAttemptsInfoDTO>? responseData = await response.Content
+            .ReadFromJsonAsync<QuizApiResponse<QuizAttemptsInfoDTO>>();
         
         return responseData
-            ?? QuizApiResponse<PagedInfoArray<AttemptInfoDTO>>.Fail(NoResponseMessage);
+            ?? QuizApiResponse<QuizAttemptsInfoDTO>.Fail(NoResponseMessage);
     }
 
-    public async Task<QuizApiResponse<QuizBriefInfoDTO[]>> GetActiveQuizzesAsync(int topicIdFilter)
+    public async Task<QuizApiResponse<PagedInfoArray<AttemptQuizInfoDTO>>> GetParticipantAttemptsAsync(PaginationDTO paginationData)
     {
-        HttpResponseMessage response = await httpClient.GetAsync($"{ApiRoute}/available-quizzes?topicIdFilter={topicIdFilter}");
+        string requestUrl = $"{ParticipantApiRoute}?pageNumber={paginationData.PageNumber}&pageSize={paginationData.PageSize}";
+        HttpResponseMessage response = await httpClient.GetAsync(requestUrl);
 
-        QuizApiResponse<QuizBriefInfoDTO[]>? responseData = await response.Content.ReadFromJsonAsync<QuizApiResponse<QuizBriefInfoDTO[]>>();
+        QuizApiResponse<PagedInfoArray<AttemptQuizInfoDTO>>? responseData = await response.Content
+            .ReadFromJsonAsync<QuizApiResponse<PagedInfoArray<AttemptQuizInfoDTO>>>();
         
         return responseData
-            ?? QuizApiResponse<QuizBriefInfoDTO[]>.Fail(NoResponseMessage);
+            ?? QuizApiResponse<PagedInfoArray<AttemptQuizInfoDTO>>.Fail(NoResponseMessage);
     }
 
     public async Task<QuizApiResponse<int>> StartQuizAsync(Guid quizId)

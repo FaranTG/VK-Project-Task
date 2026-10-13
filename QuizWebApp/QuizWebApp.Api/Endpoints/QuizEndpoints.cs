@@ -17,6 +17,7 @@ public static class QuizEndpoints
             .RequireAuthorization();
 
         MapQuizGetEndpoint(commonRouteGroup);
+        MapQuizGetActiveEndpoint(commonRouteGroup);
         MapQuizGetByIdEndpoint(commonRouteGroup);
 
         RouteGroupBuilder organizerRouteGroup = commonRouteGroup
@@ -33,6 +34,13 @@ public static class QuizEndpoints
     {
         app.MapGet("/", async (IQuizService quizService) =>
             Results.Ok(await quizService.GetQuizzesAsync())
+        );
+    }
+
+    private static void MapQuizGetActiveEndpoint(IEndpointRouteBuilder app)
+    {
+        app.MapGet("/active", async (int topicIdFilter, IQuizService quizService) =>
+            Results.Ok(await quizService.GetActiveQuizzesAsync(topicIdFilter))
         );
     }
 

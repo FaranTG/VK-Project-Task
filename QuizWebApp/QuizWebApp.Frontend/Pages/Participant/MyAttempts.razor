@@ -40,7 +40,7 @@
     private const string DateFormat = "dd.MM.yyyy HH:mm";
     private const int DefaultPageSize = 10;
 
-    private GridItemsProvider<AttemptInfoDTO>? _attemptsProvider;
+    private GridItemsProvider<AttemptQuizInfoDTO>? _attemptsProvider;
     private string? _loadErrorMessage;
 
     private PaginationState _paginationState = new PaginationState { ItemsPerPage = DefaultPageSize };
@@ -56,7 +56,7 @@
                 int pageSize = request.Count ?? DefaultPageSize;
                 int pageNumber = request.StartIndex / pageSize + 1;
                 PaginationDTO paginationData = new PaginationDTO(pageNumber, pageSize);
-                QuizApiResponse<PagedInfoArray<AttemptInfoDTO>> response = await AttemptsClient.GetAttemptsAsync(paginationData);
+                QuizApiResponse<PagedInfoArray<AttemptQuizInfoDTO>> response = await AttemptsClient.GetParticipantAttemptsAsync(paginationData);
                 
                 if (response.IsSuccess)
                 {
@@ -64,7 +64,7 @@
                 }
 
                 _loadErrorMessage = response.ErrorMessage;
-                return GridItemsProviderResult.From(Array.Empty<AttemptInfoDTO>(), 0);
+                return GridItemsProviderResult.From(Array.Empty<AttemptQuizInfoDTO>(), 0);
             }
             finally
             {

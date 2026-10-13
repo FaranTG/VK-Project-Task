@@ -9,6 +9,8 @@ public interface IQuizService
 
     Task<QuizApiResponse<QuizSummaryInfoDTO[]>> GetQuizzesAsync();
 
+    Task<QuizApiResponse<QuizBriefInfoDTO[]>> GetActiveQuizzesAsync(int topicIdFilter);
+
     Task<QuizApiResponse<QuizInfoDTO>> GetQuizByIdAsync(Guid id);
 
     Task<QuizApiResponse<QuizInfoDTO>> CreateQuizAsync(QuizSaveDTO newQuizData);
