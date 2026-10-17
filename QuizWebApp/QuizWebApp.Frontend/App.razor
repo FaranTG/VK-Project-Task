@@ -10,11 +10,16 @@
 }
 else
 {
-    <Router AppAssembly="@typeof(App).Assembly" NotFoundPage="typeof(Pages.NotFound)">
+    <Router AppAssembly="@typeof(App).Assembly">
         <Found Context="routeData">
             <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)"/>
             <FocusOnNavigate RouteData="@routeData" Selector="h1" />
         </Found>
+        <NotFound>
+            <LayoutView Layout="@typeof(MainLayout)">
+                <QuizWebApp.Frontend.Pages.NotFound />
+            </LayoutView>
+        </NotFound>
     </Router>
     <Loader />
     <ErrorAlert />
