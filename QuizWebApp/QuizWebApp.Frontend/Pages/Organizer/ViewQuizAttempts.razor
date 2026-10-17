@@ -4,7 +4,9 @@
 @using QuizWebApp.Shared.ApiResponses
 @using QuizWebApp.Shared.DTOs.Attempt
 @using QuizWebApp.Shared.DTOs.Common
+@using QuizWebApp.Shared.DTOs.Quiz
 
+@inject QuizzesClient QuizzesClient
 @inject AttemptsClient AttemptsClient
 @inject IAppState AppState
 
@@ -54,7 +56,31 @@
 
     private PaginationState _paginationState = new PaginationState { ItemsPerPage = DefaultPageSize };
 
-    protected override void OnParametersSet()
+    protected override async Task OnParametersSetAsync()
+    {
+        AppState.ShowLoader("Fetching quiz title...");
+        try
+        {
+            QuizApiResponse<QuizTitleInfoDTO> response = await QuizzesClient.GetQuizTitleByIdAsync(Id!.Value);
+
+            if (response.IsFailure)
+            {
+                _loadErrorMessage = response.ErrorMessage;
+                return;
+            }
+
+            _quizName = response.Data!.Name;
+            _topicName = response.Data.Topic;
+        }
+        finally
+        {
+            AppState.HideLoader();
+        }
+
+        ConfigureAttemptsGrid();
+    }
+
+    private void ConfigureAttemptsGrid()
     {
         _attemptsProvider = async request =>
         {
@@ -64,14 +90,11 @@
                 int pageSize = request.Count ?? DefaultPageSize;
                 int pageNumber = request.StartIndex / pageSize + 1;
                 PaginationDTO paginationData = new PaginationDTO(pageNumber, pageSize);
-                QuizApiResponse<QuizAttemptsInfoDTO> response = await AttemptsClient.GetQuizAttemptsAsync(Id!.Value, paginationData);
+                QuizApiResponse<PagedInfoArray<AttemptParticipantInfoDTO>> response = await AttemptsClient.GetQuizAttemptsAsync(Id!.Value, paginationData);
 
                 if (response.IsSuccess)
                 {
-                    _quizName = response.Data!.QuizName;
-                    _topicName = response.Data.TopicName;
-                    StateHasChanged();
-                    return GridItemsProviderResult.From(response.Data.Attempts.Records, response.Data.Attempts.TotalCount);
+                    return GridItemsProviderResult.From(response.Data!.Records, response.Data.TotalCount);
                 }
 
                 _loadErrorMessage = response.ErrorMessage;

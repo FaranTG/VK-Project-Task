@@ -14,16 +14,16 @@ public class AttemptsClient(HttpClient httpClient)
     private const string QuizApiRoute = ParticipantApiRoute + "/take-quiz";
     private const string NoResponseMessage = "No response from server.";
 
-    public async Task<QuizApiResponse<QuizAttemptsInfoDTO>> GetQuizAttemptsAsync(Guid quizId, PaginationDTO paginationData)
+    public async Task<QuizApiResponse<PagedInfoArray<AttemptParticipantInfoDTO>>> GetQuizAttemptsAsync(Guid quizId, PaginationDTO paginationData)
     {
         string requestUrl = $"{OrganizerApiRoute}/quiz-info/{quizId}?pageNumber={paginationData.PageNumber}&pageSize={paginationData.PageSize}";
         HttpResponseMessage response = await httpClient.GetAsync(requestUrl);
 
-        QuizApiResponse<QuizAttemptsInfoDTO>? responseData = await response.Content
-            .ReadFromJsonAsync<QuizApiResponse<QuizAttemptsInfoDTO>>();
+        QuizApiResponse<PagedInfoArray<AttemptParticipantInfoDTO>>? responseData = await response.Content
+            .ReadFromJsonAsync<QuizApiResponse<PagedInfoArray<AttemptParticipantInfoDTO>>>();
         
         return responseData
-            ?? QuizApiResponse<QuizAttemptsInfoDTO>.Fail(NoResponseMessage);
+            ?? QuizApiResponse<PagedInfoArray<AttemptParticipantInfoDTO>>.Fail(NoResponseMessage);
     }
 
     public async Task<QuizApiResponse<PagedInfoArray<AttemptQuizInfoDTO>>> GetParticipantAttemptsAsync(PaginationDTO paginationData)

@@ -110,6 +110,34 @@ public class QuizService : IQuizService
         }
     }
 
+    public async Task<QuizApiResponse<QuizTitleInfoDTO>> GetQuizTitleByIdAsync(Guid id)
+    {
+        try
+        {
+            QuizTitleInfoDTO? quizTitle = await _dbContext.Quizzes
+                .AsNoTracking()
+                .Where(quiz => quiz.Id == id) 
+                .Select
+                (
+                    quiz => new QuizTitleInfoDTO
+                    (
+                        quiz.Id,
+                        quiz.Name,
+                        quiz.Topic!.Name
+                    )
+                )
+                .SingleOrDefaultAsync(); 
+            
+            return quizTitle is null
+                ? QuizApiResponse<QuizTitleInfoDTO>.Fail(IQuizService.NotFoundMessage)
+                : QuizApiResponse<QuizTitleInfoDTO>.Success(quizTitle);
+        }
+        catch (Exception exception)
+        {
+            return QuizApiResponse<QuizTitleInfoDTO>.Fail(exception.Message);
+        }
+    }
+
     public async Task<QuizApiResponse<QuizInfoDTO>> CreateQuizAsync(QuizSaveDTO newQuizData)
     {
         try

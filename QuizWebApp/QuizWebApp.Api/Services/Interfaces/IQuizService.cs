@@ -13,6 +13,8 @@ public interface IQuizService
 
     Task<QuizApiResponse<QuizInfoDTO>> GetQuizByIdAsync(Guid id);
 
+    Task<QuizApiResponse<QuizTitleInfoDTO>> GetQuizTitleByIdAsync(Guid id);
+
     Task<QuizApiResponse<QuizInfoDTO>> CreateQuizAsync(QuizSaveDTO newQuizData);
 
     Task<QuizApiResponse> UpdateQuizAsync(Guid id, QuizSaveDTO newQuizData);

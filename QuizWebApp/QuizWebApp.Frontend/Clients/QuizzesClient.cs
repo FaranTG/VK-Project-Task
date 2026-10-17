@@ -38,6 +38,15 @@ public class QuizzesClient(HttpClient httpClient)
             ?? QuizApiResponse<QuizInfoDTO>.Fail(NoResponseMessage);
     }
 
+    public async Task<QuizApiResponse<QuizTitleInfoDTO>> GetQuizTitleByIdAsync(Guid id)
+    {
+        HttpResponseMessage response = await httpClient.GetAsync($"{ApiRoute}/{id}/title");
+
+        QuizApiResponse<QuizTitleInfoDTO>? responseData = await response.Content.ReadFromJsonAsync<QuizApiResponse<QuizTitleInfoDTO>>();
+        return responseData
+            ?? QuizApiResponse<QuizTitleInfoDTO>.Fail(NoResponseMessage);
+    }
+
     public async Task<QuizApiResponse<QuizInfoDTO>> AddQuizAsync(QuizSaveDTO newQuiz)
     {
         HttpResponseMessage response = await httpClient.PostAsJsonAsync(ApiRoute, newQuiz);

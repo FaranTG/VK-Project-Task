@@ -8,6 +8,7 @@ namespace QuizWebApp.Api.Endpoints;
 public static class QuizEndpoints
 {
     private const string GetQuizEndpointName = "GetQuiz";
+    private const string GetQuizTitleEndpointName = "GetQuizTitle";
     private const string ApiRoute = "/api/quizzes";
 
     public static IEndpointRouteBuilder MapQuizEndpoints(this IEndpointRouteBuilder app)
@@ -19,6 +20,7 @@ public static class QuizEndpoints
         MapQuizGetEndpoint(commonRouteGroup);
         MapQuizGetActiveEndpoint(commonRouteGroup);
         MapQuizGetByIdEndpoint(commonRouteGroup);
+        MapQuizGetTitleByIdEndpoint(commonRouteGroup);
 
         RouteGroupBuilder organizerRouteGroup = commonRouteGroup
             .MapGroup("/")
@@ -55,6 +57,19 @@ public static class QuizEndpoints
                 : Results.NotFound(response);
         })
         .WithName(GetQuizEndpointName);
+    }
+
+    private static void MapQuizGetTitleByIdEndpoint(IEndpointRouteBuilder app)
+    {
+        app.MapGet("/{id:guid}/title", async (Guid id, IQuizService quizService) =>
+        {
+            QuizApiResponse<QuizTitleInfoDTO> response = await quizService.GetQuizTitleByIdAsync(id);
+
+            return response.IsSuccess 
+                ? Results.Ok(response)
+                : Results.NotFound(response);
+        })
+        .WithName(GetQuizTitleEndpointName);
     }
 
     private static void MapQuizPostEndpoint(IEndpointRouteBuilder app)

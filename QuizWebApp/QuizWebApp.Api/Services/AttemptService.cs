@@ -22,29 +22,16 @@ public class AttemptService : IAttemptService
         _dbContext = dbContext;
     }
 
-    public async Task<QuizApiResponse<QuizAttemptsInfoDTO>> GetQuizAttemptsAsync(Guid quizId, PaginationDTO paginationData)
+    public async Task<QuizApiResponse<PagedInfoArray<AttemptParticipantInfoDTO>>> GetQuizAttemptsAsync(Guid quizId, PaginationDTO paginationData)
     {
         try
         {
-            var quizInfo = await _dbContext.Quizzes
-                .AsNoTracking()
-                .Include(quiz => quiz.Topic)
-                .Where(quiz => quiz.Id == quizId)
-                .Select(quiz => new { QuizName = quiz.Name, TopicName = quiz.Topic!.Name })
-                .SingleOrDefaultAsync();
-            
-            if (quizInfo is null)
-            {
-                return QuizApiResponse<QuizAttemptsInfoDTO>.Fail("Quiz not found.");
-            }
-
             IQueryable<Attempt> query = _dbContext.Attempts
                 .AsNoTracking()
                 .Where(attempt => attempt.QuizId == quizId);
             int count = await query.CountAsync();
 
             AttemptParticipantInfoDTO[] participants = await query
-                .Include(attempt => attempt.Participant)
                 .OrderByDescending(attempt => attempt.StartTime)
                 .Skip((paginationData.PageNumber - 1) * paginationData.PageSize)
                 .Take(paginationData.PageSize)
@@ -64,13 +51,12 @@ public class AttemptService : IAttemptService
                 .ToArrayAsync();
 
             PagedInfoArray<AttemptParticipantInfoDTO> pagedParticipants = new (participants, count);
-            QuizAttemptsInfoDTO attemptsData = new (quizInfo.QuizName, quizInfo.TopicName, pagedParticipants);
 
-            return QuizApiResponse<QuizAttemptsInfoDTO>.Success(attemptsData);
+            return QuizApiResponse<PagedInfoArray<AttemptParticipantInfoDTO>>.Success(pagedParticipants);
         }
         catch (Exception exception)
         {
-            return QuizApiResponse<QuizAttemptsInfoDTO>.Fail(exception.Message);
+            return QuizApiResponse<PagedInfoArray<AttemptParticipantInfoDTO>>.Fail(exception.Message);
         }
     }
     
@@ -85,8 +71,6 @@ public class AttemptService : IAttemptService
             int totalCount = await query.CountAsync();
 
             AttemptQuizInfoDTO[] attempts = await query
-                .Include(attempt => attempt.Quiz)
-                    .ThenInclude(quiz => quiz!.Topic)
                 .OrderByDescending(attempt => attempt.Id)
                 .Skip((paginationData.PageNumber - 1) * paginationData.PageSize)
                 .Take(paginationData.PageSize)
