@@ -1,0 +1,32 @@
+﻿@implements IDisposable
+
+@inject IAppState AppState
+
+@if (_errorMessage is not null)
+{
+    <QuizModal Title="Error" ActionButtonText="Ok"
+        OnActionButtonClicked="() => _errorMessage = null"
+        OnCancelClicked="() => _errorMessage = null">
+        <p class="h5 text-center text-danger"><em>@_errorMessage</em></p>
+    </QuizModal>
+}
+
+@code {
+    private string? _errorMessage;
+
+    protected override void OnInitialized()
+    {
+        AppState.OnShowError += ShowError;
+    }
+
+    private void ShowError(string errorMessage)
+    {
+        _errorMessage = errorMessage;
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        AppState.OnShowError -= ShowError;
+    }
+}

@@ -17,11 +17,16 @@
 @code {
     protected override void OnInitialized()
     {
-        AppState.OnToggleLoader += StateHasChanged;
+        AppState.OnToggleLoader += ToggleLoader;
+    }
+
+    private void ToggleLoader()
+    {
+        InvokeAsync(StateHasChanged);
     }
 
     public void Dispose()
     {
-        AppState.OnToggleLoader -= StateHasChanged;
+        AppState.OnToggleLoader -= ToggleLoader;
     }
 }

@@ -47,12 +47,6 @@ else
                     <ValidationMessage For="() => UserModel.Password" />
                 </div>
 
-                @if (_errorMessage is not null) {
-                    <div class="mb-3 bg-danger text-white p-2">
-                        <p>@_errorMessage</p>
-                    </div>
-                }
-
                 <div class="mb-3 d-flex justify-content-between">
                     <button type="submit" class="btn btn-primary">Register</button>
                     <a class="btn btn-outline-primary" href="auth/login">Login</a>
@@ -76,7 +70,6 @@ else
 @code {
     private UserModel? UserModel { get; set; }
 
-    private string? _errorMessage;
     private bool _showSuccessAlert;
 
     protected override void OnInitialized()
@@ -93,23 +86,17 @@ else
     private async Task RegisterAsync() {
         ArgumentNullException.ThrowIfNull(UserModel);
 
-        _errorMessage = null;
         AppState.ShowLoader("Registering-in...");
-
         try 
         {
             QuizApiResponse responseData = await AuthClient.RegisterUserAsync(CreateUserSaveDTO(UserModel));
 
             if (responseData.IsFailure) {
-                _errorMessage = responseData.ErrorMessage;
+                AppState.ShowError(responseData.ErrorMessage!);
                 return;
             }
 
             _showSuccessAlert = true;
-        }
-        catch (Exception exception)
-        {
-            _errorMessage = exception.Message;
         }
         finally
         {

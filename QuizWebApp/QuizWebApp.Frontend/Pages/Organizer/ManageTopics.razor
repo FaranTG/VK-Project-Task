@@ -35,14 +35,6 @@ else
                             <InputText @bind-Value="TopicModel.Name" id="topicName" class="form-control" />
                             <ValidationMessage For="() => TopicModel.Name" />
                         </div>
-
-                        @if (_formErrorMessage is not null)
-                        {
-                            <div class="d-flex justify-content-between align-items-center gap-2 border border-danger border-1 p-1">
-                                <p class="m-0">@_formErrorMessage</p>
-                                <button type="button" class="btn btn-sm btn-danger" @onclick="() => _formErrorMessage = null">Close</button>
-                            </div>
-                        }
                     </div>
                     <div class="card-footer d-flex justify-content-between align-items-center">
                         <button type="button" class="btn btn-sm btn-secondary" @onclick="ClearModel">
@@ -104,7 +96,6 @@ else
 
     private TopicInfoDTO[]? _topics;
     private string? _loadErrorMessage;
-    private string? _formErrorMessage;
     private int? _id;
 
     private string TopicCardTitle => _id is null ? "New Topic" : $"Edit Topic with Id {_id}";
@@ -120,7 +111,6 @@ else
     {
         ArgumentNullException.ThrowIfNull(TopicModel);
 
-        _formErrorMessage = null;
         _id = topicData.Id;
         TopicModel.Name = topicData.Name;
     }
@@ -128,8 +118,6 @@ else
     private async Task SaveTopicAsync()
     {
         ArgumentNullException.ThrowIfNull(TopicModel);
-
-        _formErrorMessage = null;
 
         AppState.ShowLoader("Saving topic...");
 
@@ -153,7 +141,7 @@ else
 
             if (response.IsFailure)
             {
-                _formErrorMessage = response.ErrorMessage;
+                AppState.ShowError(response.ErrorMessage!);
                 return false;
             }
         }
@@ -163,7 +151,7 @@ else
 
             if (response.IsFailure)
             {
-                _formErrorMessage = response.ErrorMessage;
+                AppState.ShowError(response.ErrorMessage!);
                 return false;
             }
         }
@@ -195,6 +183,5 @@ else
 
         _id = null;
         TopicModel.Name = string.Empty;
-        _formErrorMessage = null;
     }
 }
