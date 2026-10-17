@@ -18,7 +18,7 @@ public class UserService : IUserService
         _dbContext = dbContext;
     }
 
-    public async Task<QuizApiResponse<PagedInfoArray<UserInfoDTO>>> GetUsersAsync(UserApprovedFilter approvedFilter, PaginationDTO paginationData)
+    public async Task<QuizApiResponse<PagedInfo<UserInfoDTO>>> GetUsersAsync(UserApprovedFilter approvedFilter, PaginationDTO paginationData)
     {
         try
         {
@@ -46,11 +46,11 @@ public class UserService : IUserService
                 ))
                 .ToArrayAsync();
             
-            return QuizApiResponse<PagedInfoArray<UserInfoDTO>>.Success(new PagedInfoArray<UserInfoDTO>(users, totalCount));
+            return QuizApiResponse<PagedInfo<UserInfoDTO>>.Success(new PagedInfo<UserInfoDTO>(users, totalCount));
         }
         catch (Exception exception)
         {
-            return QuizApiResponse<PagedInfoArray<UserInfoDTO>>.Fail(exception.Message);
+            return QuizApiResponse<PagedInfo<UserInfoDTO>>.Fail(exception.Message);
         }
     }
 

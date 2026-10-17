@@ -3,6 +3,7 @@ using QuizWebApp.Api.Data;
 using QuizWebApp.Api.Data.Models;
 using QuizWebApp.Api.Services.Interfaces;
 using QuizWebApp.Shared.ApiResponses;
+using QuizWebApp.Shared.DTOs.Common;
 using QuizWebApp.Shared.DTOs.Topic;
 
 namespace QuizWebApp.Api.Services;
@@ -18,13 +19,17 @@ public class TopicService : ITopicService
         _dbContext = dbContext;
     }
 
-    public async Task<QuizApiResponse<TopicInfoDTO[]>> GetTopicsAsync()
+    public async Task<QuizApiResponse<PagedInfo<TopicInfoDTO>>> GetTopicsAsync(PaginationDTO paginationData)
     {
         try
         {
-            TopicInfoDTO[] topics = await _dbContext.Topics
-                .AsNoTracking()
+            IQueryable<Topic> query = _dbContext.Topics.AsNoTracking();
+            int totalCount = await query.CountAsync();
+
+            TopicInfoDTO[] topics = await query
                 .OrderBy(topic => topic.Id)
+                .Skip((paginationData.PageNumber - 1) * paginationData.PageSize)
+                .Take(paginationData.PageSize)
                 .Select(
                     topic => new TopicInfoDTO
                     (
@@ -34,11 +39,13 @@ public class TopicService : ITopicService
                 )
                 .ToArrayAsync();
             
-            return QuizApiResponse<TopicInfoDTO[]>.Success(topics);
+            PagedInfo<TopicInfoDTO> pagedTopics = new (topics, totalCount);
+            
+            return QuizApiResponse<PagedInfo<TopicInfoDTO>>.Success(pagedTopics);
         }
         catch (Exception exception)
         {
-            return QuizApiResponse<TopicInfoDTO[]>.Fail(exception.Message);
+            return QuizApiResponse<PagedInfo<TopicInfoDTO>>.Fail(exception.Message);
         }
     }
 

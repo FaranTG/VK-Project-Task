@@ -1,4 +1,5 @@
 ﻿using QuizWebApp.Shared.ApiResponses;
+using QuizWebApp.Shared.DTOs.Common;
 using QuizWebApp.Shared.DTOs.Topic;
 
 namespace QuizWebApp.Api.Services.Interfaces;
@@ -7,7 +8,7 @@ public interface ITopicService
 {
     public const string NotFoundMessage = "Topic not found.";
 
-    Task<QuizApiResponse<TopicInfoDTO[]>> GetTopicsAsync();
+    Task<QuizApiResponse<PagedInfo<TopicInfoDTO>>> GetTopicsAsync(PaginationDTO paginationData);
 
     Task<QuizApiResponse<TopicInfoDTO>> GetTopicByIdAsync(int id);
 

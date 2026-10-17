@@ -22,7 +22,7 @@ public class AttemptService : IAttemptService
         _dbContext = dbContext;
     }
 
-    public async Task<QuizApiResponse<PagedInfoArray<AttemptParticipantInfoDTO>>> GetQuizAttemptsAsync(Guid quizId, PaginationDTO paginationData)
+    public async Task<QuizApiResponse<PagedInfo<AttemptParticipantInfoDTO>>> GetQuizAttemptsAsync(Guid quizId, PaginationDTO paginationData)
     {
         try
         {
@@ -50,17 +50,17 @@ public class AttemptService : IAttemptService
                 )
                 .ToArrayAsync();
 
-            PagedInfoArray<AttemptParticipantInfoDTO> pagedParticipants = new (participants, count);
+            PagedInfo<AttemptParticipantInfoDTO> pagedParticipants = new (participants, count);
 
-            return QuizApiResponse<PagedInfoArray<AttemptParticipantInfoDTO>>.Success(pagedParticipants);
+            return QuizApiResponse<PagedInfo<AttemptParticipantInfoDTO>>.Success(pagedParticipants);
         }
         catch (Exception exception)
         {
-            return QuizApiResponse<PagedInfoArray<AttemptParticipantInfoDTO>>.Fail(exception.Message);
+            return QuizApiResponse<PagedInfo<AttemptParticipantInfoDTO>>.Fail(exception.Message);
         }
     }
     
-    public async Task<QuizApiResponse<PagedInfoArray<AttemptQuizInfoDTO>>> GetParticipantAttemptsAsync(int participantId, PaginationDTO paginationData)
+    public async Task<QuizApiResponse<PagedInfo<AttemptQuizInfoDTO>>> GetParticipantAttemptsAsync(int participantId, PaginationDTO paginationData)
     {
         try
         {
@@ -87,11 +87,11 @@ public class AttemptService : IAttemptService
                 ))
                 .ToArrayAsync();
             
-            return QuizApiResponse<PagedInfoArray<AttemptQuizInfoDTO>>.Success(new PagedInfoArray<AttemptQuizInfoDTO>(attempts, totalCount));
+            return QuizApiResponse<PagedInfo<AttemptQuizInfoDTO>>.Success(new PagedInfo<AttemptQuizInfoDTO>(attempts, totalCount));
         }
         catch (Exception exception)
         {
-            return QuizApiResponse<PagedInfoArray<AttemptQuizInfoDTO>>.Fail(exception.Message);
+            return QuizApiResponse<PagedInfo<AttemptQuizInfoDTO>>.Fail(exception.Message);
         }
     }
 

@@ -10,9 +10,9 @@ public interface IAttemptService
 {
     public const string NotFoundMessage = "Attempt not found.";
 
-    Task<QuizApiResponse<PagedInfoArray<AttemptParticipantInfoDTO>>> GetQuizAttemptsAsync(Guid quizId, PaginationDTO paginationData);
+    Task<QuizApiResponse<PagedInfo<AttemptParticipantInfoDTO>>> GetQuizAttemptsAsync(Guid quizId, PaginationDTO paginationData);
 
-    Task<QuizApiResponse<PagedInfoArray<AttemptQuizInfoDTO>>> GetParticipantAttemptsAsync(int participantId, PaginationDTO paginationData);
+    Task<QuizApiResponse<PagedInfo<AttemptQuizInfoDTO>>> GetParticipantAttemptsAsync(int participantId, PaginationDTO paginationData);
 
     Task<QuizApiResponse<int>> StartQuizAsync(Guid quizId, int participantId);
 

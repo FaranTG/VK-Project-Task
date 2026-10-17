@@ -116,7 +116,7 @@ else
         AppState.ShowLoader("Fetching quizzes and topics...");
         try
         {
-            QuizApiResponse<TopicInfoDTO[]> topicsResponse = await TopicsClient.GetTopicsAsync();
+            QuizApiResponse<PagedInfo<TopicInfoDTO>> topicsResponse = await TopicsClient.GetTopicsAsync();
 
             if (topicsResponse.IsFailure)
             {
@@ -132,7 +132,7 @@ else
                 return;
             }
 
-            _topics =  topicsResponse.Data;
+            _topics =  topicsResponse.Data!.DTOs;
             _quizzes =  quizzesResponse.Data;
         }
         finally

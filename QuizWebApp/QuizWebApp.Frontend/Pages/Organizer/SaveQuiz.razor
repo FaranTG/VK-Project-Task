@@ -139,7 +139,7 @@ else
 
         try
         {
-            QuizApiResponse<TopicInfoDTO[]> topicsResponse = await TopicsClient.GetTopicsAsync();
+            QuizApiResponse<PagedInfo<TopicInfoDTO>> topicsResponse = await TopicsClient.GetTopicsAsync();
 
             if (topicsResponse.IsFailure)
             {
@@ -147,7 +147,7 @@ else
                 return;
             }
 
-            _topics =  topicsResponse.Data;
+            _topics =  topicsResponse.Data!.DTOs;
         }
         finally
         {

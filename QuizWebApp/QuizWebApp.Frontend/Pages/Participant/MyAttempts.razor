@@ -56,11 +56,11 @@
                 int pageSize = request.Count ?? DefaultPageSize;
                 int pageNumber = request.StartIndex / pageSize + 1;
                 PaginationDTO paginationData = new PaginationDTO(pageNumber, pageSize);
-                QuizApiResponse<PagedInfoArray<AttemptQuizInfoDTO>> response = await AttemptsClient.GetParticipantAttemptsAsync(paginationData);
+                QuizApiResponse<PagedInfo<AttemptQuizInfoDTO>> response = await AttemptsClient.GetParticipantAttemptsAsync(paginationData);
                 
                 if (response.IsSuccess)
                 {
-                    return GridItemsProviderResult.From(response.Data!.Records, response.Data.TotalCount);
+                    return GridItemsProviderResult.From(response.Data!.DTOs, response.Data.TotalCount);
                 }
 
                 _loadErrorMessage = response.ErrorMessage;

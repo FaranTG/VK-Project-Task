@@ -1,5 +1,6 @@
 ﻿using System.Net.Http.Json;
 using QuizWebApp.Shared.ApiResponses;
+using QuizWebApp.Shared.DTOs.Common;
 using QuizWebApp.Shared.DTOs.Topic;
 
 namespace QuizWebApp.Frontend.Clients;
@@ -9,14 +10,16 @@ public class TopicsClient(HttpClient httpClient)
     private const string ApiRoute = "/api/topics";
     private const string NoResponseMessage = "No response from server.";
 
-    public async Task<QuizApiResponse<TopicInfoDTO[]>> GetTopicsAsync()
+    public async Task<QuizApiResponse<PagedInfo<TopicInfoDTO>>> GetTopicsAsync(PaginationDTO? paginationData = null)
     {
-        HttpResponseMessage response = await httpClient.GetAsync(ApiRoute);
+        paginationData ??= new PaginationDTO(1, 100);
 
-        QuizApiResponse<TopicInfoDTO[]>? responseData = await response.Content.ReadFromJsonAsync<QuizApiResponse<TopicInfoDTO[]>>();
+        HttpResponseMessage response = await httpClient.GetAsync($"{ApiRoute}?pageNumber={paginationData.PageNumber}&pageSize={paginationData.PageSize}");
+
+        QuizApiResponse<PagedInfo<TopicInfoDTO>>? responseData = await response.Content.ReadFromJsonAsync<QuizApiResponse<PagedInfo<TopicInfoDTO>>>();
         
         return responseData
-            ?? QuizApiResponse<TopicInfoDTO[]>.Fail(NoResponseMessage);
+            ?? QuizApiResponse<PagedInfo<TopicInfoDTO>>.Fail(NoResponseMessage);
     }
     
     public async Task<QuizApiResponse<TopicInfoDTO>> GetTopicByIdAsync(int id)

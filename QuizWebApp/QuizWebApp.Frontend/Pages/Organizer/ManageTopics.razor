@@ -1,20 +1,23 @@
 ﻿@page "/organizer/manage-topics"
 
-@using QuizWebApp.Shared.DTOs.Topic
-@using QuizWebApp.Frontend.FormModels
+@using Microsoft.AspNetCore.Components.QuickGrid
 @using QuizWebApp.Frontend.Clients
+@using QuizWebApp.Frontend.FormModels
 @using QuizWebApp.Shared.ApiResponses
+@using QuizWebApp.Shared.DTOs.Common
+@using QuizWebApp.Shared.DTOs.Topic
 
 @inject TopicsClient TopicsClient
 @inject IAppState AppState
 
-<SectionContent SectionName="pageTitle">Manage Topics</SectionContent>
+<PageTitle>@PageTitle</PageTitle>
+<SectionContent SectionName="pageTitle">@PageTitle</SectionContent>
 
 @if (_loadErrorMessage is not null)
 {
     <p class="h5 text-center text-danger"><em>Error: @_loadErrorMessage</em></p>
 }
-else if (_topics is null || TopicModel is null)
+else if (TopicModel is null)
 {
     <p><em>Loading...</em></p>
 }
@@ -48,63 +51,66 @@ else
             </EditForm>
         </div>
         <div class="col-sm-7 ms-auto">
-            <table class="table table-striped table-bordered table-hover">
-                <thead class="table-dark">
-                    <tr>
-                        <th>#</th>
-                        <th>Id</th>
-                        <th>Name</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @if (_topics.Length == 0)
-                    {
-                        <tr>
-                            <td colspan="4">
-                                <p class="h5 text-center text-danger"><em>No topics found.</em></p>
-                            </td>
-                        </tr>
-                    }
-                    else
-                    {
-                        int rowNumber = 1;
-                        @foreach (TopicInfoDTO topicData in _topics)
-                        {
-                            <tr>
-                                <td>@(rowNumber++)</td>
-                                <td>@topicData.Id</td>
-                                <td>@topicData.Name</td>
-                                <td>
-                                    <div class="d-flex">
-                                        <button type="button" class="btn btn-sm btn-primary" @onclick="() => SetTopic(topicData)">
-                                            Edit
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        }
-                    }
-                </tbody>
-            </table>
+            <QuickGrid ItemsProvider="_attemptsProvider" Pagination="_paginationState" 
+                Class="table table-striped table-bordered table-hover" @ref="_grid">
+                <PropertyColumn Property="topic => topic.Id" />
+                <PropertyColumn Property="topic => topic.Name" />
+                
+                <TemplateColumn Title="Actions">
+                    <div class="d-flex py-1">
+                        <button type="button" class="btn btn-sm btn-primary" @onclick="() => SetTopic(context)">
+                            Edit
+                        </button>
+                    </div>
+                </TemplateColumn>
+            </QuickGrid>
+            <Paginator State="_paginationState" />
         </div>
     </div>
 }
 
 @code {
+    private const string PageTitle = "Manage Topics";
+    private const int DefaultPageSize = 10;
+
     private TopicModel? TopicModel { get; set; }
 
-    private TopicInfoDTO[]? _topics;
+    private QuickGrid<TopicInfoDTO>? _grid;
+    private GridItemsProvider<TopicInfoDTO>? _attemptsProvider;
     private string? _loadErrorMessage;
     private int? _id;
 
+    private PaginationState _paginationState = new PaginationState { ItemsPerPage = DefaultPageSize };
+
     private string TopicCardTitle => _id is null ? "New Topic" : $"Edit Topic with Id {_id}";
 
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
-        await LoadTopicsAsync();
-
         TopicModel = new () { Name = string.Empty };
+
+        _attemptsProvider = async request =>
+        {
+            AppState.ShowLoader("Fetching topics...");
+            try
+            {
+                int pageSize = request.Count ?? DefaultPageSize;
+                int pageNumber = request.StartIndex / pageSize + 1;
+                PaginationDTO paginationData = new PaginationDTO(pageNumber, pageSize);
+                QuizApiResponse<PagedInfo<TopicInfoDTO>> response = await TopicsClient.GetTopicsAsync(paginationData);
+
+                if (response.IsSuccess)
+                {
+                    return GridItemsProviderResult.From(response.Data!.DTOs, response.Data.TotalCount);
+                }
+
+                _loadErrorMessage = response.ErrorMessage;
+                return GridItemsProviderResult.From(Array.Empty<TopicInfoDTO>(), 0);
+            }
+            finally
+            {
+                AppState.HideLoader();
+            }
+        };
     }
 
     private void SetTopic(TopicInfoDTO topicData)
@@ -127,7 +133,9 @@ else
         if (isSuccess)
         {
             ClearModel();
-            await LoadTopicsAsync();
+            
+            ArgumentNullException.ThrowIfNull(_grid);
+            await _grid.RefreshDataAsync();
         }
         
         AppState.HideLoader();
@@ -157,24 +165,6 @@ else
         }
         
         return true;
-    }
-
-    private async Task LoadTopicsAsync()
-    {
-        AppState.ShowLoader("Fetching topics...");
-        
-        QuizApiResponse<TopicInfoDTO[]>? response = await TopicsClient.GetTopicsAsync();
-
-        if (response.IsSuccess)
-        {
-            _topics = response.Data;
-        }
-        else
-        {
-            _loadErrorMessage = response.ErrorMessage;
-        }
-
-        AppState.HideLoader();
     }
 
     private void ClearModel()

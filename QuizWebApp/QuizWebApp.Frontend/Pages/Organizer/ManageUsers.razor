@@ -28,7 +28,8 @@
     </div>
 </div>
 <div class="row">
-    <QuickGrid ItemsProvider="_usersProvider" Pagination="_paginationState" Class="table table-striped table-bordered table-hover mb-3" @ref="_grid">
+    <QuickGrid ItemsProvider="_usersProvider" Pagination="_paginationState" 
+        Class="table table-striped table-bordered table-hover mb-3" @ref="_grid">
         <PropertyColumn Property="user => user.Id" />
         <PropertyColumn Property="user => user.Name" />
         <PropertyColumn Property="user => user.Phone" />
@@ -69,11 +70,11 @@
                 int pageSize = request.Count ?? DefaultPageSize;
                 int pageNumber = request.StartIndex / pageSize + 1;
                 PaginationDTO paginationData = new PaginationDTO(pageNumber, pageSize);
-                QuizApiResponse<PagedInfoArray<UserInfoDTO>> response = await UsersClient.GetUsersAsync(_filter, paginationData);
+                QuizApiResponse<PagedInfo<UserInfoDTO>> response = await UsersClient.GetUsersAsync(_filter, paginationData);
 
                 if (response.IsSuccess)
                 {
-                    return GridItemsProviderResult.From(response.Data!.Records, response.Data.TotalCount);
+                    return GridItemsProviderResult.From(response.Data!.DTOs, response.Data.TotalCount);
                 }
 
                 _loadErrorMessage = response.ErrorMessage;
