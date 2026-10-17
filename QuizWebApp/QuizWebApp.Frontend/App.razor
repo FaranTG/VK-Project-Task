@@ -1,6 +1,7 @@
 ﻿@using Microsoft.AspNetCore.Components.Authorization
 @using QuizWebApp.Frontend.Auth
 @using QuizWebApp.Frontend.Components
+@using QuizWebApp.Frontend.Pages
 
 @inject QuizAuthStateProvider QuizAuthStateProvider
 
@@ -12,7 +13,11 @@ else
 {
     <Router AppAssembly="@typeof(App).Assembly">
         <Found Context="routeData">
-            <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)"/>
+            <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)">
+                <NotAuthorized>
+                    <QuizWebApp.Frontend.Pages.NotAuthorized />
+                </NotAuthorized>
+            </AuthorizeRouteView>
             <FocusOnNavigate RouteData="@routeData" Selector="h1" />
         </Found>
         <NotFound>

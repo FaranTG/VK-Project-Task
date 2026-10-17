@@ -1,0 +1,9 @@
+﻿@page "/not-authorized"
+
+@using Microsoft.AspNetCore.Authorization
+
+@attribute [Authorize]
+
+<SectionContent SectionName="pageTitle">Not Authorized</SectionContent>
+
+<p>You do not have the required rights to access this page.</p>
