@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using QuizWebApp.Api.Data.Models;
+using QuizWebApp.Api.Infrastructure;
 using QuizWebApp.Api.Services;
 using QuizWebApp.Api.Services.Interfaces;
 
@@ -16,7 +17,8 @@ public static class DependencyInjection
             .AddScoped<IQuizService, QuizService>()
             .AddScoped<IAttemptService, AttemptService>()
             .AddScoped<IUserService, UserService>()
-            .AddScoped<IOrganizerService, OrganizerService>();
+            .AddScoped<IOrganizerService, OrganizerService>()
+            .AddHostedService<QuizExpirationWorker>();
         
         return serviceCollection;
     }
