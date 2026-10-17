@@ -1,4 +1,4 @@
-﻿using QuizWebApp.Api.Data.DataEnums;
+﻿using QuizWebApp.Shared.Enums;
 using QuizWebApp.Shared.ApiResponses;
 using QuizWebApp.Shared.DTOs.Attempt;
 using QuizWebApp.Shared.DTOs.Common;

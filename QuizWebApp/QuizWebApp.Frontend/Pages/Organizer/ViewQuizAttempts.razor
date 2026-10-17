@@ -28,7 +28,7 @@
         <PropertyColumn Property="attempt => attempt.Status" />
         <PropertyColumn Property="attempt => attempt.StartTime" Title="Start Time" Format="@DateFormat" />
         <TemplateColumn Title="End Time">
-            @if (context.Status == "Started")
+            @if (context.Status == nameof(AttemptStatus.Started))
             {
                 <span>-</span>
             }

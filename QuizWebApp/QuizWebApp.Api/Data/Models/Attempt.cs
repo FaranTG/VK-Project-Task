@@ -1,5 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using QuizWebApp.Api.Data.DataEnums;
+using QuizWebApp.Shared.Enums;
 
 namespace QuizWebApp.Api.Data.Models;
 

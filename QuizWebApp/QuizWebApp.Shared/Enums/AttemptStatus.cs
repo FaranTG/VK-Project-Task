@@ -1,4 +1,4 @@
-﻿namespace QuizWebApp.Api.Data.DataEnums;
+﻿namespace QuizWebApp.Shared.Enums;
 
 public enum AttemptStatus
 {

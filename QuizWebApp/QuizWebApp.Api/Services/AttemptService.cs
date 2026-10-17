@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using QuizWebApp.Api.Data;
-using QuizWebApp.Api.Data.DataEnums;
+using QuizWebApp.Shared.Enums;
 using QuizWebApp.Api.Data.Models;
 using QuizWebApp.Api.Services.Interfaces;
 using QuizWebApp.Shared.ApiResponses;
