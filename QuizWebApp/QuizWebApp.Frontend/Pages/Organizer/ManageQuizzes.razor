@@ -1,7 +1,9 @@
 ﻿@page "/organizer/manage-quizzes"
 
+@using Microsoft.AspNetCore.Components.QuickGrid
 @using QuizWebApp.Frontend.Clients
 @using QuizWebApp.Frontend.Components
+@using QuizWebApp.Frontend.Extensions
 @using QuizWebApp.Shared.ApiResponses
 @using QuizWebApp.Shared.DTOs.Quiz
 @using QuizWebApp.Shared.DTOs.Topic
@@ -12,13 +14,14 @@
 @inject TopicsClient TopicsClient
 @inject IAppState AppState
 
-<SectionContent SectionName="pageTitle">Manage Quizzes</SectionContent>
+<PageTitle>@PageTitle</PageTitle>
+<SectionContent SectionName="pageTitle">@PageTitle</SectionContent>
 
 @if (_loadErrorMessage is not null)
 {
     <p class="h5 text-center text-danger"><em>Error: @_loadErrorMessage</em></p>
 }
-else if (_topics is null || _quizzes is null || _filteredQuizzes is null)
+else if (_topics is null)
 {
     <p><em>Loading...</em></p>
 }
@@ -33,54 +36,32 @@ else
         </div>
     </div>
     <div class="row">
-        <table class="table table-striped table-bordered table-hover">
-            <thead class="table-dark">
-                <tr>
-                    <th>Name</th>
-                    <th>Topic</th>
-                    <th>Number of questions</th>
-                    <th>Time in minutes</th>
-                    <th>Is active</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                @if (_filteredQuizzes.Length == 0)
-                {
-                    <tr>
-                        <td colspan="6">
-                            <p class="h5 text-danger text-center"><em>No quizzes found.</em></p>
-                        </td>
-                    </tr>
-                }
-                else
-                {
-                    foreach (QuizSummaryInfoDTO quizInfo in _filteredQuizzes)
-                    {
-                        <tr>
-                            <td>@quizInfo.Name</td>
-                            <td>@quizInfo.Topic</td>
-                            <td>@quizInfo.QuestionsNumber</td>
-                            <td>@quizInfo.TimeInMinutes</td>
-                            <td>@(quizInfo.IsActive ? "Yes" : "No")</td>
-                            <td>
-                                <div class="d-flex justify-content-around">
-                                    <button type="button" class="btn btn-sm btn-secondary" @onclick="() => ViewQuestions(quizInfo)">
-                                        View questions
-                                    </button>
-                                    <a class="btn btn-sm btn-secondary" href="organizer/manage-quizzes/@quizInfo.Id/attempts">
-                                        View attempts
-                                    </a>
-                                    <a class="btn btn-sm btn-primary" href="organizer/edit-quiz/@quizInfo.Id">
-                                        Edit
-                                    </a>
-                                </div>
-                            </td>
-                        </tr>
-                    }
-                }
-            </tbody>
-        </table>
+        <QuickGrid ItemsProvider="_quizzesProvider" Pagination="_paginationState"
+            Class="table table-striped table-bordered table-hover" @ref="_grid">
+            <PropertyColumn Property="@(quiz => quiz.Name)" />
+            <PropertyColumn Property="@(quiz => quiz.Topic)" />
+            <PropertyColumn Property="@(quiz => quiz.QuestionsNumber)" Title="Number of questions" />
+            <PropertyColumn Property="@(quiz => quiz.TimeInMinutes)" Title="Time in minutes" />
+            
+            <TemplateColumn Title="Is active">
+                @(context.IsActive ? "Yes" : "No")
+            </TemplateColumn>
+            
+            <TemplateColumn Title="Actions">
+                <div class="d-flex justify-content-around py-2">
+                    <button type="button" class="btn btn-sm btn-secondary" @onclick="() => ViewQuestions(context)">
+                        View questions
+                    </button>
+                    <a class="btn btn-sm btn-secondary" href="organizer/manage-quizzes/@context.Id/attempts">
+                        View attempts
+                    </a>
+                    <a class="btn btn-sm btn-primary" href="organizer/edit-quiz/@context.Id">
+                        Edit
+                    </a>
+                </div>
+            </TemplateColumn>
+        </QuickGrid>
+        <Paginator State="_paginationState" />
     </div>
 
     @if (_showQuestionsModal && _viewingQuestions is not null)
@@ -99,18 +80,23 @@ else
 }
 
 @code {
-    private QuizSummaryInfoDTO[]? _quizzes;
-    private QuizSummaryInfoDTO[]? _filteredQuizzes;
+    private const string PageTitle = "Manage Quizzes";
+    private const int DefaultPageSize = 10;
+    private const int FirstPageIndex = 0;
+
+    private QuickGrid<QuizSummaryInfoDTO>? _grid;
+    private GridItemsProvider<QuizSummaryInfoDTO>? _quizzesProvider;
     private TopicInfoDTO[]? _topics;
     private string[]? _viewingQuestions;
     private string? _loadErrorMessage;
 
+    private PaginationState _paginationState = new PaginationState { ItemsPerPage = DefaultPageSize };
     private int _topicFilterId;
     private bool _showQuestionsModal;
 
     protected override async Task OnInitializedAsync()
     {
-        AppState.ShowLoader("Fetching quizzes and topics...");
+        AppState.ShowLoader("Fetching topics...");
         try
         {
             QuizApiResponse<PagedInfo<TopicInfoDTO>> topicsResponse = await TopicsClient.GetTopicsAsync();
@@ -121,36 +107,53 @@ else
                 return;
             }
 
-            QuizApiResponse<QuizSummaryInfoDTO[]> quizzesResponse = await QuizzesClient.GetQuizzesAsync();
-
-            if (quizzesResponse.IsFailure)
-            {
-                _loadErrorMessage = quizzesResponse.ErrorMessage;
-                return;
-            }
-
             _topics =  topicsResponse.Data!.DTOs;
-            _quizzes =  quizzesResponse.Data;
-            _filteredQuizzes = _quizzes;
         }
         finally
         {
             AppState.HideLoader();
         }
+
+        ConfigureQuizzesProvider();
     }
 
-    private void OnTopicFilterChanged()
+    private void ConfigureQuizzesProvider()
     {
-        ArgumentNullException.ThrowIfNull(_quizzes);
-
-        _filteredQuizzes = _topicFilterId.ToFilterStatus() switch
+        _quizzesProvider = async request =>
         {
-            TopicFilterStatus.Invalid => Array.Empty<QuizSummaryInfoDTO>(),
-            TopicFilterStatus.Empty => _quizzes,
-            _ => _quizzes
-                .Where(quizInfo => quizInfo.TopicId == _topicFilterId)
-                .ToArray()
+            if (_topicFilterId.ToFilterStatus() == TopicFilterStatus.Invalid)
+            {
+                return GridItemsProviderResult.From(Array.Empty<QuizSummaryInfoDTO>(), 0);
+            }
+
+            AppState.ShowLoader("Fetching topics...");
+            try
+            {
+                QuizApiResponse<PagedInfo<QuizSummaryInfoDTO>> response = await QuizzesClient
+                    .GetQuizzesAsync(_topicFilterId, request.CreatePagination(DefaultPageSize));
+
+                if (response.IsSuccess)
+                {
+                    return GridItemsProviderResult.From(response.Data!.DTOs, response.Data.TotalCount);
+                }
+
+                _loadErrorMessage = response.ErrorMessage;
+                StateHasChanged();
+                return GridItemsProviderResult.From(Array.Empty<QuizSummaryInfoDTO>(), 0);
+            }
+            finally
+            {
+                AppState.HideLoader();
+            }
         };
+    }
+
+    private async Task OnTopicFilterChanged()
+    {
+        ArgumentNullException.ThrowIfNull(_grid);
+
+        await _paginationState.SetCurrentPageIndexAsync(FirstPageIndex);
+        await _grid.RefreshDataAsync();
     }
 
     private void ViewQuestions(QuizSummaryInfoDTO quizInfo)

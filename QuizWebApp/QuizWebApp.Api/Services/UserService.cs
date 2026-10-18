@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using QuizWebApp.Api.Configuration;
 using QuizWebApp.Api.Data;
 using QuizWebApp.Api.Data.Models;
 using QuizWebApp.Api.Services.Interfaces;
@@ -33,8 +34,7 @@ public class UserService : IUserService
             int totalCount = await query.CountAsync();
             UserInfoDTO[] users = await query
                 .OrderByDescending(user => user.Id)
-                .Skip((paginationData.PageNumber - 1) * paginationData.PageSize)
-                .Take(paginationData.PageSize)
+                .Paginate(paginationData)
                 .Select(user => new UserInfoDTO
                 (
                     user.Id,

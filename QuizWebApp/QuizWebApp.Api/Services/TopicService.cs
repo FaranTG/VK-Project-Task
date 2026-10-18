@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using QuizWebApp.Api.Configuration;
 using QuizWebApp.Api.Data;
 using QuizWebApp.Api.Data.Models;
 using QuizWebApp.Api.Services.Interfaces;
@@ -32,8 +33,7 @@ public class TopicService : ITopicService
 
             TopicInfoDTO[] topics = await query
                 .OrderBy(topic => topic.Id)
-                .Skip((paginationData.PageNumber - 1) * paginationData.PageSize)
-                .Take(paginationData.PageSize)
+                .Paginate(paginationData)
                 .Select(
                     topic => new TopicInfoDTO
                     (

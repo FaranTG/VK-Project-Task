@@ -8,6 +8,7 @@ using QuizWebApp.Shared.DTOs.AnswerOption;
 using QuizWebApp.Shared.DTOs.Attempt;
 using QuizWebApp.Shared.DTOs.Common;
 using QuizWebApp.Shared.DTOs.Question;
+using QuizWebApp.Api.Configuration;
 
 namespace QuizWebApp.Api.Services;
 
@@ -33,8 +34,7 @@ public class AttemptService : IAttemptService
 
             AttemptParticipantInfoDTO[] participants = await query
                 .OrderByDescending(attempt => attempt.StartTime)
-                .Skip((paginationData.PageNumber - 1) * paginationData.PageSize)
-                .Take(paginationData.PageSize)
+                .Paginate(paginationData)
                 .Select
                 (
                     attempt => new AttemptParticipantInfoDTO
@@ -72,8 +72,7 @@ public class AttemptService : IAttemptService
 
             AttemptQuizInfoDTO[] attempts = await query
                 .OrderByDescending(attempt => attempt.Id)
-                .Skip((paginationData.PageNumber - 1) * paginationData.PageSize)
-                .Take(paginationData.PageSize)
+                .Paginate(paginationData)
                 .Select(attempt => new AttemptQuizInfoDTO
                 (
                     attempt.Id,

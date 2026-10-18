@@ -1,5 +1,6 @@
 ﻿using QuizWebApp.Api.Services.Interfaces;
 using QuizWebApp.Shared.ApiResponses;
+using QuizWebApp.Shared.DTOs.Common;
 using QuizWebApp.Shared.DTOs.Quiz;
 using QuizWebApp.Shared.Enums;
 
@@ -34,8 +35,8 @@ public static class QuizEndpoints
 
     private static void MapQuizGetEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapGet("/", async (IQuizService quizService) =>
-            Results.Ok(await quizService.GetQuizzesAsync())
+        app.MapGet("/", async (int topicFilterId, [AsParameters] PaginationDTO paginationData, IQuizService quizService) =>
+            Results.Ok(await quizService.GetQuizzesAsync(topicFilterId, paginationData))
         );
     }
 

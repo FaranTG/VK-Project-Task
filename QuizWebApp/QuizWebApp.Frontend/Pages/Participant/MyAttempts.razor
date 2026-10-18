@@ -1,6 +1,7 @@
 ﻿@page "/participant/my-attempts"
 @using Microsoft.AspNetCore.Components.QuickGrid
 @using QuizWebApp.Frontend.Clients
+@using QuizWebApp.Frontend.Extensions
 @using QuizWebApp.Shared.ApiResponses
 @using QuizWebApp.Shared.DTOs.Attempt
 @using QuizWebApp.Shared.DTOs.Common
@@ -53,10 +54,8 @@
 
             try
             {
-                int pageSize = request.Count ?? DefaultPageSize;
-                int pageNumber = request.StartIndex / pageSize + 1;
-                PaginationDTO paginationData = new PaginationDTO(pageNumber, pageSize);
-                QuizApiResponse<PagedInfo<AttemptQuizInfoDTO>> response = await AttemptsClient.GetParticipantAttemptsAsync(paginationData);
+                QuizApiResponse<PagedInfo<AttemptQuizInfoDTO>> response = await AttemptsClient
+                    .GetParticipantAttemptsAsync(request.CreatePagination(DefaultPageSize));
                 
                 if (response.IsSuccess)
                 {
@@ -64,6 +63,7 @@
                 }
 
                 _loadErrorMessage = response.ErrorMessage;
+                StateHasChanged();
                 return GridItemsProviderResult.From(Array.Empty<AttemptQuizInfoDTO>(), 0);
             }
             finally

@@ -1,6 +1,7 @@
 ﻿@page "/organizer/manage-quizzes/{id:guid}/attempts"
 @using Microsoft.AspNetCore.Components.QuickGrid
 @using QuizWebApp.Frontend.Clients
+@using QuizWebApp.Frontend.Extensions
 @using QuizWebApp.Shared.ApiResponses
 @using QuizWebApp.Shared.DTOs.Attempt
 @using QuizWebApp.Shared.DTOs.Common
@@ -87,10 +88,8 @@
             AppState.ShowLoader("Fetching attempts...");
             try
             {
-                int pageSize = request.Count ?? DefaultPageSize;
-                int pageNumber = request.StartIndex / pageSize + 1;
-                PaginationDTO paginationData = new PaginationDTO(pageNumber, pageSize);
-                QuizApiResponse<PagedInfo<AttemptParticipantInfoDTO>> response = await AttemptsClient.GetQuizAttemptsAsync(Id!.Value, paginationData);
+                QuizApiResponse<PagedInfo<AttemptParticipantInfoDTO>> response = await AttemptsClient
+                    .GetQuizAttemptsAsync(Id!.Value, request.CreatePagination(DefaultPageSize));
 
                 if (response.IsSuccess)
                 {
@@ -98,6 +97,7 @@
                 }
 
                 _loadErrorMessage = response.ErrorMessage;
+                StateHasChanged();
                 return GridItemsProviderResult.From(Array.Empty<AttemptParticipantInfoDTO>(), 0);
             }
             finally

@@ -1,4 +1,5 @@
 ﻿using QuizWebApp.Shared.ApiResponses;
+using QuizWebApp.Shared.DTOs.Common;
 using QuizWebApp.Shared.DTOs.Quiz;
 
 namespace QuizWebApp.Api.Services.Interfaces;
@@ -7,7 +8,7 @@ public interface IQuizService
 {
     public const string NotFoundMessage = "Quiz not found.";
 
-    Task<QuizApiResponse<QuizSummaryInfoDTO[]>> GetQuizzesAsync();
+    Task<QuizApiResponse<PagedInfo<QuizSummaryInfoDTO>>> GetQuizzesAsync(int topicFilterId, PaginationDTO paginationData);
 
     Task<QuizApiResponse<QuizBriefInfoDTO[]>> GetActiveQuizzesAsync(int topicIdFilter);
 

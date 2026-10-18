@@ -2,9 +2,10 @@
 
 @using Microsoft.AspNetCore.Components.QuickGrid
 @using QuizWebApp.Frontend.Clients
-@using QuizWebApp.Shared.DTOs.User
-@using QuizWebApp.Shared.DTOs.Common
+@using QuizWebApp.Frontend.Extensions
 @using QuizWebApp.Shared.ApiResponses
+@using QuizWebApp.Shared.DTOs.Common
+@using QuizWebApp.Shared.DTOs.User
 
 @inject UsersClient UsersClient
 @inject IAppState AppState
@@ -51,6 +52,7 @@
 
 @code {
     private const int DefaultPageSize = 10;
+    private const int FirstPageIndex = 0;
 
     private QuickGrid<UserInfoDTO>? _grid;
     private GridItemsProvider<UserInfoDTO>? _usersProvider;
@@ -67,10 +69,8 @@
 
             try
             {
-                int pageSize = request.Count ?? DefaultPageSize;
-                int pageNumber = request.StartIndex / pageSize + 1;
-                PaginationDTO paginationData = new PaginationDTO(pageNumber, pageSize);
-                QuizApiResponse<PagedInfo<UserInfoDTO>> response = await UsersClient.GetUsersAsync(_filter, paginationData);
+                QuizApiResponse<PagedInfo<UserInfoDTO>> response = await UsersClient
+                    .GetUsersAsync(_filter, request.CreatePagination(DefaultPageSize));
 
                 if (response.IsSuccess)
                 {
@@ -78,6 +78,7 @@
                 }
 
                 _loadErrorMessage = response.ErrorMessage;
+                StateHasChanged();
                 return GridItemsProviderResult.From(Array.Empty<UserInfoDTO>(), 0);
             }
             finally
@@ -115,7 +116,7 @@
     {
         ArgumentNullException.ThrowIfNull(_grid);
 
-        await _paginationState.SetCurrentPageIndexAsync(0);
+        await _paginationState.SetCurrentPageIndexAsync(FirstPageIndex);
         await _grid.RefreshDataAsync();
     }
 }

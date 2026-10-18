@@ -2,6 +2,7 @@
 
 @using Microsoft.AspNetCore.Components.QuickGrid
 @using QuizWebApp.Frontend.Clients
+@using QuizWebApp.Frontend.Extensions
 @using QuizWebApp.Frontend.FormModels
 @using QuizWebApp.Shared.ApiResponses
 @using QuizWebApp.Shared.DTOs.Common
@@ -51,7 +52,7 @@ else
             </EditForm>
         </div>
         <div class="col-sm-7 ms-auto">
-            <QuickGrid ItemsProvider="_attemptsProvider" Pagination="_paginationState" 
+            <QuickGrid ItemsProvider="_topicsProvider" Pagination="_paginationState" 
                 Class="table table-striped table-bordered table-hover" @ref="_grid">
                 <PropertyColumn Property="topic => topic.Id" />
                 <PropertyColumn Property="topic => topic.Name" />
@@ -76,7 +77,7 @@ else
     private TopicModel? TopicModel { get; set; }
 
     private QuickGrid<TopicInfoDTO>? _grid;
-    private GridItemsProvider<TopicInfoDTO>? _attemptsProvider;
+    private GridItemsProvider<TopicInfoDTO>? _topicsProvider;
     private string? _loadErrorMessage;
     private int? _id;
 
@@ -88,15 +89,13 @@ else
     {
         TopicModel = new () { Name = string.Empty };
 
-        _attemptsProvider = async request =>
+        _topicsProvider = async request =>
         {
             AppState.ShowLoader("Fetching topics...");
             try
             {
-                int pageSize = request.Count ?? DefaultPageSize;
-                int pageNumber = request.StartIndex / pageSize + 1;
-                PaginationDTO paginationData = new PaginationDTO(pageNumber, pageSize);
-                QuizApiResponse<PagedInfo<TopicInfoDTO>> response = await TopicsClient.GetTopicsAsync(paginationData);
+                QuizApiResponse<PagedInfo<TopicInfoDTO>> response = await TopicsClient
+                    .GetTopicsAsync(request.CreatePagination(DefaultPageSize));
 
                 if (response.IsSuccess)
                 {
@@ -104,6 +103,7 @@ else
                 }
 
                 _loadErrorMessage = response.ErrorMessage;
+                StateHasChanged();
                 return GridItemsProviderResult.From(Array.Empty<TopicInfoDTO>(), 0);
             }
             finally

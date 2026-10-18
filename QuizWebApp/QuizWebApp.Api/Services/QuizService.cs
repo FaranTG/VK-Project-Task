@@ -1,10 +1,12 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using QuizWebApp.Api.Configuration;
 using QuizWebApp.Api.Data;
 using QuizWebApp.Api.Data.Models;
 using QuizWebApp.Api.Services.Interfaces;
 using QuizWebApp.Api.Validation;
 using QuizWebApp.Shared.ApiResponses;
 using QuizWebApp.Shared.DTOs.AnswerOption;
+using QuizWebApp.Shared.DTOs.Common;
 using QuizWebApp.Shared.DTOs.Question;
 using QuizWebApp.Shared.DTOs.Quiz;
 
@@ -21,12 +23,21 @@ public class QuizService : IQuizService
         _dbContext = dbContext;
     }
 
-    public async Task<QuizApiResponse<QuizSummaryInfoDTO[]>> GetQuizzesAsync()
+    public async Task<QuizApiResponse<PagedInfo<QuizSummaryInfoDTO>>> GetQuizzesAsync(int topicFilterId, PaginationDTO paginationData)
     {
         try
         {
-            QuizSummaryInfoDTO[] quizzes = await _dbContext.Quizzes
-                .AsNoTracking()
+            IQueryable<Quiz> query = _dbContext.Quizzes.AsNoTracking();
+
+            if (topicFilterId > 0)
+            {
+                query = query.Where(quiz => quiz.TopicId == topicFilterId);
+            }
+
+            int totalCount = await query.CountAsync();
+            QuizSummaryInfoDTO[] quizzes = await query
+                .OrderBy(quiz => quiz.Id)
+                .Paginate(paginationData)
                 .Select
                 (
                     quiz => new QuizSummaryInfoDTO
@@ -45,11 +56,13 @@ public class QuizService : IQuizService
                 )
                 .ToArrayAsync();
             
-            return QuizApiResponse<QuizSummaryInfoDTO[]>.Success(quizzes);
+            PagedInfo<QuizSummaryInfoDTO> pagedQuizzes = new (quizzes, totalCount);
+            
+            return QuizApiResponse<PagedInfo<QuizSummaryInfoDTO>>.Success(pagedQuizzes);
         }
         catch (Exception exception)
         {
-            return QuizApiResponse<QuizSummaryInfoDTO[]>.Fail(exception.Message);
+            return QuizApiResponse<PagedInfo<QuizSummaryInfoDTO>>.Fail(exception.Message);
         }
     }
 
