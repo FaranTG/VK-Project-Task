@@ -25,24 +25,10 @@ else
 {
     <div class="mb-3 row">
         <div class="col-sm-3 ms-auto">
-            <label for="searchTopic" class="form-label">Topic Filter: </label>
-            <div class="input-group">
-                <input list="topicsDatalist" id="searchTopic" class="form-control" 
-                    placeholder="Type to filter by topic..." 
-                    @bind="_selectedTopicName" @bind:after="OnSearchTopicNameChanged" />
-                
-                @if (!string.IsNullOrWhiteSpace(_selectedTopicName))
-                {
-                    <button class="btn btn-outline-secondary" type="button" @onclick="ResetTopicFilter">✕</button>
-                }
-            </div>
-
-            <datalist id="topicsDatalist">
-                @foreach (TopicInfoDTO topic in _topics)
-                {
-                    <option value="@topic.Name" />
-                }
-            </datalist>
+            <TopicFilter Topics="_topics" Label="Topic filter: "
+                Placeholder="Type to filter by topic..." IsFilterRequired="false"
+                @bind-TopicFilterId="_topicFilterId" 
+                @bind-TopicFilterId:after="OnTopicFilterChanged" />
         </div>
     </div>
     <div class="row">
@@ -117,7 +103,8 @@ else
     private TopicInfoDTO[]? _topics;
     private string[]? _viewingQuestions;
     private string? _loadErrorMessage;
-    private int _selectedTopicId;
+
+    private int _topicFilterId;
     private bool _showQuestionsModal;
 
     protected override async Task OnInitializedAsync()
@@ -126,7 +113,7 @@ else
         try
         {
             QuizApiResponse<PagedInfo<TopicInfoDTO>> topicsResponse = await TopicsClient.GetTopicsAsync();
-            
+
             if (topicsResponse.IsFailure)
             {
                 _loadErrorMessage = topicsResponse.ErrorMessage;
@@ -134,7 +121,7 @@ else
             }
 
             QuizApiResponse<QuizSummaryInfoDTO[]> quizzesResponse = await QuizzesClient.GetQuizzesAsync();
-            
+
             if (quizzesResponse.IsFailure)
             {
                 _loadErrorMessage = quizzesResponse.ErrorMessage;
@@ -151,64 +138,23 @@ else
         }
     }
 
-    private void OnSelectedTopicChanged()
+    private void OnTopicFilterChanged()
     {
         ArgumentNullException.ThrowIfNull(_quizzes);
 
-        if (_selectedTopicId == 0)
+        _filteredQuizzes = _topicFilterId switch
         {
-            _filteredQuizzes = _quizzes;
-            return;
-        }
-
-        _filteredQuizzes = _quizzes
-            .Where(quizInfo => quizInfo.TopicId ==  _selectedTopicId)
-            .ToArray();
+            -1 => Array.Empty<QuizSummaryInfoDTO>(),
+            0 => _quizzes,
+            _ => _quizzes
+                .Where(quizInfo => quizInfo.TopicId == _topicFilterId)
+                .ToArray()
+        };
     }
 
     private void ViewQuestions(QuizSummaryInfoDTO quizInfo)
     {
         _viewingQuestions = quizInfo.Questions.ToArray();
         _showQuestionsModal = true;
-    }
-
-    // Новая переменная для текстового поиска
-    private string _selectedTopicName = string.Empty;
-
-    // ИСПРАВЛЕНО: Новый метод фильтрации для текстового Combobox
-    private void OnSearchTopicNameChanged()
-    {
-        ArgumentNullException.ThrowIfNull(_quizzes);
-        ArgumentNullException.ThrowIfNull(_topics);
-
-        // Если поле поиска пустое — показываем все квизы
-        if (string.IsNullOrWhiteSpace(_selectedTopicName))
-        {
-            _filteredQuizzes = _quizzes;
-            return;
-        }
-
-        // Пытаемся найти тему в нашем массиве по точному совпадению имени
-        var matchedTopic = _topics.FirstOrDefault(t => t.Name.Equals(_selectedTopicName.Trim(), StringComparison.OrdinalIgnoreCase));
-
-        if (matchedTopic is not null)
-        {
-            // Если нашли — фильтруем по её Id
-            _filteredQuizzes = _quizzes
-                .Where(quizInfo => quizInfo.TopicId == matchedTopic.Id)
-                .ToArray();
-        }
-        else
-        {
-            // Если пользователь ввел несуществующее имя — таблица пустеет
-            _filteredQuizzes = Array.Empty<QuizSummaryInfoDTO>();
-        }
-    }
-
-    // Метод для кнопки "✕" (сброс)
-    private void ResetTopicFilter()
-    {
-        _selectedTopicName = string.Empty;
-        OnSearchTopicNameChanged();
     }
 }

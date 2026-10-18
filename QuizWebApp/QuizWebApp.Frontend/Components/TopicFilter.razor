@@ -1,0 +1,88 @@
+﻿@using QuizWebApp.Shared.DTOs.Topic
+
+<label for="topicFilter" class="form-label">@Label</label>
+<div class="input-group">
+    <input list="topicsDatalist" id="topicFilter" class="form-control @GetValidationClass()" 
+        placeholder="@Placeholder" 
+        @bind="_topicFilter" @bind:after="OnTopicFilterChanged" />
+    
+    @if (!string.IsNullOrWhiteSpace(_topicFilter))
+    {
+        <button class="btn btn-outline-secondary" type="button" @onclick="ResetTopicFilter">✕</button>
+    }
+</div>
+
+<datalist id="topicsDatalist">
+    @if (Topics is not null)
+    {
+        @foreach (TopicInfoDTO topic in Topics)
+        {
+            <option value="@topic.Name" />
+        }
+    }
+</datalist>
+
+@code {
+    [Parameter, EditorRequired] public TopicInfoDTO[]? Topics { get; set; }
+    [Parameter, EditorRequired] public string Label { get; set; }
+    [Parameter, EditorRequired] public string Placeholder { get; set; }
+    [Parameter, EditorRequired] public bool IsFilterRequired { get; set; }
+
+    [Parameter] public int TopicFilterId { get; set; }
+    [Parameter] public EventCallback<int> TopicFilterIdChanged { get; set; }
+
+    private string? _topicFilter;
+    private bool _hasBeenTouched;
+
+    private string GetValidationClass()
+    {
+        if (!_hasBeenTouched) return string.Empty;
+
+        int invalidityThreshold = IsFilterRequired ? 0 : -1;
+
+        return TopicFilterId <= invalidityThreshold
+            ? "is-invalid"
+            : "is-valid";
+    }
+
+    private async Task OnTopicFilterChanged()
+    {
+        if (Topics is null)
+        {
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(_topicFilter))
+        {
+            await SetTopicFilterId(0);
+            return;
+        }
+
+        TopicInfoDTO? matchedTopic = Topics.FirstOrDefault
+        (
+            t => t.Name.Equals(_topicFilter.Trim(), StringComparison.OrdinalIgnoreCase)
+        );
+
+        if (matchedTopic is null)
+        {
+            await SetTopicFilterId(-1);
+        }
+        else
+        {
+            await SetTopicFilterId(matchedTopic.Id);
+        }
+    }
+
+    private async Task ResetTopicFilter()
+    {
+        _topicFilter = null;
+        await SetTopicFilterId(0);
+    }
+
+    private async Task SetTopicFilterId(int id)
+    {
+        _hasBeenTouched = true;
+        TopicFilterId = id;
+        await TopicFilterIdChanged.InvokeAsync(id);
+    }
+}

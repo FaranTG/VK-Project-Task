@@ -1,6 +1,7 @@
 ﻿@page "/organizer/add-quiz"
 @page "/organizer/edit-quiz/{id:guid}"
 
+@using QuizWebApp.Frontend.Components
 @using QuizWebApp.Shared.DTOs.Topic
 @using QuizWebApp.Shared.DTOs.Quiz
 @using QuizWebApp.Shared.DTOs.Question
@@ -26,7 +27,7 @@ else if (_quizModel is null || _topics is null)
 }
 else
 {
-    <EditForm Model="_quizModel" OnValidSubmit="SaveQuizAsync">
+    <EditForm EditContext="_editContext" OnValidSubmit="SaveQuizAsync">
         <DataAnnotationsValidator />
         <div class="row">
             <div class="col-sm-6">
@@ -38,15 +39,11 @@ else
             </div>
             <div class="col-sm-3">
                 <div class="mb-3">
-                    <label for="topic" class="form-label">Topic: </label>
-                    <InputSelect @bind-Value="_quizModel.TopicId" id="topic"  class="form-select">
-                        <option value="0">Select Topic...</option>
-
-                        @foreach (TopicInfoDTO topicInfo in _topics)
-                        {
-                            <option value="@topicInfo.Id">@topicInfo.Name</option>
-                        }
-                    </InputSelect>
+                    <TopicFilter Topics="_topics" Label="Topic: "
+                        Placeholder="Type to select topic..." IsFilterRequired="true"
+                        @bind-TopicFilterId="_quizModel.TopicId"
+                        @bind-TopicFilterId:after="OnTopicFilterChanged" />
+        
                     <ValidationMessage For="() => _quizModel.TopicId" />
                 </div>
             </div>
@@ -126,6 +123,7 @@ else
     public Guid? Id { get; set; }
 
     private QuizModel? _quizModel;
+    private EditContext? _editContext;
     private TopicInfoDTO[]? _topics;
     private string? _loadErrorMessage;
     private Guid? _lastProcessedId;
@@ -169,6 +167,8 @@ else
             {
                 CreateEmptyQuiz();
             }
+
+            _editContext = new EditContext(_quizModel!);
         }
     }
 
@@ -291,6 +291,15 @@ else
         finally
         {
             AppState.HideLoader();
+        }
+    }
+
+    private void OnTopicFilterChanged()
+    {
+        if (_editContext is not null && _quizModel is not null)
+        {
+            FieldIdentifier fieldIdentifier = FieldIdentifier.Create(() => _quizModel.TopicId);
+            _editContext.NotifyFieldChanged(fieldIdentifier);
         }
     }
 

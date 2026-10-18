@@ -11,6 +11,8 @@ namespace QuizWebApp.Api.Services;
 public class TopicService : ITopicService
 {
     private const string DuplicateMessage = "A topic with this name already exists.";
+    private const int DefaultPageNumber = 1;
+    private const int DefaultPageSize = 100;
 
     private readonly QuizContext _dbContext;
 
@@ -23,7 +25,7 @@ public class TopicService : ITopicService
     {
         try
         {
-            paginationData ??= new PaginationDTO(1, 100);
+            paginationData ??= new PaginationDTO(DefaultPageNumber, DefaultPageSize);
 
             IQueryable<Topic> query = _dbContext.Topics.AsNoTracking();
             int totalCount = await query.CountAsync();
