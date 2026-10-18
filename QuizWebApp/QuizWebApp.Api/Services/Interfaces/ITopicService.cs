@@ -8,7 +8,7 @@ public interface ITopicService
 {
     public const string NotFoundMessage = "Topic not found.";
 
-    Task<QuizApiResponse<PagedInfo<TopicInfoDTO>>> GetTopicsAsync(PaginationDTO paginationData);
+    Task<QuizApiResponse<PagedInfo<TopicInfoDTO>>> GetTopicsAsync(PaginationDTO? paginationData);
 
     Task<QuizApiResponse<TopicInfoDTO>> GetTopicByIdAsync(int id);
 

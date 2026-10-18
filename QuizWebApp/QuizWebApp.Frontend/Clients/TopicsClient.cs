@@ -12,9 +12,10 @@ public class TopicsClient(HttpClient httpClient)
 
     public async Task<QuizApiResponse<PagedInfo<TopicInfoDTO>>> GetTopicsAsync(PaginationDTO? paginationData = null)
     {
-        paginationData ??= new PaginationDTO(1, 100);
-
-        HttpResponseMessage response = await httpClient.GetAsync($"{ApiRoute}?pageNumber={paginationData.PageNumber}&pageSize={paginationData.PageSize}");
+        string url = paginationData is null
+            ? ApiRoute
+            : $"{ApiRoute}?pageNumber={paginationData.PageNumber}&pageSize={paginationData.PageSize}";
+        HttpResponseMessage response = await httpClient.GetAsync(url);
 
         QuizApiResponse<PagedInfo<TopicInfoDTO>>? responseData = await response.Content.ReadFromJsonAsync<QuizApiResponse<PagedInfo<TopicInfoDTO>>>();
         

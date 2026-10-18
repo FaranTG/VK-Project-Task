@@ -19,10 +19,12 @@ public class TopicService : ITopicService
         _dbContext = dbContext;
     }
 
-    public async Task<QuizApiResponse<PagedInfo<TopicInfoDTO>>> GetTopicsAsync(PaginationDTO paginationData)
+    public async Task<QuizApiResponse<PagedInfo<TopicInfoDTO>>> GetTopicsAsync(PaginationDTO? paginationData)
     {
         try
         {
+            paginationData ??= new PaginationDTO(1, 100);
+
             IQueryable<Topic> query = _dbContext.Topics.AsNoTracking();
             int totalCount = await query.CountAsync();
 

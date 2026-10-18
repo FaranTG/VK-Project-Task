@@ -32,9 +32,14 @@ public static class TopicEndpoints
 
     private static void MapTopicGetEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapGet("/", async ([AsParameters] PaginationDTO paginationData, ITopicService topicService) => 
-            Results.Ok(await topicService.GetTopicsAsync(paginationData))
-        );
+        app.MapGet("/", async (int? pageNumber, int? pageSize, ITopicService topicService) =>
+        {
+            PaginationDTO? paginationData = (pageNumber.HasValue && pageSize.HasValue)
+                ? new PaginationDTO(pageNumber.Value, pageSize.Value)
+                : null;
+
+            return Results.Ok(await topicService.GetTopicsAsync(paginationData));
+        });
     }
 
     private static void MapTopicGetByIdEndpoint(IEndpointRouteBuilder app)
