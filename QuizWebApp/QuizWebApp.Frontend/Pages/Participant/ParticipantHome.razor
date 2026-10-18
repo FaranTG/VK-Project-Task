@@ -139,7 +139,7 @@ else
 
     private async Task OnTopicFilterChanged()
     {
-        if (_topicFilterId == -1)
+        if (_topicFilterId == (int)TopicFilterStatus.Invalid)
         {
             _quizzes = [];
             return;

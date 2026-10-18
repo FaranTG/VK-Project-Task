@@ -34,15 +34,35 @@
     private string? _topicFilter;
     private bool _hasBeenTouched;
 
+    private bool IsFilterValid => TopicFilterId > 0;
+
+    protected override void OnParametersSet()
+    {
+        if (IsFilterValid && Topics is not null && string.IsNullOrWhiteSpace(_topicFilter))
+        {
+            TopicInfoDTO? matchedTopic = Topics.FirstOrDefault(t => t.Id == TopicFilterId);
+            if (matchedTopic is not null)
+            {
+                _topicFilter = matchedTopic.Name;
+            }
+        }
+    }
+
     private string GetValidationClass()
     {
         if (!_hasBeenTouched) return string.Empty;
 
-        int invalidityThreshold = IsFilterRequired ? 0 : -1;
+        TopicFilterStatus status = IsFilterValid
+            ? TopicFilterStatus.Valid
+            : (TopicFilterStatus) TopicFilterId;
 
-        return TopicFilterId <= invalidityThreshold
-            ? "is-invalid"
-            : "is-valid";
+        return status switch
+        {
+            TopicFilterStatus.Invalid => "is-invalid",
+            TopicFilterStatus.Empty => IsFilterRequired ? "is-invalid" : "is-valid",
+            TopicFilterStatus.Valid => "is-valid",
+            _ => string.Empty
+        };
     }
 
     private async Task OnTopicFilterChanged()
@@ -54,7 +74,7 @@
 
         if (string.IsNullOrWhiteSpace(_topicFilter))
         {
-            await SetTopicFilterId(0);
+            await SetTopicFilterId((int)TopicFilterStatus.Empty);
             return;
         }
 
@@ -65,7 +85,7 @@
 
         if (matchedTopic is null)
         {
-            await SetTopicFilterId(-1);
+            await SetTopicFilterId((int)TopicFilterStatus.Invalid);
         }
         else
         {
@@ -76,13 +96,15 @@
     private async Task ResetTopicFilter()
     {
         _topicFilter = null;
-        await SetTopicFilterId(0);
+
+        await SetTopicFilterId((int)TopicFilterStatus.Empty);
     }
 
     private async Task SetTopicFilterId(int id)
     {
         _hasBeenTouched = true;
         TopicFilterId = id;
+
         await TopicFilterIdChanged.InvokeAsync(id);
     }
 }

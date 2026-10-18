@@ -144,8 +144,8 @@ else
 
         _filteredQuizzes = _topicFilterId switch
         {
-            -1 => Array.Empty<QuizSummaryInfoDTO>(),
-            0 => _quizzes,
+            (int)TopicFilterStatus.Invalid => Array.Empty<QuizSummaryInfoDTO>(),
+            (int)TopicFilterStatus.Empty => _quizzes,
             _ => _quizzes
                 .Where(quizInfo => quizInfo.TopicId == _topicFilterId)
                 .ToArray()
