@@ -2,10 +2,11 @@
 
 @using QuizWebApp.Frontend.Clients
 @using QuizWebApp.Frontend.Components
+@using QuizWebApp.Shared.ApiResponses
 @using QuizWebApp.Shared.DTOs.Quiz
 @using QuizWebApp.Shared.DTOs.Topic
 @using QuizWebApp.Shared.Enums
-@using QuizWebApp.Shared.ApiResponses
+@using QuizWebApp.Shared.Extensions
 
 @inject QuizzesClient QuizzesClient
 @inject TopicsClient TopicsClient
@@ -142,10 +143,10 @@ else
     {
         ArgumentNullException.ThrowIfNull(_quizzes);
 
-        _filteredQuizzes = _topicFilterId switch
+        _filteredQuizzes = _topicFilterId.ToFilterStatus() switch
         {
-            (int)TopicFilterStatus.Invalid => Array.Empty<QuizSummaryInfoDTO>(),
-            (int)TopicFilterStatus.Empty => _quizzes,
+            TopicFilterStatus.Invalid => Array.Empty<QuizSummaryInfoDTO>(),
+            TopicFilterStatus.Empty => _quizzes,
             _ => _quizzes
                 .Where(quizInfo => quizInfo.TopicId == _topicFilterId)
                 .ToArray()

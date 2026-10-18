@@ -1,4 +1,5 @@
 ﻿@using QuizWebApp.Shared.DTOs.Topic
+@using QuizWebApp.Shared.Extensions
 
 <label for="topicFilter" class="form-label">@Label</label>
 <div class="input-group">
@@ -34,11 +35,10 @@
     private string? _topicFilter;
     private bool _hasBeenTouched;
 
-    private bool IsFilterValid => TopicFilterId > 0;
-
     protected override void OnParametersSet()
     {
-        if (IsFilterValid && Topics is not null && string.IsNullOrWhiteSpace(_topicFilter))
+        if (TopicFilterId.ToFilterStatus() == TopicFilterStatus.Valid 
+            && Topics is not null && string.IsNullOrWhiteSpace(_topicFilter))
         {
             TopicInfoDTO? matchedTopic = Topics.FirstOrDefault(t => t.Id == TopicFilterId);
             if (matchedTopic is not null)
@@ -52,11 +52,7 @@
     {
         if (!_hasBeenTouched) return string.Empty;
 
-        TopicFilterStatus status = IsFilterValid
-            ? TopicFilterStatus.Valid
-            : (TopicFilterStatus) TopicFilterId;
-
-        return status switch
+        return TopicFilterId.ToFilterStatus() switch
         {
             TopicFilterStatus.Invalid => "is-invalid",
             TopicFilterStatus.Empty => IsFilterRequired ? "is-invalid" : "is-valid",

@@ -3,8 +3,9 @@
 @using QuizWebApp.Frontend.Clients
 @using QuizWebApp.Frontend.Components
 @using QuizWebApp.Shared.ApiResponses
-@using QuizWebApp.Shared.DTOs.Topic
 @using QuizWebApp.Shared.DTOs.Quiz
+@using QuizWebApp.Shared.DTOs.Topic
+@using QuizWebApp.Shared.Extensions
 
 @inject AttemptsClient AttemptsClient
 @inject QuizzesClient QuizzesClient
@@ -103,9 +104,9 @@ else
     private string? _loadErrorMessage;
     private int _topicFilterId;
 
-    private string NoFoundMessage => _topicFilterId <= 0 
-        ? "No active quizzes found." 
-        : "No active quizzes found for the selected topic.";
+    private string NoFoundMessage => _topicFilterId.ToFilterStatus() == TopicFilterStatus.Valid 
+        ? "No active quizzes found for the selected topic."
+        : "No active quizzes found.";
 
     protected override async Task OnInitializedAsync()
     {
@@ -139,7 +140,7 @@ else
 
     private async Task OnTopicFilterChanged()
     {
-        if (_topicFilterId == (int)TopicFilterStatus.Invalid)
+        if (_topicFilterId.ToFilterStatus() == TopicFilterStatus.Invalid)
         {
             _quizzes = [];
             return;
