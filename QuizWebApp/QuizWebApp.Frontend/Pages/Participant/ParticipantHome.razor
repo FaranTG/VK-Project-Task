@@ -3,6 +3,7 @@
 @using QuizWebApp.Frontend.Clients
 @using QuizWebApp.Frontend.Components
 @using QuizWebApp.Shared.ApiResponses
+@using QuizWebApp.Shared.DTOs.Common
 @using QuizWebApp.Shared.DTOs.Quiz
 @using QuizWebApp.Shared.DTOs.Topic
 @using QuizWebApp.Shared.Extensions
@@ -79,6 +80,29 @@ else
                     </div>
                 </div>
             }
+
+            @if (TotalPages > 1)
+            {
+                <div class="d-flex justify-content-center align-items-center gap-2 mb-5">
+                    <button class="btn btn-sm btn-outline-secondary" 
+                            disabled="@IsFirstPage" 
+                            @onclick="GoToFirstPage">|◄</button>
+                    
+                    <button class="btn btn-sm btn-outline-secondary" 
+                            disabled="@IsFirstPage" 
+                            @onclick="GoToPreviousPage">◄</button>
+                    
+                    <span class="mx-2 fw-semibold">Page <strong>@_currentPage</strong> of <strong>@TotalPages</strong></span>
+                    
+                    <button class="btn btn-sm btn-outline-secondary" 
+                            disabled="@IsLastPage" 
+                            @onclick="GoToNextPage">►</button>
+                    
+                    <button class="btn btn-sm btn-outline-secondary" 
+                            disabled="@IsLastPage" 
+                            @onclick="GoToLastPage">►|</button>
+                </div>
+            }
         }
     </div>
 
@@ -98,15 +122,23 @@ else
 }
 
 @code {
+    private const int DefaultPageSize = 6;
+    private const int FirstPageNumber = 1;
+
     private QuizBriefInfoDTO[]? _quizzes;
     private TopicInfoDTO[]? _topics;
     private QuizBriefInfoDTO? _selectedQuiz;
     private string? _loadErrorMessage;
     private int _topicFilterId;
+    private int _currentPage = FirstPageNumber;
+    private int _totalItemsCount = 0;
 
     private string NoFoundMessage => _topicFilterId.ToFilterStatus() == TopicFilterStatus.Valid 
         ? "No active quizzes found for the selected topic."
         : "No active quizzes found.";
+    private int TotalPages => (int)Math.Ceiling((double)_totalItemsCount / DefaultPageSize);
+    private bool IsFirstPage => _currentPage == FirstPageNumber;
+    private bool IsLastPage => _currentPage >= TotalPages;
 
     protected override async Task OnInitializedAsync()
     {
@@ -121,16 +153,9 @@ else
                 return;
             }
 
-            QuizApiResponse<QuizBriefInfoDTO[]> quizzesResponse = await QuizzesClient.GetActiveQuizzesAsync(_topicFilterId);
+            _topics = topicsResponse.Data!.DTOs;
 
-            if (quizzesResponse.IsFailure)
-            {
-                _loadErrorMessage = quizzesResponse.ErrorMessage;
-                return;
-            }
-
-            _topics =  topicsResponse.Data!.DTOs;
-            _quizzes =  quizzesResponse.Data;
+            await FetchQuizzesAsync();
         }
         finally
         {
@@ -143,12 +168,20 @@ else
         if (_topicFilterId.ToFilterStatus() == TopicFilterStatus.Invalid)
         {
             _quizzes = [];
+            _totalItemsCount = 0;
             return;
         }
 
-        AppState.ShowLoader("Fetching quizzes...");
+        _currentPage = FirstPageNumber; 
 
-        QuizApiResponse<QuizBriefInfoDTO[]> quizzesResponse = await QuizzesClient.GetActiveQuizzesAsync(_topicFilterId);
+        await ReloadPageDataAsync();
+    }
+
+    private async Task FetchQuizzesAsync()
+    {
+        PaginationDTO? paginationData = new PaginationDTO(_currentPage, DefaultPageSize);
+        QuizApiResponse<PagedInfo<QuizBriefInfoDTO>> quizzesResponse = 
+            await QuizzesClient.GetActiveBriefQuizzesAsync(_topicFilterId, paginationData);
 
         if (quizzesResponse.IsFailure)
         {
@@ -156,9 +189,30 @@ else
         }
         else
         {
-            _quizzes =  quizzesResponse.Data;
+            _quizzes = quizzesResponse.Data!.DTOs;
+            _totalItemsCount = quizzesResponse.Data.TotalCount;
         }
+    }
 
+    private async Task GoToFirstPage() => await GoToPage(IsFirstPage, FirstPageNumber);
+
+    private async Task GoToPreviousPage() => await GoToPage(IsFirstPage, _currentPage - 1);
+
+    private async Task GoToNextPage() => await GoToPage(IsLastPage, _currentPage + 1);
+
+    private async Task GoToLastPage() => await GoToPage(IsLastPage, TotalPages);
+
+    private async Task GoToPage(bool returnCondition, int newPageNumber)
+    {
+        if (returnCondition) return;
+        _currentPage = newPageNumber;
+        await ReloadPageDataAsync();
+    }
+
+    private async Task ReloadPageDataAsync()
+    {
+        AppState.ShowLoader("Fetching quizzes...");
+        await FetchQuizzesAsync();
         AppState.HideLoader();
     }
 

@@ -8,9 +8,9 @@ public interface IQuizService
 {
     public const string NotFoundMessage = "Quiz not found.";
 
-    Task<QuizApiResponse<PagedInfo<QuizSummaryInfoDTO>>> GetQuizzesAsync(int topicFilterId, PaginationDTO paginationData);
+    Task<QuizApiResponse<PagedInfo<QuizSummaryInfoDTO>>> GetQuizzesAsync(PaginationDTO paginationData, int topicFilterId);
 
-    Task<QuizApiResponse<QuizBriefInfoDTO[]>> GetActiveQuizzesAsync(int topicIdFilter);
+    Task<QuizApiResponse<PagedInfo<QuizBriefInfoDTO>>> GetAvailableQuizzesAsync(PaginationDTO paginationData, int topicFilterId);
 
     Task<QuizApiResponse<QuizInfoDTO>> GetQuizByIdAsync(Guid id);
 

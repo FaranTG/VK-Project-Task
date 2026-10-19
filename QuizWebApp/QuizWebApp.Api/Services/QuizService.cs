@@ -23,7 +23,7 @@ public class QuizService : IQuizService
         _dbContext = dbContext;
     }
 
-    public async Task<QuizApiResponse<PagedInfo<QuizSummaryInfoDTO>>> GetQuizzesAsync(int topicFilterId, PaginationDTO paginationData)
+    public async Task<QuizApiResponse<PagedInfo<QuizSummaryInfoDTO>>> GetQuizzesAsync(PaginationDTO paginationData, int topicFilterId)
     {
         try
         {
@@ -66,20 +66,23 @@ public class QuizService : IQuizService
         }
     }
 
-    public async Task<QuizApiResponse<QuizBriefInfoDTO[]>> GetActiveQuizzesAsync(int topicIdFilter)
+    public async Task<QuizApiResponse<PagedInfo<QuizBriefInfoDTO>>> GetAvailableQuizzesAsync(PaginationDTO paginationData, int topicFilterId)
     {
         try
         {
             IQueryable<Quiz> query = _dbContext.Quizzes
                 .AsNoTracking()
                 .Where(quiz => quiz.IsActive);
-            
-            if (topicIdFilter > 0)
+
+            if (topicFilterId > 0)
             {
-                query = query.Where(quiz => quiz.TopicId == topicIdFilter);
+                query = query.Where(quiz => quiz.TopicId == topicFilterId);
             }
             
+            int totalCount = await query.CountAsync();
             QuizBriefInfoDTO[] quizzes = await query
+                .OrderBy(quiz => quiz.Id)
+                .Paginate(paginationData)
                 .Select
                 (
                     quiz => new QuizBriefInfoDTO
@@ -94,11 +97,13 @@ public class QuizService : IQuizService
                 )
                 .ToArrayAsync();
             
-            return QuizApiResponse<QuizBriefInfoDTO[]>.Success(quizzes);
+            PagedInfo<QuizBriefInfoDTO> pagedQuizzes = new (quizzes, totalCount);
+            
+            return QuizApiResponse<PagedInfo<QuizBriefInfoDTO>>.Success(pagedQuizzes);
         }
         catch (Exception exception)
         {
-            return QuizApiResponse<QuizBriefInfoDTO[]>.Fail(exception.Message);
+            return QuizApiResponse<PagedInfo<QuizBriefInfoDTO>>.Fail(exception.Message);
         }
     }
 

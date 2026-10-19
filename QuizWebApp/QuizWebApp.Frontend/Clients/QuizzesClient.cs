@@ -22,14 +22,16 @@ public class QuizzesClient(HttpClient httpClient)
             ?? QuizApiResponse<PagedInfo<QuizSummaryInfoDTO>>.Fail(NoResponseMessage);
     }
 
-    public async Task<QuizApiResponse<QuizBriefInfoDTO[]>> GetActiveQuizzesAsync(int topicIdFilter)
+    public async Task<QuizApiResponse<PagedInfo<QuizBriefInfoDTO>>> GetActiveBriefQuizzesAsync(int topicFilterId, PaginationDTO paginationData)
     {
-        HttpResponseMessage response = await httpClient.GetAsync($"{ApiRoute}/active?topicIdFilter={topicIdFilter}");
+        string requestUrl = $"{ApiRoute}/active/brief?topicFilterId={topicFilterId}&pageNumber={paginationData.PageNumber}&pageSize={paginationData.PageSize}";
+        HttpResponseMessage response = await httpClient.GetAsync(requestUrl);
 
-        QuizApiResponse<QuizBriefInfoDTO[]>? responseData = await response.Content.ReadFromJsonAsync<QuizApiResponse<QuizBriefInfoDTO[]>>();
+        QuizApiResponse<PagedInfo<QuizBriefInfoDTO>>? responseData = await response.Content
+            .ReadFromJsonAsync<QuizApiResponse<PagedInfo<QuizBriefInfoDTO>>>();
         
         return responseData
-            ?? QuizApiResponse<QuizBriefInfoDTO[]>.Fail(NoResponseMessage);
+            ?? QuizApiResponse<PagedInfo<QuizBriefInfoDTO>>.Fail(NoResponseMessage);
     }
 
     public async Task<QuizApiResponse<QuizInfoDTO>> GetQuizByIdAsync(Guid id)

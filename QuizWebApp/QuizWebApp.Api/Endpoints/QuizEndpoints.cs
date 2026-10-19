@@ -19,7 +19,7 @@ public static class QuizEndpoints
             .RequireAuthorization();
 
         MapQuizGetEndpoint(commonRouteGroup);
-        MapQuizGetActiveEndpoint(commonRouteGroup);
+        MapBriefQuizGetActiveEndpoint(commonRouteGroup);
         MapQuizGetByIdEndpoint(commonRouteGroup);
         MapQuizGetTitleByIdEndpoint(commonRouteGroup);
 
@@ -36,14 +36,14 @@ public static class QuizEndpoints
     private static void MapQuizGetEndpoint(IEndpointRouteBuilder app)
     {
         app.MapGet("/", async (int topicFilterId, [AsParameters] PaginationDTO paginationData, IQuizService quizService) =>
-            Results.Ok(await quizService.GetQuizzesAsync(topicFilterId, paginationData))
+            Results.Ok(await quizService.GetQuizzesAsync(paginationData, topicFilterId))
         );
     }
 
-    private static void MapQuizGetActiveEndpoint(IEndpointRouteBuilder app)
+    private static void MapBriefQuizGetActiveEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapGet("/active", async (int topicIdFilter, IQuizService quizService) =>
-            Results.Ok(await quizService.GetActiveQuizzesAsync(topicIdFilter))
+        app.MapGet("/active/brief", async (int topicFilterId, [AsParameters] PaginationDTO paginationData, IQuizService quizService) =>
+            Results.Ok(await quizService.GetAvailableQuizzesAsync(paginationData, topicFilterId))
         );
     }
 
