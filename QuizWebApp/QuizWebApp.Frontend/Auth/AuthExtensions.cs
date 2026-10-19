@@ -7,14 +7,12 @@ public static class AuthExtensions
 {
     public static void AddQuizAuth(this WebAssemblyHostBuilder builder)
     {
-        builder.Services.AddCascadingAuthenticationState();
-
-        builder.Services.AddSingleton<QuizAuthStateProvider>();
-
-        builder.Services.AddSingleton<AuthenticationStateProvider>(
-            sp => sp.GetRequiredService<QuizAuthStateProvider>()
-        );
-        
-        builder.Services.AddAuthorizationCore();
+        builder.Services
+            .AddCascadingAuthenticationState()
+            .AddSingleton<QuizAuthStateProvider>()
+            .AddSingleton<AuthenticationStateProvider>(
+                sp => sp.GetRequiredService<QuizAuthStateProvider>()
+            )
+            .AddAuthorizationCore();
     }
 }
