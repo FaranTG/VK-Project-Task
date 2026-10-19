@@ -1,5 +1,4 @@
-﻿using System.Net.Http.Json;
-using QuizWebApp.Frontend.Extensions;
+﻿using QuizWebApp.Frontend.Extensions;
 using QuizWebApp.Shared.ApiResponses;
 using QuizWebApp.Shared.DTOs.Common;
 using QuizWebApp.Shared.DTOs.User;
@@ -9,29 +8,19 @@ namespace QuizWebApp.Frontend.Clients;
 public class UsersClient(HttpClient httpClient)
 {
     private const string ApiRoute = "/api/users";
-    private const string NoResponseMessage = "No response from server.";
 
-    public async Task<QuizApiResponse<PagedInfo<UserInfoDTO>>> GetUsersAsync(PaginationDTO paginationData, bool? isApprovedFilter)
-    {
-        string requestUrl = isApprovedFilter is null 
+    public Task<QuizApiResponse<PagedInfo<UserInfoDTO>>> GetUsersAsync(PaginationDTO paginationData, bool? isApprovedFilter)
+        => httpClient
+            .GetAsync(CreateRequestUrl(paginationData, isApprovedFilter))
+            .ExtractQuizApiResponse<PagedInfo<UserInfoDTO>>();
+
+    public Task<QuizApiResponse> ToggleUserApprovedStatusAsync(int id)
+        => httpClient
+            .PatchAsync($"{ApiRoute}/{id}/toggle-status", null)
+            .ExtractQuizApiResponse();
+
+    private static string CreateRequestUrl(PaginationDTO paginationData, bool? isApprovedFilter)
+        => isApprovedFilter is null 
             ? $"{ApiRoute}?{paginationData.CreatePaginationParameters()}"
             : $"{ApiRoute}?isApprovedFilter={isApprovedFilter}&{paginationData.CreatePaginationParameters()}";
-        HttpResponseMessage response = await httpClient.GetAsync(requestUrl);
-
-        QuizApiResponse<PagedInfo<UserInfoDTO>>? responseData = await response.Content
-            .ReadFromJsonAsync<QuizApiResponse<PagedInfo<UserInfoDTO>>>();
-        
-        return responseData
-            ?? QuizApiResponse<PagedInfo<UserInfoDTO>>.Fail(NoResponseMessage);
-    }
-
-    public async Task<QuizApiResponse> ToggleUserApprovedStatusAsync(int id)
-    {
-        HttpResponseMessage response = await httpClient.PatchAsync($"{ApiRoute}/{id}/toggle-status", null);
-
-        QuizApiResponse? responseData = await response.Content.ReadFromJsonAsync<QuizApiResponse>();
-
-        return responseData
-            ?? QuizApiResponse.Fail(NoResponseMessage);
-    }
 }

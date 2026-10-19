@@ -13,61 +13,31 @@ public static class ClientsExtensions
 
         Uri baseUri = new (quizApiUrl);
 
-        builder.Services.AddTransient<AuthorizationMessageHandler>();
-        
-        AddAuthClient(builder, baseUri);
-        AddTopicsClient(builder, baseUri);
-        AddQuizzesClient(builder, baseUri);
-        AddAttemptsClient(builder, baseUri);
-        AddUsersClient(builder, baseUri);
-        AddOrganizerClient(builder, baseUri);
+        builder.Services
+            .AddTransient<AuthorizationMessageHandler>()
+            .AddAuthClient(baseUri)
+            .AddAuthorizedClient(baseUri, client => new TopicsClient(client))
+            .AddAuthorizedClient(baseUri, client => new QuizzesClient(client))
+            .AddAuthorizedClient(baseUri, client => new AttemptsClient(client))
+            .AddAuthorizedClient(baseUri, client => new UsersClient(client))
+            .AddAuthorizedClient(baseUri, client => new OrganizerClient(client));
     }
 
-    private static void AddAuthClient(WebAssemblyHostBuilder builder, Uri baseUri)
+    private static IServiceCollection AddAuthClient(this IServiceCollection services, Uri baseUri)
     {
-        builder.Services.AddScoped
+        return services.AddScoped
         (
             sp => new AuthClient(new HttpClient { BaseAddress = baseUri })
         );
     }
 
-    private static void AddTopicsClient(WebAssemblyHostBuilder builder, Uri baseUri)
+    private static IServiceCollection AddAuthorizedClient<TClient>(this IServiceCollection services,
+        Uri baseUri, Func<HttpClient, TClient> clientFactory)
+        where TClient : class
     {
-        builder.Services.AddScoped
+        return services.AddScoped
         (
-            sp => new TopicsClient(CreateAuthorizedClient(sp, baseUri))
-        );
-    }
-
-    private static void AddQuizzesClient(WebAssemblyHostBuilder builder, Uri baseUri)
-    {
-        builder.Services.AddScoped
-        (
-            sp => new QuizzesClient(CreateAuthorizedClient(sp, baseUri))
-        );
-    }
-
-    private static void AddAttemptsClient(WebAssemblyHostBuilder builder, Uri baseUri)
-    {
-        builder.Services.AddScoped
-        (
-            sp => new AttemptsClient(CreateAuthorizedClient(sp, baseUri))
-        );
-    }
-
-    private static void AddUsersClient(WebAssemblyHostBuilder builder, Uri baseUri)
-    {
-        builder.Services.AddScoped
-        (
-            sp => new UsersClient(CreateAuthorizedClient(sp, baseUri))
-        );
-    }
-
-    private static void AddOrganizerClient(WebAssemblyHostBuilder builder, Uri baseUri)
-    {
-        builder.Services.AddScoped
-        (
-            sp => new OrganizerClient(CreateAuthorizedClient(sp, baseUri))
+            sp => clientFactory(CreateAuthorizedClient(sp, baseUri))
         );
     }
 
