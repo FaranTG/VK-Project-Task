@@ -4,7 +4,6 @@
 @using QuizWebApp.Frontend.Clients
 @using QuizWebApp.Frontend.Extensions
 @using QuizWebApp.Shared.ApiResponses
-@using QuizWebApp.Shared.DTOs.Common
 @using QuizWebApp.Shared.DTOs.User
 
 @inject UsersClient UsersClient
@@ -19,12 +18,13 @@
 
 <div class="row">
     <div class="col-sm-4 ms-auto mb-3">
-        <label class="form-label" for="filter">Filter by approved status:</label>
-        <select class="form-select" @bind="_filter" id="filter" @bind:after="OnFilterChangedAsync">
-            @foreach (UserApprovedFilter filter in Enum.GetValues<UserApprovedFilter>())
-            {
-                <option value="@filter">@filter</option>
-            }
+        <label class="form-label" for="filter">Status filter: </label>
+        <select class="form-select" @bind="_isApprovedFilter" id="filter" @bind:after="OnFilterChangedAsync">
+            <option value="">Select status...</option>
+            
+            <option value="@ApprovedValue">Approved</option>
+            
+            <option value="@NotApprovedValue">Not Approved</option>
         </select>
     </div>
 </div>
@@ -49,17 +49,18 @@
     <Paginator State="_paginationState" />
 </div>
 
-
 @code {
+    private const string ApprovedValue = "approved";
+    private const string NotApprovedValue = "not-approved";
     private const int DefaultPageSize = 10;
     private const int FirstPageIndex = 0;
 
     private QuickGrid<UserInfoDTO>? _grid;
     private GridItemsProvider<UserInfoDTO>? _usersProvider;
     private string? _loadErrorMessage;
-    
+    private string _isApprovedFilter = string.Empty;
+
     private PaginationState _paginationState = new PaginationState { ItemsPerPage = DefaultPageSize };
-    private UserApprovedFilter _filter = UserApprovedFilter.All;
 
     protected override void OnInitialized()
     {
@@ -70,7 +71,7 @@
             try
             {
                 QuizApiResponse<PagedInfo<UserInfoDTO>> response = await UsersClient
-                    .GetUsersAsync(_filter, request.CreatePagination(DefaultPageSize));
+                    .GetUsersAsync(request.CreatePagination(DefaultPageSize), ConvertFilter());
 
                 if (response.IsSuccess)
                 {
@@ -118,5 +119,15 @@
 
         await _paginationState.SetCurrentPageIndexAsync(FirstPageIndex);
         await _grid.RefreshDataAsync();
+    }
+
+    private bool? ConvertFilter()
+    {
+        return _isApprovedFilter switch
+        {
+            ApprovedValue => true,
+            NotApprovedValue => false,
+            _ => null
+        };
     }
 }

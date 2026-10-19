@@ -23,8 +23,8 @@ public static class UserEndpoints
 
     private static void MapUserGetEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapGet("/", async (UserApprovedFilter approvedFilter, [AsParameters] PaginationDTO paginationData, IUserService userService) => 
-            Results.Ok(await userService.GetUsersAsync(approvedFilter, paginationData))
+        app.MapGet("/", async (bool? isApprovedFilter, [AsParameters] PaginationDTO paginationData, IUserService userService) => 
+            Results.Ok(await userService.GetUsersAsync(paginationData, isApprovedFilter))
         );
     }
 

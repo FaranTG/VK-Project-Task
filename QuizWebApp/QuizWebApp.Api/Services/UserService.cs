@@ -6,7 +6,6 @@ using QuizWebApp.Api.Services.Interfaces;
 using QuizWebApp.Shared.ApiResponses;
 using QuizWebApp.Shared.DTOs.Common;
 using QuizWebApp.Shared.DTOs.User;
-using QuizWebApp.Shared.Enums;
 
 namespace QuizWebApp.Api.Services;
 
@@ -19,17 +18,16 @@ public class UserService : IUserService
         _dbContext = dbContext;
     }
 
-    public async Task<QuizApiResponse<PagedInfo<UserInfoDTO>>> GetUsersAsync(UserApprovedFilter approvedFilter, PaginationDTO paginationData)
+    public async Task<QuizApiResponse<PagedInfo<UserInfoDTO>>> GetUsersAsync(PaginationDTO paginationData, bool? isApprovedFilter)
     {
         try
         {
             IQueryable<User> query = _dbContext.Users.AsNoTracking();
-            query = approvedFilter switch
+
+            if (isApprovedFilter is not null)
             {
-                UserApprovedFilter.ApprovedOnly => query.Where(user => user.IsApproved),
-                UserApprovedFilter.NotApprovedOnly => query.Where(user => !user.IsApproved),
-                _ => query
-            };
+                query = query.Where(user => user.IsApproved == isApprovedFilter);
+            }
 
             int totalCount = await query.CountAsync();
             UserInfoDTO[] users = await query

@@ -2,7 +2,6 @@
 using QuizWebApp.Shared.ApiResponses;
 using QuizWebApp.Shared.DTOs.Common;
 using QuizWebApp.Shared.DTOs.User;
-using QuizWebApp.Shared.Enums;
 
 namespace QuizWebApp.Frontend.Clients;
 
@@ -11,9 +10,11 @@ public class UsersClient(HttpClient httpClient)
     private const string ApiRoute = "/api/users";
     private const string NoResponseMessage = "No response from server.";
 
-    public async Task<QuizApiResponse<PagedInfo<UserInfoDTO>>> GetUsersAsync(UserApprovedFilter approvedFilter, PaginationDTO paginationData)
+    public async Task<QuizApiResponse<PagedInfo<UserInfoDTO>>> GetUsersAsync(PaginationDTO paginationData, bool? isApprovedFilter)
     {
-        string requestUrl = $"{ApiRoute}?approvedFilter={approvedFilter}&pageNumber={paginationData.PageNumber}&pageSize={paginationData.PageSize}";
+        string requestUrl = isApprovedFilter is null 
+            ? $"{ApiRoute}?pageNumber={paginationData.PageNumber}&pageSize={paginationData.PageSize}"
+            : $"{ApiRoute}?isApprovedFilter={isApprovedFilter}&pageNumber={paginationData.PageNumber}&pageSize={paginationData.PageSize}";
         HttpResponseMessage response = await httpClient.GetAsync(requestUrl);
 
         QuizApiResponse<PagedInfo<UserInfoDTO>>? responseData = await response.Content
