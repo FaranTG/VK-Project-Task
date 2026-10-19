@@ -1,4 +1,5 @@
 ﻿using System.Net.Http.Json;
+using QuizWebApp.Frontend.Extensions;
 using QuizWebApp.Shared.ApiResponses;
 using QuizWebApp.Shared.DTOs.Common;
 using QuizWebApp.Shared.DTOs.User;
@@ -13,8 +14,8 @@ public class UsersClient(HttpClient httpClient)
     public async Task<QuizApiResponse<PagedInfo<UserInfoDTO>>> GetUsersAsync(PaginationDTO paginationData, bool? isApprovedFilter)
     {
         string requestUrl = isApprovedFilter is null 
-            ? $"{ApiRoute}?pageNumber={paginationData.PageNumber}&pageSize={paginationData.PageSize}"
-            : $"{ApiRoute}?isApprovedFilter={isApprovedFilter}&pageNumber={paginationData.PageNumber}&pageSize={paginationData.PageSize}";
+            ? $"{ApiRoute}?{paginationData.CreatePaginationParameters()}"
+            : $"{ApiRoute}?isApprovedFilter={isApprovedFilter}&{paginationData.CreatePaginationParameters()}";
         HttpResponseMessage response = await httpClient.GetAsync(requestUrl);
 
         QuizApiResponse<PagedInfo<UserInfoDTO>>? responseData = await response.Content

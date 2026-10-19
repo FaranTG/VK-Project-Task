@@ -1,4 +1,5 @@
 ﻿using System.Net.Http.Json;
+using QuizWebApp.Frontend.Extensions;
 using QuizWebApp.Shared.ApiResponses;
 using QuizWebApp.Shared.DTOs.Common;
 using QuizWebApp.Shared.DTOs.Topic;
@@ -14,7 +15,7 @@ public class TopicsClient(HttpClient httpClient)
     {
         string url = paginationData is null
             ? ApiRoute
-            : $"{ApiRoute}?pageNumber={paginationData.PageNumber}&pageSize={paginationData.PageSize}";
+            : $"{ApiRoute}?{paginationData.CreatePaginationParameters()}";
         HttpResponseMessage response = await httpClient.GetAsync(url);
 
         QuizApiResponse<PagedInfo<TopicInfoDTO>>? responseData = await response.Content.ReadFromJsonAsync<QuizApiResponse<PagedInfo<TopicInfoDTO>>>();

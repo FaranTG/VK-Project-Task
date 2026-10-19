@@ -1,4 +1,5 @@
 ﻿using System.Net.Http.Json;
+using QuizWebApp.Frontend.Extensions;
 using QuizWebApp.Shared.ApiResponses;
 using QuizWebApp.Shared.DTOs.Common;
 using QuizWebApp.Shared.DTOs.Quiz;
@@ -12,7 +13,7 @@ public class QuizzesClient(HttpClient httpClient)
 
     public async Task<QuizApiResponse<PagedInfo<QuizSummaryInfoDTO>>> GetQuizzesAsync(int topicFilterId, PaginationDTO paginationData)
     {
-        string requestUrl = $"{ApiRoute}?topicFilterId={topicFilterId}&pageNumber={paginationData.PageNumber}&pageSize={paginationData.PageSize}";
+        string requestUrl = $"{ApiRoute}?{CreateFilterParameter(topicFilterId)}&{paginationData.CreatePaginationParameters()}";
         HttpResponseMessage response = await httpClient.GetAsync(requestUrl);
 
         QuizApiResponse<PagedInfo<QuizSummaryInfoDTO>>? responseData = await response.Content
@@ -24,7 +25,7 @@ public class QuizzesClient(HttpClient httpClient)
 
     public async Task<QuizApiResponse<PagedInfo<QuizBriefInfoDTO>>> GetActiveBriefQuizzesAsync(int topicFilterId, PaginationDTO paginationData)
     {
-        string requestUrl = $"{ApiRoute}/active/brief?topicFilterId={topicFilterId}&pageNumber={paginationData.PageNumber}&pageSize={paginationData.PageSize}";
+        string requestUrl = $"{ApiRoute}/active/brief?{CreateFilterParameter(topicFilterId)}&{paginationData.CreatePaginationParameters()}";
         HttpResponseMessage response = await httpClient.GetAsync(requestUrl);
 
         QuizApiResponse<PagedInfo<QuizBriefInfoDTO>>? responseData = await response.Content
@@ -69,4 +70,7 @@ public class QuizzesClient(HttpClient httpClient)
         return responseData
             ?? QuizApiResponse.Fail(NoResponseMessage);
     }
+
+    private static string CreateFilterParameter(int topicFilterId)
+        => $"topicFilterId={topicFilterId}";
 }

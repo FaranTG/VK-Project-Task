@@ -1,4 +1,5 @@
 ﻿using System.Net.Http.Json;
+using QuizWebApp.Frontend.Extensions;
 using QuizWebApp.Shared.ApiResponses;
 using QuizWebApp.Shared.DTOs.Attempt;
 using QuizWebApp.Shared.DTOs.Common;
@@ -16,7 +17,7 @@ public class AttemptsClient(HttpClient httpClient)
 
     public async Task<QuizApiResponse<PagedInfo<AttemptParticipantInfoDTO>>> GetQuizAttemptsAsync(Guid quizId, PaginationDTO paginationData)
     {
-        string requestUrl = $"{OrganizerApiRoute}/quiz-info/{quizId}?pageNumber={paginationData.PageNumber}&pageSize={paginationData.PageSize}";
+        string requestUrl = $"{OrganizerApiRoute}/quiz-info/{quizId}?{paginationData.CreatePaginationParameters()}";
         HttpResponseMessage response = await httpClient.GetAsync(requestUrl);
 
         QuizApiResponse<PagedInfo<AttemptParticipantInfoDTO>>? responseData = await response.Content
@@ -28,7 +29,7 @@ public class AttemptsClient(HttpClient httpClient)
 
     public async Task<QuizApiResponse<PagedInfo<AttemptQuizInfoDTO>>> GetParticipantAttemptsAsync(PaginationDTO paginationData)
     {
-        string requestUrl = $"{ParticipantApiRoute}?pageNumber={paginationData.PageNumber}&pageSize={paginationData.PageSize}";
+        string requestUrl = $"{ParticipantApiRoute}?{paginationData.CreatePaginationParameters()}";
         HttpResponseMessage response = await httpClient.GetAsync(requestUrl);
 
         QuizApiResponse<PagedInfo<AttemptQuizInfoDTO>>? responseData = await response.Content
