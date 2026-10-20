@@ -120,6 +120,8 @@ else
     [Parameter]
     public Guid? Id { get; set; }
 
+    private const string SaveQuizLoaderMessage = "Saving quiz...";
+
     private QuizModel? _quizModel;
     private EditContext? _editContext;
     private TopicInfoDTO[]? _topics;
@@ -129,45 +131,32 @@ else
     private string Title => IsEditCase ? $"Edit Quiz" : "New Quiz";
     private bool IsEditCase => Id.HasValue && Id.Value != Guid.Empty;
 
-    protected override async Task OnInitializedAsync()
-    {
-        AppState.ShowLoader("Fetching topics...");
-
-        try
-        {
-            QuizApiResponse<PagedInfo<TopicInfoDTO>> topicsResponse = await TopicsClient.GetTopicsAsync();
-
-            if (topicsResponse.IsFailure)
-            {
-                _loadErrorMessage = topicsResponse.ErrorMessage;
-                return;
-            }
-
-            _topics =  topicsResponse.Data!.DTOs;
-        }
-        finally
-        {
-            AppState.HideLoader();
-        }
-    }
+    protected override Task OnInitializedAsync()
+        => AppState.HandleRequestAsync<PagedInfo<TopicInfoDTO>>
+        (
+            "Fetching topics...",
+            () => TopicsClient.GetTopicsAsync(),
+            data => _topics = data.DTOs,
+            errorMessage => _loadErrorMessage = errorMessage
+        );
 
     protected override async Task OnParametersSetAsync()
     {
-        if (_quizModel is null || _lastProcessedId != Id)
+        if (_quizModel is not null && _lastProcessedId == Id) return;
+
+        _lastProcessedId = Id;
+
+        if (IsEditCase)
         {
-            _lastProcessedId = Id;
-
-            if (IsEditCase)
-            {
-                await FillQuiz();
-            }
-            else
-            {
-                CreateEmptyQuiz();
-            }
-
-            _editContext = new EditContext(_quizModel!);
+            bool isQuizFilled = await FillQuiz();
+            if (!isQuizFilled) return;
         }
+        else
+        {
+            CreateEmptyQuiz();
+        }
+
+        _editContext = new EditContext(_quizModel!);
     }
 
     private async Task SaveQuizAsync()
@@ -181,13 +170,12 @@ else
             return;
         } 
 
-        AppState.ShowLoader("Saving quiz...");
+        QuizSaveDTO newQuiz = CreateQuizSaveDTO(_quizModel);
+        bool isQuizSaved = IsEditCase
+            ? await TrySendUpdateRequestAsync(newQuiz, Id!.Value)
+            : await TrySendAddRequestAsync(newQuiz);
 
-        bool isSuccess = await TrySendRequstAsync(CreateQuizSaveDTO(_quizModel));
-        
-        AppState.HideLoader();
-
-        if (!isSuccess)
+        if (!isQuizSaved)
         {
             return;
         }
@@ -195,32 +183,24 @@ else
         NavigationManager.NavigateTo("organizer/manage-quizzes");
     }
 
-    private async Task<bool> TrySendRequstAsync(QuizSaveDTO newQuiz)
-    {
-        if (IsEditCase)
-        {
-            QuizApiResponse response = await QuizzesClient.UpdateQuizAsync(Id!.Value, newQuiz);
-            
-            if (response.IsFailure)
-            {
-                AppState.ShowError(response.ErrorMessage!);
-                return false;
-            }
-        }
-        else
-        {
-            QuizApiResponse<QuizInfoDTO> response = await QuizzesClient.AddQuizAsync(newQuiz);
-            
-            if (response.IsFailure)
-            {
-                AppState.ShowError(response.ErrorMessage!);
-                return false;
-            }
-        }
+    private Task<bool> TrySendAddRequestAsync(QuizSaveDTO newQuiz)
+        => AppState.HandleRequestAsync<QuizInfoDTO>
+        (
+            SaveQuizLoaderMessage,
+            () => QuizzesClient.AddQuizAsync(newQuiz),
+            _ => {},
+            errorMessage => AppState.ShowError(errorMessage!)
+        );
 
-        return true;
-    }
-    
+    private Task<bool> TrySendUpdateRequestAsync(QuizSaveDTO newQuiz, Guid id)
+        => AppState.HandleRequestAsync
+        (
+            SaveQuizLoaderMessage,
+            () => QuizzesClient.UpdateQuizAsync(id, newQuiz),
+            () => {},
+            errorMessage => AppState.ShowError(errorMessage!)
+        );
+
     private void SetCorrectOption(QuestionModel question, AnswerOptionModel correctOption)
     {
         foreach (AnswerOptionModel option in question.Options)
@@ -242,55 +222,15 @@ else
             }
         };
     }
-    
-    private async Task FillQuiz()
-    {
-        AppState.ShowLoader("Fetching quiz...");
 
-        try
-        {
-            QuizApiResponse<QuizInfoDTO> quizResponse = await QuizzesClient.GetQuizByIdAsync(Id!.Value);
-        
-            if (quizResponse.IsFailure)
-            {
-                _loadErrorMessage = quizResponse.ErrorMessage;
-                return;
-            }
-            
-            QuizInfoDTO quizInfo = quizResponse.Data!;
-
-            _quizModel = new QuizModel()
-            {
-                Name = quizInfo.Name,
-                TopicId = quizInfo.TopicId,
-                TimeInMinutes = quizInfo.TimeInMinutes,
-                IsActive = quizInfo.IsActive,
-                Questions = quizInfo.Questions
-                    .Select
-                    (
-                        questionInfo => new QuestionModel()
-                        {
-                            Text = questionInfo.Text,
-                            Options = questionInfo.Options
-                                .Select
-                                (
-                                    optionInfo => new AnswerOptionModel()
-                                    {
-                                        Text = optionInfo.Text,
-                                        IsCorrect = optionInfo.IsCorrect
-                                    }
-                                )
-                                .ToList()
-                        }
-                    )
-                    .ToList()
-            };
-        }
-        finally
-        {
-            AppState.HideLoader();
-        }
-    }
+    private Task<bool> FillQuiz()
+        => AppState.HandleRequestAsync<QuizInfoDTO>
+        (
+            "Fetching quiz...",
+            () => QuizzesClient.GetQuizByIdAsync(Id!.Value),
+            quizInfo => _quizModel = CreateQuizModel(quizInfo),
+            errorMessage => { _loadErrorMessage = errorMessage; StateHasChanged(); }
+        );
 
     private void OnTopicFilterChanged()
     {
@@ -299,6 +239,36 @@ else
             FieldIdentifier fieldIdentifier = FieldIdentifier.Create(() => _quizModel.TopicId);
             _editContext.NotifyFieldChanged(fieldIdentifier);
         }
+    }
+
+    private QuizModel CreateQuizModel(QuizInfoDTO quizInfo)
+    {
+        return new QuizModel()
+        {
+            Name = quizInfo.Name,
+            TopicId = quizInfo.TopicId,
+            TimeInMinutes = quizInfo.TimeInMinutes,
+            IsActive = quizInfo.IsActive,
+            Questions = quizInfo.Questions
+                .Select
+                (
+                    questionInfo => new QuestionModel()
+                    {
+                        Text = questionInfo.Text,
+                        Options = questionInfo.Options
+                            .Select
+                            (
+                                optionInfo => new AnswerOptionModel()
+                                {
+                                    Text = optionInfo.Text,
+                                    IsCorrect = optionInfo.IsCorrect
+                                }
+                            )
+                            .ToList()
+                    }
+                )
+                .ToList()
+        };
     }
 
     private QuestionModel CreateEmptyQuestion()

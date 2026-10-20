@@ -139,25 +139,17 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        AppState.ShowLoader("Fetching quizzes and topics...");
-        try
-        {
-            QuizApiResponse<PagedInfo<TopicInfoDTO>> topicsResponse = await TopicsClient.GetTopicsAsync();
+        bool areTopicsReceived = await AppState.HandleRequestAsync<PagedInfo<TopicInfoDTO>>
+        (
+            "Fetching topics...",
+            () => TopicsClient.GetTopicsAsync(),
+            data => _topics = data.DTOs,
+            errorMessage => _loadErrorMessage = errorMessage
+        );
 
-            if (topicsResponse.IsFailure)
-            {
-                _loadErrorMessage = topicsResponse.ErrorMessage;
-                return;
-            }
+        if (!areTopicsReceived) return;
 
-            _topics = topicsResponse.Data!.DTOs;
-
-            await FetchQuizzesAsync();
-        }
-        finally
-        {
-            AppState.HideLoader();
-        }
+        await FetchQuizzesAsync();
     }
 
     private async Task OnTopicFilterChanged()
@@ -170,25 +162,20 @@ else
         }
 
         _currentPage = FirstPageNumber; 
-
-        await ReloadPageDataAsync();
+        await FetchQuizzesAsync();
     }
 
     private async Task FetchQuizzesAsync()
     {
-        PaginationDTO? paginationData = new PaginationDTO(_currentPage, DefaultPageSize);
-        QuizApiResponse<PagedInfo<QuizBriefInfoDTO>> quizzesResponse = 
-            await QuizzesClient.GetActiveBriefQuizzesAsync(_topicFilterId, paginationData);
+        PaginationDTO paginationData = new PaginationDTO(_currentPage, DefaultPageSize);
 
-        if (quizzesResponse.IsFailure)
-        {
-            _loadErrorMessage = quizzesResponse.ErrorMessage;
-        }
-        else
-        {
-            _quizzes = quizzesResponse.Data!.DTOs;
-            _totalItemsCount = quizzesResponse.Data.TotalCount;
-        }
+        await AppState.HandleRequestAsync<PagedInfo<QuizBriefInfoDTO>>
+        (
+            "Fetching quizzes...",
+            () => QuizzesClient.GetActiveBriefQuizzesAsync(_topicFilterId, paginationData),
+            data => { _quizzes = data.DTOs; _totalItemsCount = data.TotalCount; },
+            errorMessage => { _loadErrorMessage = errorMessage; StateHasChanged(); }
+        );
     }
 
     private async Task GoToFirstPage() => await GoToPage(IsFirstPage, FirstPageNumber);
@@ -202,40 +189,25 @@ else
     private async Task GoToPage(bool returnCondition, int newPageNumber)
     {
         if (returnCondition) return;
-        _currentPage = newPageNumber;
-        await ReloadPageDataAsync();
-    }
 
-    private async Task ReloadPageDataAsync()
-    {
-        AppState.ShowLoader("Fetching quizzes...");
+        _currentPage = newPageNumber;
         await FetchQuizzesAsync();
-        AppState.HideLoader();
     }
 
     private async Task StartSelectedQuiz()
     {
         ArgumentNullException.ThrowIfNull(_selectedQuiz);
 
-        AppState.ShowLoader("Preparing the quiz...");
-        try
-        {
-            QuizApiResponse<int> response = await AttemptsClient.StartQuizAsync(_selectedQuiz.Id);
-
-            if (response.IsFailure)
+        await AppState.HandleRequestAsync<int>
+        (
+            "Preparing the quiz...",
+            () => AttemptsClient.StartQuizAsync(_selectedQuiz.Id),
+            attemptId =>
             {
-                _loadErrorMessage = response.ErrorMessage;
-                return;
-            }
-
-            int attemptId = response.Data;
-
-            QuizState.SetSelectedQuiz(_selectedQuiz, attemptId);
-            NavigationManager.NavigateTo("/participant/take-quiz");
-        }
-        finally
-        {
-            AppState.HideLoader();
-        }
+                QuizState.SetSelectedQuiz(_selectedQuiz, attemptId);
+                NavigationManager.NavigateTo("/participant/take-quiz");
+            },
+            errorMessage => { _loadErrorMessage = errorMessage; StateHasChanged(); }
+        );
     }
 }

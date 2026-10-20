@@ -52,6 +52,7 @@
     private string? _loadErrorMessage;
     private string? _quizName;
     private string? _topicName;
+    private Guid? _previousId;
 
     private PaginationState _paginationState = new PaginationState { ItemsPerPage = DefaultPageSize };
 
@@ -62,24 +63,16 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        AppState.ShowLoader("Fetching quiz title...");
-        try
-        {
-            QuizApiResponse<QuizTitleInfoDTO> response = await QuizzesClient.GetQuizTitleByIdAsync(Id!.Value);
+        if (_previousId == Id) return;
+        _previousId = Id;
 
-            if (response.IsFailure)
-            {
-                _loadErrorMessage = response.ErrorMessage;
-                return;
-            }
-
-            _quizName = response.Data!.Name;
-            _topicName = response.Data.Topic;
-        }
-        finally
-        {
-            AppState.HideLoader();
-        }
+        await AppState.HandleRequestAsync<QuizTitleInfoDTO>
+        (
+            "Fetching quiz title...",
+            () => QuizzesClient.GetQuizTitleByIdAsync(Id!.Value),
+            data => { _quizName = data.Name; _topicName = data.Topic; },
+            errorMessage => _loadErrorMessage = errorMessage
+        );
     }
 
     private void ConfigureAttemptsProvider()

@@ -1,7 +1,6 @@
 ﻿@page "/organizer/manage-quizzes"
 
 @using Microsoft.AspNetCore.Components.QuickGrid
-@using QuizWebApp.Frontend.Extensions
 @using QuizWebApp.Shared.DTOs.Quiz
 @using QuizWebApp.Shared.DTOs.Topic
 @using QuizWebApp.Shared.Enums
@@ -92,23 +91,15 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        AppState.ShowLoader("Fetching topics...");
-        try
-        {
-            QuizApiResponse<PagedInfo<TopicInfoDTO>> topicsResponse = await TopicsClient.GetTopicsAsync();
+        bool areTopicsReceived = await AppState.HandleRequestAsync<PagedInfo<TopicInfoDTO>>
+        (
+            "Fetching topics...",
+            () => TopicsClient.GetTopicsAsync(),
+            data => _topics = data.DTOs,
+            errorMessage => _loadErrorMessage = errorMessage
+        );
 
-            if (topicsResponse.IsFailure)
-            {
-                _loadErrorMessage = topicsResponse.ErrorMessage;
-                return;
-            }
-
-            _topics =  topicsResponse.Data!.DTOs;
-        }
-        finally
-        {
-            AppState.HideLoader();
-        }
+        if (!areTopicsReceived) return;
 
         ConfigureQuizzesProvider();
     }

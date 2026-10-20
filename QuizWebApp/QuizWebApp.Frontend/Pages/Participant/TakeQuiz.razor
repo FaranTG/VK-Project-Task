@@ -76,7 +76,7 @@ else
 
         @if (_showExitQuizConfirmation)
         {
-            <QuizModal Title="Quiz Submitted" ActionButtonText="Yes"
+            <QuizModal Title="Confirm Exit" ActionButtonText="Yes"
                 OnActionButtonClicked="ExitQuizAsync"
                 OnCancelClicked="() => _showExitQuizConfirmation = false">
                 <p class="text-danger h5">
@@ -117,38 +117,21 @@ else
             return;
         }
 
-        AppState.ShowLoader("Fetching question...");
-
-        string? errorMessage = await TryLoadNextQuestionAsync();
-        if (errorMessage is not null)
-        {
-            _loadErrorMessage = errorMessage;
-        }
-
-        AppState.HideLoader();
+        await LoadNextQuestionAsync();
     }
 
-    private async Task ExitQuizAsync()
-    {
-        AppState.ShowLoader("Exiting the quiz...");
-        try
-        {
-            QuizApiResponse response = await ParticipantQuizzesClient.ExitQuizAsync(QuizState.AttemptId);
-
-            if (response.IsFailure)
+    private Task ExitQuizAsync()
+        => AppState.HandleRequestAsync
+        (
+            "Exiting the quiz...",
+            () => ParticipantQuizzesClient.ExitQuizAsync(QuizState.AttemptId),
+            RedirectToMyQuizzes,
+            errorMessage => 
             {
                 _showExitQuizConfirmation = false;
-                AppState.ShowError(response.ErrorMessage!);
-                return;
+                AppState.ShowError(errorMessage!);
             }
-
-            RedirectToMyQuizzes();
-        }
-        finally
-        {
-            AppState.HideLoader();
-        }
-    }
+        );
 
     private async Task GoNextQuestionAsync()
     {
@@ -158,27 +141,11 @@ else
             return;
         }
 
-        AppState.ShowLoader("Sending response and fetching next question...");
-        try
-        {
-            if (!(await TrySaveQuestionResponseAsync()))
-            {
-                return;
-            }
+        bool isSaved = await SaveQuestionAsync();
+        if (!isSaved) return;
 
-            string? errorMessage = await TryLoadNextQuestionAsync();
-            if (errorMessage is not null)
-            {
-                AppState.ShowError(errorMessage);
-                return;
-            }
-
-            ++_completedQuestionsNumber;
-        }
-        finally
-        {
-            AppState.HideLoader();
-        }
+        bool isLoaded = await LoadNextQuestionAsync();
+        if (isLoaded) ++_completedQuestionsNumber;
     }
 
     private async Task SubmitQuizAsync()
@@ -189,50 +156,50 @@ else
             return;
         }
 
-        AppState.ShowLoader("Sending response and submitting the quiz...");
-        try
-        {
-            if (!(await TrySaveQuestionResponseAsync()))
-            {
-                return;
-            }
+        bool isSaved = await SaveQuestionAsync();
+        if (!isSaved) return;
 
-            QuizApiResponse response = await ParticipantQuizzesClient.CompleteQuizAsync(QuizState.AttemptId);
-
-            if (response.IsFailure)
-            {
-                _submitErrorMessage = response.ErrorMessage;
-                return;
-            }
-
-            _submitQuizMessage = "Quiz submitted successfully";
-        }
-        finally
-        {
-            AppState.HideLoader();
-        }
+        await CompleteQuizAsync();
     }
 
-    private async Task AutoSubmitQuizAsync()
-    {
-        AppState.ShowLoader("Auto-submitting the quiz...");
-        try
-        {
-            QuizApiResponse response = await ParticipantQuizzesClient.AutoSubmitQuizAsync(QuizState.AttemptId);
+    private Task AutoSubmitQuizAsync()
+        => AppState.HandleRequestAsync(
+            "Auto-submitting the quiz...",
+            () => ParticipantQuizzesClient.AutoSubmitQuizAsync(QuizState.AttemptId),
+            () => _submitQuizMessage = "Quiz auto-submitted successfully",
+            errorMessage => _submitErrorMessage = errorMessage
+        );
 
-            if (response.IsFailure)
+    private Task<bool> LoadNextQuestionAsync()
+        => AppState.HandleRequestAsync<QuestionInfoDTO>
+        (
+            "Fetching question...",
+            () => ParticipantQuizzesClient.GetQuizNextQuestionAsync(QuizState.AttemptId),
+            data => 
             {
-                _submitErrorMessage = response.ErrorMessage;
-                return;
-            }
+                _selectedOptionId = 0;
+                _questionData = data;
+            },
+            errorMessage => { _loadErrorMessage = errorMessage; StateHasChanged(); }
+        );
 
-            _submitQuizMessage = "Quiz auto-submitted successfully";
-        }
-        finally
-        {
-            AppState.HideLoader();
-        }
-    }
+    private Task<bool> SaveQuestionAsync()
+        => AppState.HandleRequestAsync
+        (
+            "Sending question response...",
+            () => ParticipantQuizzesClient.SaveQuestionResponseAsync(QuizState.AttemptId, CreateResponseDTO()),
+            () => {},
+            errorMessage => AppState.ShowError(errorMessage!)
+        );
+
+    private Task CompleteQuizAsync()
+        => AppState.HandleRequestAsync
+        (
+            "Submitting the quiz...",
+            () => ParticipantQuizzesClient.CompleteQuizAsync(QuizState.AttemptId),
+            () => _submitQuizMessage = "Quiz submitted successfully",
+            errorMessage => _submitErrorMessage = errorMessage
+        );
 
     private QuestionResponseSaveDTO CreateResponseDTO()
     {
@@ -244,35 +211,6 @@ else
             _questionData.Id,
             _selectedOptionId
         );
-    }
-
-    private async Task<string?> TryLoadNextQuestionAsync()
-    {
-        QuizApiResponse<QuestionInfoDTO> response = await ParticipantQuizzesClient
-            .GetQuizNextQuestionAsync(QuizState.AttemptId);
-
-        if (response.IsFailure)
-        {
-            return response.ErrorMessage;
-        }
-
-        _selectedOptionId = 0;
-        _questionData = response.Data;
-        return null;
-    }
-
-    private async Task<bool> TrySaveQuestionResponseAsync()
-    {
-        QuizApiResponse response = await ParticipantQuizzesClient
-            .SaveQuestionResponseAsync(QuizState.AttemptId, CreateResponseDTO());
-
-        if (response.IsFailure)
-        {
-            AppState.ShowError(response.ErrorMessage!);
-            return false;
-        }
-        
-        return true;
     }
 
     private void RedirectToMyQuizzes()

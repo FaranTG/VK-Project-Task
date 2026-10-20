@@ -65,26 +65,17 @@ else
     private async Task LoginAsync() {
         ArgumentNullException.ThrowIfNull(LoginModel);
 
-        AppState.ShowLoader("Logging-in...");
-        try 
-        {
-            QuizApiResponse<LoggedInUserInfo> response = await AuthClient.AddUserTokenAsync(CreateLoginDTO(LoginModel));
+        bool isLoggedIn = await AppState.HandleRequestAsync<LoggedInUserInfo>
+        (
+            "Logging-in...",
+            () => AuthClient.AddUserTokenAsync(CreateLoginDTO(LoginModel)),
+            async user => await QuizAuthStateProvider.SetLoginAsync(user),
+            errorMessage => AppState.ShowError(errorMessage!)
+        );
 
-            if (response.IsFailure) {
-                AppState.ShowError(response.ErrorMessage!);
-                return;
-            }
+        if (!isLoggedIn) return;
 
-            ArgumentNullException.ThrowIfNull(response.Data);
-            LoggedInUserInfo user = response.Data;
-            await QuizAuthStateProvider.SetLoginAsync(user);
-
-            NavigationManager.NavigateTo("/");
-        }
-        finally
-        {
-            AppState.HideLoader();
-        }
+        NavigationManager.NavigateTo("/");
     }
 
     private UserLoginDTO CreateLoginDTO(LoginModel model) {

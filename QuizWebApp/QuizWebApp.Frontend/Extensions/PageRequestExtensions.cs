@@ -7,6 +7,81 @@ namespace QuizWebApp.Frontend.Extensions;
 
 public static class PageRequestExtensions
 {
+    /// <summary>
+    /// Управляет Loader, получает response из networkCall, 
+    /// на основе ответа выбрасывает onSuccess и true
+    /// или onError и false
+    /// </summary>
+    public static async Task<bool> HandleRequestAsync<TData>
+    (
+        this IAppState appState, // Расширяем IAppState для красивого Fluent-вызова!
+        string loaderMessage,
+        Func<Task<QuizApiResponse<TData>>> networkCall,
+        Action<TData> onSuccess,
+        Action<string?> onError
+    )
+    {
+        appState.ShowLoader(loaderMessage);
+        try
+        {
+            QuizApiResponse<TData> response = await networkCall();
+
+            if (response.IsFailure)
+            {
+                onError(response.ErrorMessage);
+                return false;
+            }
+
+            onSuccess(response.Data!);
+        }
+        finally
+        {
+            appState.HideLoader();
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    /// Управляет Loader, получает response из networkCall, 
+    /// на основе ответа выбрасывает onSuccess и true
+    /// или onError и false
+    /// </summary>
+    public static async Task<bool> HandleRequestAsync
+    (
+        this IAppState appState,
+        string loaderMessage,
+        Func<Task<QuizApiResponse>> networkCall,
+        Action onSuccess,
+        Action<string?> onError
+    )
+    {
+        appState.ShowLoader(loaderMessage);
+        try
+        {
+            QuizApiResponse response = await networkCall();
+
+            if (response.IsFailure)
+            {
+                onError(response.ErrorMessage);
+                return false;
+            }
+
+            onSuccess();
+        }
+        finally
+        {
+            appState.HideLoader();
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    /// Управляет Loader, получает response из networkCall, 
+    /// на основе ответа возвращает результат с записями и общим количеством
+    /// или пустой результат
+    /// </summary>
     public static async Task<GridItemsProviderResult<TData>> HandleGridRequestAsync<TData>
     (
         this GridItemsProviderRequest<TData> request,

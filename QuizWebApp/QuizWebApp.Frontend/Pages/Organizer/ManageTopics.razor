@@ -67,6 +67,7 @@ else
 
 @code {
     private const string PageTitle = "Manage Topics";
+    private const string SaveTopicLoaderMessage = "Saving topic...";
     private const int DefaultPageSize = 10;
 
     private TopicModel? TopicModel { get; set; }
@@ -99,47 +100,34 @@ else
     {
         ArgumentNullException.ThrowIfNull(TopicModel);
 
-        AppState.ShowLoader("Saving topic...");
-
         TopicSaveDTO newTopic = new TopicSaveDTO(TopicModel.Name);
-        
-        bool isSuccess = await TrySendRequstAsync(newTopic);
-        if (isSuccess)
-        {
-            ClearModel();
-            
-            ArgumentNullException.ThrowIfNull(_grid);
-            await _grid.RefreshDataAsync();
-        }
-        
-        AppState.HideLoader();
+        bool isTopicSaved = _id is null
+            ? await TrySendAddRequestAsync(newTopic)
+            : await TrySendUpdateRequestAsync(newTopic, _id.Value);
+
+        if (!isTopicSaved) return;
+
+        ArgumentNullException.ThrowIfNull(_grid);
+        await _grid.RefreshDataAsync();
     }
 
-    private async Task<bool> TrySendRequstAsync(TopicSaveDTO newTopic)
-    {
-        if (_id is null)
-        {
-            QuizApiResponse<TopicInfoDTO>? response = await TopicsClient.AddTopicAsync(newTopic);
+    private Task<bool> TrySendAddRequestAsync(TopicSaveDTO newTopic)
+        => AppState.HandleRequestAsync<TopicInfoDTO>
+        (
+            SaveTopicLoaderMessage,
+            () => TopicsClient.AddTopicAsync(newTopic),
+            _ => ClearModel(),
+            errorMessage => AppState.ShowError(errorMessage!)
+        );
 
-            if (response.IsFailure)
-            {
-                AppState.ShowError(response.ErrorMessage!);
-                return false;
-            }
-        }
-        else
-        {
-            QuizApiResponse? response = await TopicsClient.UpdateTopicAsync(_id.Value, newTopic);
-
-            if (response.IsFailure)
-            {
-                AppState.ShowError(response.ErrorMessage!);
-                return false;
-            }
-        }
-        
-        return true;
-    }
+    private Task<bool> TrySendUpdateRequestAsync(TopicSaveDTO newTopic, int id)
+        => AppState.HandleRequestAsync
+        (
+            SaveTopicLoaderMessage,
+            () => TopicsClient.UpdateTopicAsync(id, newTopic),
+            ClearModel,
+            errorMessage => AppState.ShowError(errorMessage!)
+        );
 
     private void ClearModel()
     {

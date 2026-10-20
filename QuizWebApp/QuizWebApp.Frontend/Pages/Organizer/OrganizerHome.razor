@@ -56,24 +56,12 @@ else
     private OrganizerHomeSummaryDTO? _summary;
     private string? _loadErrorMessage;
 
-    protected override async Task OnInitializedAsync()
-    {
-        AppState.ShowLoader("Fetching summary...");
-        try
-        {
-            QuizApiResponse<OrganizerHomeSummaryDTO> response = await OrganizerClient.GetHomeSummaryAsync();
-
-            if (response.IsFailure)
-            {
-                _loadErrorMessage = response.ErrorMessage;
-                return;
-            }
-
-            _summary = response.Data;
-        }
-        finally
-        {
-            AppState.HideLoader();
-        }
-    }
+    protected override Task OnInitializedAsync()
+        => AppState.HandleRequestAsync<OrganizerHomeSummaryDTO>
+        (
+            "Fetching summary...",
+            () => OrganizerClient.GetHomeSummaryAsync(),
+            data => _summary = data,
+            errorMessage => _loadErrorMessage = errorMessage
+        );
 }

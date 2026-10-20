@@ -83,22 +83,13 @@ else
     private async Task RegisterAsync() {
         ArgumentNullException.ThrowIfNull(UserModel);
 
-        AppState.ShowLoader("Registering-in...");
-        try 
-        {
-            QuizApiResponse responseData = await AuthClient.RegisterUserAsync(CreateUserSaveDTO(UserModel));
-
-            if (responseData.IsFailure) {
-                AppState.ShowError(responseData.ErrorMessage!);
-                return;
-            }
-
-            _showSuccessAlert = true;
-        }
-        finally
-        {
-            AppState.HideLoader();
-        }
+        await AppState.HandleRequestAsync
+        (
+            "Registering-in...",
+            () => AuthClient.RegisterUserAsync(CreateUserSaveDTO(UserModel)),
+            () => _showSuccessAlert = true,
+            errorMessage => AppState.ShowError(errorMessage!)
+        );
     }
 
     private void OnModalClosed()

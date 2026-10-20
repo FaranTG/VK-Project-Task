@@ -65,29 +65,18 @@
         ConfigureUsersProvider();
     }
 
-    private async Task OnUserApprovedToggleAsync(int id)
-    {
-        AppState.ShowLoader("Updating user approved status...");
-
-        try
-        {
-            QuizApiResponse response = await UsersClient.ToggleUserApprovedStatusAsync(id);
-
-            if (response.IsSuccess)
+    private Task OnUserApprovedToggleAsync(int id)
+        => AppState.HandleRequestAsync
+        (
+            "Updating user approved status...",
+            () => UsersClient.ToggleUserApprovedStatusAsync(id),
+            async () =>
             {
                 ArgumentNullException.ThrowIfNull(_grid);
                 await _grid.RefreshDataAsync();
-                return;
-            }
-
-            _loadErrorMessage = response.ErrorMessage;
-            StateHasChanged();
-        }
-        finally
-        {
-            AppState.HideLoader();
-        }
-    }
+            },
+            errorMessage => { _loadErrorMessage = errorMessage; StateHasChanged(); }
+        );
 
     private async Task OnFilterChangedAsync()
     {
