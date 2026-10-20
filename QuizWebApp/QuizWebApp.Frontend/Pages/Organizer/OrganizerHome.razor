@@ -18,28 +18,34 @@ else if (_summary is null)
 }
 else
 {
-    <div class="row">
-        <div class="col-sm-4">
-            <div class="box p-3 rounded h-100" style="background-color: rgba(21, 25, 29, 0.08);">
-                <h4 class="fw-bold">Topics</h4>
-                <hr />
-                <h5>@_summary.TopicsCount</h5>
+    <div class="row row-cols-1 row-cols-md-3 g-4">
+        <div class="col">
+            <div class="box p-3 rounded h-100 d-flex flex-column" style="background-color: rgba(21, 25, 29, 0.08);">
+                <h4 class="fw-bold m-0">Participants</h4>
+                <hr class="my-3" />
+                <div class="mt-auto">
+                    <h5 class="mb-2">@_summary.ParticipantsCount Total</h5>
+                    <h5 class="m-0 text-success">@_summary.ApprovedParticipantsCount Approved</h5>
+                </div>
             </div>
         </div>
-        <div class="col-sm-4">
-            <div class="box p-3 rounded" style="background-color: rgba(21, 25, 29, 0.08);">
-                <h4 class="fw-bold">Participants</h4>
-                <hr />
-                <h5>@_summary.ParticipantsCount Total</h5>
-                <h5>@_summary.ApprovedParticipantsCount Approved</h5>
+        <div class="col">
+            <div class="box p-3 rounded h-100 d-flex flex-column" style="background-color: rgba(21, 25, 29, 0.08);">
+                <h4 class="fw-bold m-0">Topics</h4>
+                <hr class="my-3" />
+                <div class="mt-auto">
+                    <h5 class="m-0">@_summary.TopicsCount Total</h5>
+                </div>
             </div>
         </div>
-        <div class="col-sm-4">
-            <div class="box p-3 rounded" style="background-color: rgba(21, 25, 29, 0.08);">
-                <h4 class="fw-bold">Quizzes</h4>
-                <hr />
-                <h5>@_summary.QuizzesCount Total</h5>
-                <h5>@_summary.ActiveQuizzesCount Active</h5>
+        <div class="col">
+            <div class="box p-3 rounded h-100 d-flex flex-column" style="background-color: rgba(21, 25, 29, 0.08);">
+                <h4 class="fw-bold m-0">Quizzes</h4>
+                <hr class="my-3" />
+                <div class="mt-auto">
+                    <h5 class="mb-2">@_summary.QuizzesCount Total</h5>
+                    <h5 class="m-0 text-primary">@_summary.ActiveQuizzesCount Active</h5>
+                </div>
             </div>
         </div>
     </div>

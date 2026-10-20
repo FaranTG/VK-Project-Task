@@ -85,28 +85,7 @@ else
     {
         TopicModel = new () { Name = string.Empty };
 
-        _topicsProvider = async request =>
-        {
-            AppState.ShowLoader("Fetching topics...");
-            try
-            {
-                QuizApiResponse<PagedInfo<TopicInfoDTO>> response = await TopicsClient
-                    .GetTopicsAsync(request.CreatePagination(DefaultPageSize));
-
-                if (response.IsSuccess)
-                {
-                    return GridItemsProviderResult.From(response.Data!.DTOs, response.Data.TotalCount);
-                }
-
-                _loadErrorMessage = response.ErrorMessage;
-                StateHasChanged();
-                return GridItemsProviderResult.From(Array.Empty<TopicInfoDTO>(), 0);
-            }
-            finally
-            {
-                AppState.HideLoader();
-            }
-        };
+        ConfigureTopicsProvider();
     }
 
     private void SetTopic(TopicInfoDTO topicData)
@@ -169,5 +148,18 @@ else
 
         _id = null;
         TopicModel.Name = string.Empty;
+    }
+
+    private void ConfigureTopicsProvider()
+    {
+        _topicsProvider = async request =>
+            await request.HandleGridRequestAsync
+            (
+                AppState,
+                "Fetching topics...",
+                DefaultPageSize,
+                paginationData => TopicsClient.GetTopicsAsync(paginationData),
+                errorMessage => { _loadErrorMessage = errorMessage; StateHasChanged(); }
+            );
     }
 }

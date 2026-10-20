@@ -45,28 +45,19 @@
 
     protected override void OnInitialized()
     {
+        ConfigureAttemptsProvider();
+    }
+
+    private void ConfigureAttemptsProvider()
+    {
         _attemptsProvider = async request =>
-        {
-            AppState.ShowLoader("Fetching attempts...");
-
-            try
-            {
-                QuizApiResponse<PagedInfo<AttemptQuizInfoDTO>> response = await AttemptsClient
-                    .GetParticipantAttemptsAsync(request.CreatePagination(DefaultPageSize));
-                
-                if (response.IsSuccess)
-                {
-                    return GridItemsProviderResult.From(response.Data!.DTOs, response.Data.TotalCount);
-                }
-
-                _loadErrorMessage = response.ErrorMessage;
-                StateHasChanged();
-                return GridItemsProviderResult.From(Array.Empty<AttemptQuizInfoDTO>(), 0);
-            }
-            finally
-            {
-                AppState.HideLoader();
-            }
-        };
+            await request.HandleGridRequestAsync
+            (
+                AppState,
+                "Fetching attempts...",
+                DefaultPageSize,
+                paginationData => AttemptsClient.GetParticipantAttemptsAsync(paginationData),
+                errorMessage => { _loadErrorMessage = errorMessage; StateHasChanged(); }
+            );
     }
 }

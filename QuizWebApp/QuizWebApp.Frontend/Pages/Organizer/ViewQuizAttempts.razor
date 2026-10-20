@@ -54,6 +54,11 @@
 
     private PaginationState _paginationState = new PaginationState { ItemsPerPage = DefaultPageSize };
 
+    protected override void OnInitialized()
+    {
+        ConfigureAttemptsProvider();
+    }
+
     protected override async Task OnParametersSetAsync()
     {
         AppState.ShowLoader("Fetching quiz title...");
@@ -74,33 +79,18 @@
         {
             AppState.HideLoader();
         }
-
-        ConfigureAttemptsGrid();
     }
 
-    private void ConfigureAttemptsGrid()
+    private void ConfigureAttemptsProvider()
     {
         _attemptsProvider = async request =>
-        {
-            AppState.ShowLoader("Fetching attempts...");
-            try
-            {
-                QuizApiResponse<PagedInfo<AttemptParticipantInfoDTO>> response = await AttemptsClient
-                    .GetQuizAttemptsAsync(Id!.Value, request.CreatePagination(DefaultPageSize));
-
-                if (response.IsSuccess)
-                {
-                    return GridItemsProviderResult.From(response.Data!.DTOs, response.Data.TotalCount);
-                }
-
-                _loadErrorMessage = response.ErrorMessage;
-                StateHasChanged();
-                return GridItemsProviderResult.From(Array.Empty<AttemptParticipantInfoDTO>(), 0);
-            }
-            finally
-            {
-                AppState.HideLoader();
-            }
-        };
+            await request.HandleGridRequestAsync
+            (
+                AppState,
+                "Fetching attempts...",
+                DefaultPageSize,
+                paginationData => AttemptsClient.GetQuizAttemptsAsync(Id!.Value, paginationData),
+                errorMessage => { _loadErrorMessage = errorMessage; StateHasChanged(); }
+            );
     }
 }

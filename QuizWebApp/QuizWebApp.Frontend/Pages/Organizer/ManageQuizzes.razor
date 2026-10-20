@@ -114,37 +114,6 @@ else
         ConfigureQuizzesProvider();
     }
 
-    private void ConfigureQuizzesProvider()
-    {
-        _quizzesProvider = async request =>
-        {
-            if (_topicFilterId.ToFilterStatus() == TopicFilterStatus.Invalid)
-            {
-                return GridItemsProviderResult.From(Array.Empty<QuizSummaryInfoDTO>(), 0);
-            }
-
-            AppState.ShowLoader("Fetching topics...");
-            try
-            {
-                QuizApiResponse<PagedInfo<QuizSummaryInfoDTO>> response = await QuizzesClient
-                    .GetQuizzesAsync(_topicFilterId, request.CreatePagination(DefaultPageSize));
-
-                if (response.IsSuccess)
-                {
-                    return GridItemsProviderResult.From(response.Data!.DTOs, response.Data.TotalCount);
-                }
-
-                _loadErrorMessage = response.ErrorMessage;
-                StateHasChanged();
-                return GridItemsProviderResult.From(Array.Empty<QuizSummaryInfoDTO>(), 0);
-            }
-            finally
-            {
-                AppState.HideLoader();
-            }
-        };
-    }
-
     private async Task OnTopicFilterChanged()
     {
         ArgumentNullException.ThrowIfNull(_grid);
@@ -157,5 +126,25 @@ else
     {
         _viewingQuestions = quizInfo.Questions.ToArray();
         _showQuestionsModal = true;
+    }
+
+    private void ConfigureQuizzesProvider()
+    {
+        _quizzesProvider = async request =>
+        {
+            if (_topicFilterId.ToTopicFilterStatus() == TopicFilterStatus.Invalid)
+            {
+                return GridItemsProviderResult.From(Array.Empty<QuizSummaryInfoDTO>(), 0);
+            }
+
+            return await request.HandleGridRequestAsync
+            (
+                AppState,
+                "Fetching quizzes...",
+                DefaultPageSize,
+                paginationData => QuizzesClient.GetQuizzesAsync(_topicFilterId, paginationData),
+                errorMessage => { _loadErrorMessage = errorMessage; StateHasChanged(); }
+            );
+        };
     }
 }

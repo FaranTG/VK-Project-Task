@@ -130,7 +130,7 @@ else
     private int _currentPage = FirstPageNumber;
     private int _totalItemsCount = 0;
 
-    private string NoFoundMessage => _topicFilterId.ToFilterStatus() == TopicFilterStatus.Valid 
+    private string NoFoundMessage => _topicFilterId.ToTopicFilterStatus() == TopicFilterStatus.Valid 
         ? "No active quizzes found for the selected topic."
         : "No active quizzes found.";
     private int TotalPages => (int)Math.Ceiling((double)_totalItemsCount / DefaultPageSize);
@@ -162,7 +162,7 @@ else
 
     private async Task OnTopicFilterChanged()
     {
-        if (_topicFilterId.ToFilterStatus() == TopicFilterStatus.Invalid)
+        if (_topicFilterId.ToTopicFilterStatus() == TopicFilterStatus.Invalid)
         {
             _quizzes = [];
             _totalItemsCount = 0;

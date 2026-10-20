@@ -37,7 +37,7 @@
 
     protected override void OnParametersSet()
     {
-        if (TopicFilterId.ToFilterStatus() == TopicFilterStatus.Valid 
+        if (TopicFilterId.ToTopicFilterStatus() == TopicFilterStatus.Valid 
             && Topics is not null && string.IsNullOrWhiteSpace(_topicFilter))
         {
             TopicInfoDTO? matchedTopic = Topics.FirstOrDefault(t => t.Id == TopicFilterId);
@@ -52,7 +52,7 @@
     {
         if (!_hasBeenTouched) return string.Empty;
 
-        return TopicFilterId.ToFilterStatus() switch
+        return TopicFilterId.ToTopicFilterStatus() switch
         {
             TopicFilterStatus.Invalid => "is-invalid",
             TopicFilterStatus.Empty => IsFilterRequired ? "is-invalid" : "is-valid",

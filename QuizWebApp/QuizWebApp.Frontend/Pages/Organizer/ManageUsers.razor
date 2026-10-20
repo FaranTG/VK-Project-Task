@@ -61,29 +61,7 @@
 
     protected override void OnInitialized()
     {
-        _usersProvider = async request =>
-        {
-            AppState.ShowLoader("Fetching users...");
-
-            try
-            {
-                QuizApiResponse<PagedInfo<UserInfoDTO>> response = await UsersClient
-                    .GetUsersAsync(request.CreatePagination(DefaultPageSize), ConvertFilter());
-
-                if (response.IsSuccess)
-                {
-                    return GridItemsProviderResult.From(response.Data!.DTOs, response.Data.TotalCount);
-                }
-
-                _loadErrorMessage = response.ErrorMessage;
-                StateHasChanged();
-                return GridItemsProviderResult.From(Array.Empty<UserInfoDTO>(), 0);
-            }
-            finally
-            {
-                AppState.HideLoader();
-            }
-        };
+        ConfigureUsersProvider();
     }
 
     private async Task OnUserApprovedToggleAsync(int id)
@@ -126,5 +104,18 @@
             NotApprovedValue => false,
             _ => null
         };
+    }
+
+    private void ConfigureUsersProvider()
+    {
+        _usersProvider = async request =>
+            await request.HandleGridRequestAsync
+            (
+                AppState,
+                "Fetching users...",
+                DefaultPageSize,
+                paginationData => UsersClient.GetUsersAsync(paginationData, ConvertFilter()),
+                errorMessage => { _loadErrorMessage = errorMessage; StateHasChanged(); }
+            );
     }
 }

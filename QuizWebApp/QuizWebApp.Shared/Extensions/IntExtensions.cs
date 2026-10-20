@@ -4,7 +4,7 @@ namespace QuizWebApp.Shared.Extensions;
 
 public static class IntExtensions
 {
-    public static TopicFilterStatus ToFilterStatus(this int topicId)
+    public static TopicFilterStatus ToTopicFilterStatus(this int topicId)
     {
         return topicId < 0
             ? TopicFilterStatus.Invalid
