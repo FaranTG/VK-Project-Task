@@ -101,33 +101,27 @@ else
         ArgumentNullException.ThrowIfNull(TopicModel);
 
         TopicSaveDTO newTopic = new TopicSaveDTO(TopicModel.Name);
-        bool isTopicSaved = _id is null
-            ? await TrySendAddRequestAsync(newTopic)
-            : await TrySendUpdateRequestAsync(newTopic, _id.Value);
+
+        bool isTopicSaved = await TrySendSaveRequestAsync(newTopic);
 
         if (!isTopicSaved) return;
 
+        ClearModel();
         ArgumentNullException.ThrowIfNull(_grid);
         await _grid.RefreshDataAsync();
     }
 
-    private Task<bool> TrySendAddRequestAsync(TopicSaveDTO newTopic)
-        => AppState.HandleRequestAsync<TopicInfoDTO>
-        (
-            SaveTopicLoaderMessage,
-            () => TopicsClient.AddTopicAsync(newTopic),
-            _ => ClearModel(),
-            errorMessage => AppState.ShowError(errorMessage!)
-        );
-
-    private Task<bool> TrySendUpdateRequestAsync(TopicSaveDTO newTopic, int id)
-        => AppState.HandleRequestAsync
-        (
-            SaveTopicLoaderMessage,
-            () => TopicsClient.UpdateTopicAsync(id, newTopic),
-            ClearModel,
-            errorMessage => AppState.ShowError(errorMessage!)
-        );
+    private Task<bool> TrySendSaveRequestAsync(TopicSaveDTO newTopic)
+        => (_id is null
+            ? TopicsClient.AddTopicAsync(newTopic).CastToBaseAsync()
+            : TopicsClient.UpdateTopicAsync(_id.Value, newTopic))
+            .HandleRequestAsync
+            (
+                appState: AppState,
+                loaderMessage: SaveTopicLoaderMessage,
+                onSuccess: null,
+                onError: errorMessage => AppState.ShowError(errorMessage)
+            );
 
     private void ClearModel()
     {
@@ -140,13 +134,13 @@ else
     private void ConfigureTopicsProvider()
     {
         _topicsProvider = async request =>
-            await request.HandleGridRequestAsync
-            (
-                AppState,
-                "Fetching topics...",
-                DefaultPageSize,
-                paginationData => TopicsClient.GetTopicsAsync(paginationData),
-                errorMessage => { _loadErrorMessage = errorMessage; StateHasChanged(); }
-            );
+            await TopicsClient
+                .GetTopicsAsync(request.CreatePagination(DefaultPageSize))
+                .HandleGridRequestAsync
+                (
+                    appState: AppState,
+                    loaderMessage: "Fetching topics...",
+                    onError: errorMessage => { _loadErrorMessage = errorMessage; StateHasChanged(); }
+                );
     }
 }

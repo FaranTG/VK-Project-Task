@@ -139,13 +139,15 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        bool areTopicsReceived = await AppState.HandleRequestAsync<PagedInfo<TopicInfoDTO>>
-        (
-            "Fetching topics...",
-            () => TopicsClient.GetTopicsAsync(),
-            data => _topics = data.DTOs,
-            errorMessage => _loadErrorMessage = errorMessage
-        );
+        bool areTopicsReceived = await TopicsClient
+            .GetTopicsAsync()
+            .HandleRequestAsync
+            (
+                appState: AppState,
+                loaderMessage: "Fetching topics...",
+                onSuccess: data => _topics = data.DTOs,
+                onError: errorMessage => _loadErrorMessage = errorMessage
+            );
 
         if (!areTopicsReceived) return;
 
@@ -165,17 +167,19 @@ else
         await FetchQuizzesAsync();
     }
 
-    private async Task FetchQuizzesAsync()
+    private Task FetchQuizzesAsync()
     {
         PaginationDTO paginationData = new PaginationDTO(_currentPage, DefaultPageSize);
 
-        await AppState.HandleRequestAsync<PagedInfo<QuizBriefInfoDTO>>
-        (
-            "Fetching quizzes...",
-            () => QuizzesClient.GetActiveBriefQuizzesAsync(_topicFilterId, paginationData),
-            data => { _quizzes = data.DTOs; _totalItemsCount = data.TotalCount; },
-            errorMessage => { _loadErrorMessage = errorMessage; StateHasChanged(); }
-        );
+        return QuizzesClient
+            .GetActiveBriefQuizzesAsync(_topicFilterId, paginationData)
+            .HandleRequestAsync
+            (
+                appState: AppState,
+                loaderMessage: "Fetching quizzes...",
+                onSuccess: data => { _quizzes = data.DTOs; _totalItemsCount = data.TotalCount; },
+                onError: errorMessage => { _loadErrorMessage = errorMessage; StateHasChanged(); }
+            );
     }
 
     private async Task GoToFirstPage() => await GoToPage(IsFirstPage, FirstPageNumber);
@@ -194,20 +198,22 @@ else
         await FetchQuizzesAsync();
     }
 
-    private async Task StartSelectedQuiz()
+    private Task StartSelectedQuiz()
     {
         ArgumentNullException.ThrowIfNull(_selectedQuiz);
 
-        await AppState.HandleRequestAsync<int>
-        (
-            "Preparing the quiz...",
-            () => AttemptsClient.StartQuizAsync(_selectedQuiz.Id),
-            attemptId =>
-            {
-                QuizState.SetSelectedQuiz(_selectedQuiz, attemptId);
-                NavigationManager.NavigateTo("/participant/take-quiz");
-            },
-            errorMessage => { _loadErrorMessage = errorMessage; StateHasChanged(); }
-        );
+        return AttemptsClient
+            .StartQuizAsync(_selectedQuiz.Id)
+            .HandleRequestAsync
+            (
+                appState: AppState,
+                loaderMessage: "Preparing the quiz...",
+                onSuccess: attemptId =>
+                {
+                    QuizState.SetSelectedQuiz(_selectedQuiz, attemptId);
+                    NavigationManager.NavigateTo("/participant/take-quiz");
+                },
+                onError: errorMessage => { _loadErrorMessage = errorMessage; StateHasChanged(); }
+            );
     }
 }

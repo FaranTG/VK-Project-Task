@@ -80,17 +80,16 @@ else
         CreateEmptyUser();
     }
 
-    private async Task RegisterAsync() {
-        ArgumentNullException.ThrowIfNull(UserModel);
-
-        await AppState.HandleRequestAsync
-        (
-            "Registering-in...",
-            () => AuthClient.RegisterUserAsync(CreateUserSaveDTO(UserModel)),
-            () => _showSuccessAlert = true,
-            errorMessage => AppState.ShowError(errorMessage!)
-        );
-    }
+    private Task RegisterAsync()
+        => AuthClient
+            .RegisterUserAsync(CreateUserSaveDTO())
+            .HandleRequestAsync
+            (
+                appState: AppState,
+                loaderMessage: "Registering-in...",
+                onSuccess: () => _showSuccessAlert = true,
+                onError: errorMessage => AppState.ShowError(errorMessage)
+            );
 
     private void OnModalClosed()
     {
@@ -109,13 +108,15 @@ else
         };
     }
 
-    private UserSaveDTO CreateUserSaveDTO(UserModel model) {
+    private UserSaveDTO CreateUserSaveDTO() {
+        ArgumentNullException.ThrowIfNull(UserModel);
+
         return new UserSaveDTO
         (
-            model.Name,
-            model.Phone,
-            model.Email,
-            model.Password
+            UserModel.Name,
+            UserModel.Phone,
+            UserModel.Email,
+            UserModel.Password
         );
     }
 }

@@ -1,9 +1,6 @@
 ﻿namespace QuizWebApp.Shared.ApiResponses;
 
-public record QuizApiResponse
-(
-    string? ErrorMessage
-)
+public record QuizApiResponse(string? ErrorMessage)
 {
     public bool IsSuccess => ErrorMessage is null;
     public bool IsFailure => !IsSuccess;
@@ -13,16 +10,10 @@ public record QuizApiResponse
     public static QuizApiResponse Fail(string errorMessage) => new (errorMessage);
 }
 
-public record QuizApiResponse<TData>
-(
-    TData? Data,
-    string? ErrorMessage
-)
+public record QuizApiResponse<TData>(TData? Data, string? ErrorMessage) 
+    : QuizApiResponse(ErrorMessage)
 {
-    public bool IsSuccess => ErrorMessage is null;
-    public bool IsFailure => !IsSuccess;
-
     public static QuizApiResponse<TData> Success(TData Data) => new (Data, null);
 
-    public static QuizApiResponse<TData> Fail(string errorMessage) => new (default, errorMessage);
+    public static new QuizApiResponse<TData> Fail(string errorMessage) => new (default, errorMessage);
 }

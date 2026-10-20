@@ -121,17 +121,19 @@ else
     }
 
     private Task ExitQuizAsync()
-        => AppState.HandleRequestAsync
-        (
-            "Exiting the quiz...",
-            () => ParticipantQuizzesClient.ExitQuizAsync(QuizState.AttemptId),
-            RedirectToMyQuizzes,
-            errorMessage => 
-            {
-                _showExitQuizConfirmation = false;
-                AppState.ShowError(errorMessage!);
-            }
-        );
+        => ParticipantQuizzesClient
+            .ExitQuizAsync(QuizState.AttemptId)
+            .HandleRequestAsync
+            (
+                appState: AppState,
+                loaderMessage: "Exiting the quiz...",
+                onSuccess: RedirectToMyQuizzes,
+                onError: errorMessage => 
+                {
+                    _showExitQuizConfirmation = false;
+                    AppState.ShowError(errorMessage);
+                }
+            );
 
     private async Task GoNextQuestionAsync()
     {
@@ -163,43 +165,52 @@ else
     }
 
     private Task AutoSubmitQuizAsync()
-        => AppState.HandleRequestAsync(
-            "Auto-submitting the quiz...",
-            () => ParticipantQuizzesClient.AutoSubmitQuizAsync(QuizState.AttemptId),
-            () => _submitQuizMessage = "Quiz auto-submitted successfully",
-            errorMessage => _submitErrorMessage = errorMessage
-        );
+        => ParticipantQuizzesClient
+            .AutoSubmitQuizAsync(QuizState.AttemptId)
+            .HandleRequestAsync
+            (
+                appState: AppState,
+                loaderMessage: "Auto-submitting the quiz...",
+                onSuccess: () => _submitQuizMessage = "Quiz auto-submitted successfully",
+                onError: errorMessage => _submitErrorMessage = errorMessage
+            );
 
     private Task<bool> LoadNextQuestionAsync()
-        => AppState.HandleRequestAsync<QuestionInfoDTO>
-        (
-            "Fetching question...",
-            () => ParticipantQuizzesClient.GetQuizNextQuestionAsync(QuizState.AttemptId),
-            data => 
-            {
-                _selectedOptionId = 0;
-                _questionData = data;
-            },
-            errorMessage => { _loadErrorMessage = errorMessage; StateHasChanged(); }
-        );
+        => ParticipantQuizzesClient
+            .GetQuizNextQuestionAsync(QuizState.AttemptId)
+            .HandleRequestAsync
+            (
+                appState: AppState,
+                loaderMessage: "Fetching question...",
+                onSuccess: data => 
+                {
+                    _selectedOptionId = 0;
+                    _questionData = data;
+                },
+                onError: errorMessage => { _loadErrorMessage = errorMessage; StateHasChanged(); }
+            );
 
     private Task<bool> SaveQuestionAsync()
-        => AppState.HandleRequestAsync
-        (
-            "Sending question response...",
-            () => ParticipantQuizzesClient.SaveQuestionResponseAsync(QuizState.AttemptId, CreateResponseDTO()),
-            () => {},
-            errorMessage => AppState.ShowError(errorMessage!)
-        );
+        => ParticipantQuizzesClient
+            .SaveQuestionResponseAsync(QuizState.AttemptId, CreateResponseDTO())
+            .HandleRequestAsync
+            (
+                appState: AppState,
+                loaderMessage: "Sending question response...",
+                onSuccess: null,
+                onError: errorMessage => AppState.ShowError(errorMessage)
+            );
 
     private Task CompleteQuizAsync()
-        => AppState.HandleRequestAsync
-        (
-            "Submitting the quiz...",
-            () => ParticipantQuizzesClient.CompleteQuizAsync(QuizState.AttemptId),
-            () => _submitQuizMessage = "Quiz submitted successfully",
-            errorMessage => _submitErrorMessage = errorMessage
-        );
+        => ParticipantQuizzesClient
+            .CompleteQuizAsync(QuizState.AttemptId)
+            .HandleRequestAsync
+            (
+                appState: AppState,
+                loaderMessage: "Submitting the quiz...",
+                onSuccess: () => _submitQuizMessage = "Quiz submitted successfully",
+                onError: errorMessage => _submitErrorMessage = errorMessage
+            );
 
     private QuestionResponseSaveDTO CreateResponseDTO()
     {

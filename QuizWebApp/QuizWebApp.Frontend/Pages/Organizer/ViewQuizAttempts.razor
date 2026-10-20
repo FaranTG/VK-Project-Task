@@ -61,30 +61,32 @@
         ConfigureAttemptsProvider();
     }
 
-    protected override async Task OnParametersSetAsync()
+    protected override Task OnParametersSetAsync()
     {
-        if (_previousId == Id) return;
+        if (_previousId == Id) return Task.CompletedTask;
         _previousId = Id;
 
-        await AppState.HandleRequestAsync<QuizTitleInfoDTO>
-        (
-            "Fetching quiz title...",
-            () => QuizzesClient.GetQuizTitleByIdAsync(Id!.Value),
-            data => { _quizName = data.Name; _topicName = data.Topic; },
-            errorMessage => _loadErrorMessage = errorMessage
-        );
+        return QuizzesClient
+            .GetQuizTitleByIdAsync(Id!.Value)
+            .HandleRequestAsync
+            (
+                appState: AppState,
+                loaderMessage: "Fetching quiz title...",
+                onSuccess: data => { _quizName = data.Name; _topicName = data.Topic; },
+                onError: errorMessage => _loadErrorMessage = errorMessage
+            );
     }
 
     private void ConfigureAttemptsProvider()
     {
         _attemptsProvider = async request =>
-            await request.HandleGridRequestAsync
-            (
-                AppState,
-                "Fetching attempts...",
-                DefaultPageSize,
-                paginationData => AttemptsClient.GetQuizAttemptsAsync(Id!.Value, paginationData),
-                errorMessage => { _loadErrorMessage = errorMessage; StateHasChanged(); }
-            );
+            await AttemptsClient
+                .GetQuizAttemptsAsync(Id!.Value, request.CreatePagination(DefaultPageSize))
+                .HandleGridRequestAsync
+                (
+                    appState: AppState,
+                    loaderMessage: "Fetching attempts...",
+                    onError: errorMessage => { _loadErrorMessage = errorMessage; StateHasChanged(); }
+                );
     }
 }

@@ -91,13 +91,15 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        bool areTopicsReceived = await AppState.HandleRequestAsync<PagedInfo<TopicInfoDTO>>
-        (
-            "Fetching topics...",
-            () => TopicsClient.GetTopicsAsync(),
-            data => _topics = data.DTOs,
-            errorMessage => _loadErrorMessage = errorMessage
-        );
+        bool areTopicsReceived = await TopicsClient
+            .GetTopicsAsync()
+            .HandleRequestAsync
+            (
+                appState: AppState,
+                loaderMessage: "Fetching topics...",
+                onSuccess: data => _topics = data.DTOs,
+                onError: errorMessage => _loadErrorMessage = errorMessage
+            );
 
         if (!areTopicsReceived) return;
 
@@ -127,14 +129,14 @@ else
                 return GridItemsProviderResult.From(Array.Empty<QuizSummaryInfoDTO>(), 0);
             }
 
-            return await request.HandleGridRequestAsync
-            (
-                AppState,
-                "Fetching quizzes...",
-                DefaultPageSize,
-                paginationData => QuizzesClient.GetQuizzesAsync(_topicFilterId, paginationData),
-                errorMessage => { _loadErrorMessage = errorMessage; StateHasChanged(); }
-            );
+            return await QuizzesClient
+                .GetQuizzesAsync(_topicFilterId, request.CreatePagination(DefaultPageSize))
+                .HandleGridRequestAsync
+                (
+                    appState: AppState,
+                    loaderMessage: "Fetching quizzes...",
+                    onError: errorMessage => { _loadErrorMessage = errorMessage; StateHasChanged(); }
+                );
         };
     }
 }

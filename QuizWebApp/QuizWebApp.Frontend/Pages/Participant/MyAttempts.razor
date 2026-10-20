@@ -52,13 +52,13 @@
     private void ConfigureAttemptsProvider()
     {
         _attemptsProvider = async request =>
-            await request.HandleGridRequestAsync
-            (
-                AppState,
-                "Fetching attempts...",
-                DefaultPageSize,
-                paginationData => AttemptsClient.GetParticipantAttemptsAsync(paginationData),
-                errorMessage => { _loadErrorMessage = errorMessage; StateHasChanged(); }
-            );
+            await AttemptsClient
+                .GetParticipantAttemptsAsync(request.CreatePagination(DefaultPageSize))
+                .HandleGridRequestAsync
+                (
+                    appState: AppState,
+                    loaderMessage: "Fetching attempts...",
+                    onError: errorMessage => { _loadErrorMessage = errorMessage; StateHasChanged(); }
+                );
     }
 }

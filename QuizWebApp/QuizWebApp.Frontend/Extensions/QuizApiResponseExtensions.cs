@@ -6,22 +6,25 @@ namespace QuizWebApp.Frontend.Extensions;
 public static class QuizApiResponseExtensions
 {
     private const string NoResponseMessage = "No response from server.";
-    
-    public static async Task<QuizApiResponse> ExtractQuizApiResponse(this Task<HttpResponseMessage> messageTask)
+
+    public static Task<QuizApiResponse> ExtractQuizApiResponse(this Task<HttpResponseMessage> messageTask)
+        => CoreExtractResponseAsync(messageTask, QuizApiResponse.Fail(NoResponseMessage));
+
+    public static Task<QuizApiResponse<TData>> ExtractQuizApiResponse<TData> (this Task<HttpResponseMessage> messageTask)
+        => CoreExtractResponseAsync(messageTask, QuizApiResponse<TData>.Fail(NoResponseMessage));
+
+    private static async Task<TResponse> CoreExtractResponseAsync<TResponse>
+    (
+        Task<HttpResponseMessage> messageTask,
+        TResponse failFallback
+    ) 
+        where TResponse : QuizApiResponse
     {
         HttpResponseMessage response = await messageTask;
-
-        QuizApiResponse? responseData = await response.Content.ReadFromJsonAsync<QuizApiResponse>();
         
-        return responseData ?? QuizApiResponse.Fail(NoResponseMessage);
-    }
-
-    public static async Task<QuizApiResponse<TData>> ExtractQuizApiResponse<TData>(this Task<HttpResponseMessage> messageTask)
-    {
-        HttpResponseMessage response = await messageTask;
-
-        QuizApiResponse<TData>? responseData = await response.Content.ReadFromJsonAsync<QuizApiResponse<TData>>();
-        
-        return responseData ?? QuizApiResponse<TData>.Fail(NoResponseMessage);
+        TResponse? responseData = await response.Content
+            .ReadFromJsonAsync<TResponse>();
+            
+        return responseData ?? failFallback;
     }
 }

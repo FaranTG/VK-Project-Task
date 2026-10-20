@@ -4,7 +4,6 @@
 @using QuizWebApp.Frontend.FormModels
 @using QuizWebApp.Shared.DTOs.User
 @using QuizWebApp.Frontend.Auth
-@using QuizWebApp.Shared
 
 @inject AuthClient AuthClient
 @inject QuizAuthStateProvider QuizAuthStateProvider
@@ -65,13 +64,15 @@ else
     private async Task LoginAsync() {
         ArgumentNullException.ThrowIfNull(LoginModel);
 
-        bool isLoggedIn = await AppState.HandleRequestAsync<LoggedInUserInfo>
-        (
-            "Logging-in...",
-            () => AuthClient.AddUserTokenAsync(CreateLoginDTO(LoginModel)),
-            async user => await QuizAuthStateProvider.SetLoginAsync(user),
-            errorMessage => AppState.ShowError(errorMessage!)
-        );
+        bool isLoggedIn = await AuthClient
+            .AddUserTokenAsync(CreateLoginDTO(LoginModel))
+            .HandleRequestAsync
+            (
+                appState: AppState,
+                loaderMessage: "Logging-in...",
+                onSuccess: async user => await QuizAuthStateProvider.SetLoginAsync(user),
+                onError: errorMessage => AppState.ShowError(errorMessage) 
+            );
 
         if (!isLoggedIn) return;
 

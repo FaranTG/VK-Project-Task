@@ -57,11 +57,13 @@ else
     private string? _loadErrorMessage;
 
     protected override Task OnInitializedAsync()
-        => AppState.HandleRequestAsync<OrganizerHomeSummaryDTO>
-        (
-            "Fetching summary...",
-            () => OrganizerClient.GetHomeSummaryAsync(),
-            data => _summary = data,
-            errorMessage => _loadErrorMessage = errorMessage
-        );
+        => OrganizerClient
+            .GetHomeSummaryAsync()
+            .HandleRequestAsync
+            (
+                appState: AppState,
+                loaderMessage: "Fetching summary...",
+                onSuccess: data => _summary = data,
+                onError: errorMessage => _loadErrorMessage = errorMessage
+            );
 }

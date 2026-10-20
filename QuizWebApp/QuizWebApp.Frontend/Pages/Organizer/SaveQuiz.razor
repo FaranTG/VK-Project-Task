@@ -132,13 +132,15 @@ else
     private bool IsEditCase => Id.HasValue && Id.Value != Guid.Empty;
 
     protected override Task OnInitializedAsync()
-        => AppState.HandleRequestAsync<PagedInfo<TopicInfoDTO>>
-        (
-            "Fetching topics...",
-            () => TopicsClient.GetTopicsAsync(),
-            data => _topics = data.DTOs,
-            errorMessage => _loadErrorMessage = errorMessage
-        );
+        => TopicsClient
+            .GetTopicsAsync()
+            .HandleRequestAsync
+            (
+                appState: AppState,
+                loaderMessage: "Fetching topics...",
+                onSuccess: data => _topics = data.DTOs,
+                onError: errorMessage => _loadErrorMessage = errorMessage
+            );
 
     protected override async Task OnParametersSetAsync()
     {
@@ -148,7 +150,7 @@ else
 
         if (IsEditCase)
         {
-            bool isQuizFilled = await FillQuiz();
+            bool isQuizFilled = await FillQuizAsync();
             if (!isQuizFilled) return;
         }
         else
@@ -171,9 +173,7 @@ else
         } 
 
         QuizSaveDTO newQuiz = CreateQuizSaveDTO(_quizModel);
-        bool isQuizSaved = IsEditCase
-            ? await TrySendUpdateRequestAsync(newQuiz, Id!.Value)
-            : await TrySendAddRequestAsync(newQuiz);
+        bool isQuizSaved = await TrySendSaveRequestAsync(newQuiz);
 
         if (!isQuizSaved)
         {
@@ -183,23 +183,17 @@ else
         NavigationManager.NavigateTo("organizer/manage-quizzes");
     }
 
-    private Task<bool> TrySendAddRequestAsync(QuizSaveDTO newQuiz)
-        => AppState.HandleRequestAsync<QuizInfoDTO>
-        (
-            SaveQuizLoaderMessage,
-            () => QuizzesClient.AddQuizAsync(newQuiz),
-            _ => {},
-            errorMessage => AppState.ShowError(errorMessage!)
-        );
-
-    private Task<bool> TrySendUpdateRequestAsync(QuizSaveDTO newQuiz, Guid id)
-        => AppState.HandleRequestAsync
-        (
-            SaveQuizLoaderMessage,
-            () => QuizzesClient.UpdateQuizAsync(id, newQuiz),
-            () => {},
-            errorMessage => AppState.ShowError(errorMessage!)
-        );
+    private Task<bool> TrySendSaveRequestAsync(QuizSaveDTO newQuiz)
+        => (IsEditCase
+            ? QuizzesClient.UpdateQuizAsync(Id!.Value, newQuiz)
+            : QuizzesClient.AddQuizAsync(newQuiz).CastToBaseAsync())
+            .HandleRequestAsync
+            (
+                appState: AppState,
+                loaderMessage: SaveQuizLoaderMessage,
+                onSuccess: null,
+                onError: errorMessage => AppState.ShowError(errorMessage)
+            );
 
     private void SetCorrectOption(QuestionModel question, AnswerOptionModel correctOption)
     {
@@ -223,14 +217,16 @@ else
         };
     }
 
-    private Task<bool> FillQuiz()
-        => AppState.HandleRequestAsync<QuizInfoDTO>
-        (
-            "Fetching quiz...",
-            () => QuizzesClient.GetQuizByIdAsync(Id!.Value),
-            quizInfo => _quizModel = CreateQuizModel(quizInfo),
-            errorMessage => { _loadErrorMessage = errorMessage; StateHasChanged(); }
-        );
+    private Task<bool> FillQuizAsync()
+        => QuizzesClient
+            .GetQuizByIdAsync(Id!.Value)
+            .HandleRequestAsync
+            (
+                appState: AppState,
+                loaderMessage: "Fetching quiz...",
+                onSuccess: quizInfo => _quizModel = CreateQuizModel(quizInfo),
+                onError: errorMessage => { _loadErrorMessage = errorMessage; StateHasChanged(); }
+            );
 
     private void OnTopicFilterChanged()
     {

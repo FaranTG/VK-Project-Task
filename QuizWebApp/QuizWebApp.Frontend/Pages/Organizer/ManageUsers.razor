@@ -16,7 +16,7 @@
 <div class="row">
     <div class="col-sm-4 ms-auto mb-3">
         <label class="form-label" for="filter">Status filter: </label>
-        <select class="form-select" @bind="_isApprovedFilter" id="filter" @bind:after="OnFilterChangedAsync">
+        <select class="form-select" @bind="_isApprovedFilter" id="filter" @bind:after="OnFilterChanged">
             <option value="">Select status...</option>
             
             <option value="@ApprovedValue">Approved</option>
@@ -39,7 +39,7 @@
                     @(context.IsApproved ? "Yes" : "No")
                 </label>
                 <input id="u_@context.Id" class="form-check-input" type="checkbox" role="switch"
-                    checked="@context.IsApproved" @onchange="() => OnUserApprovedToggleAsync(context.Id)"/>
+                    checked="@context.IsApproved" @onchange="() => OnUserApprovedToggle(context.Id)"/>
             </div>
         </TemplateColumn>
     </QuickGrid>
@@ -65,20 +65,22 @@
         ConfigureUsersProvider();
     }
 
-    private Task OnUserApprovedToggleAsync(int id)
-        => AppState.HandleRequestAsync
-        (
-            "Updating user approved status...",
-            () => UsersClient.ToggleUserApprovedStatusAsync(id),
-            async () =>
-            {
-                ArgumentNullException.ThrowIfNull(_grid);
-                await _grid.RefreshDataAsync();
-            },
-            errorMessage => { _loadErrorMessage = errorMessage; StateHasChanged(); }
-        );
+    private Task OnUserApprovedToggle(int id)
+        => UsersClient
+            .ToggleUserApprovedStatusAsync(id)
+            .HandleRequestAsync
+            (
+                appState: AppState,
+                loaderMessage: "Updating user approved status...",
+                onSuccess: async () =>
+                {
+                    ArgumentNullException.ThrowIfNull(_grid);
+                    await _grid.RefreshDataAsync();
+                },
+                onError: errorMessage => { _loadErrorMessage = errorMessage; StateHasChanged(); }
+            );
 
-    private async Task OnFilterChangedAsync()
+    private async Task OnFilterChanged()
     {
         ArgumentNullException.ThrowIfNull(_grid);
 
@@ -99,13 +101,13 @@
     private void ConfigureUsersProvider()
     {
         _usersProvider = async request =>
-            await request.HandleGridRequestAsync
-            (
-                AppState,
-                "Fetching users...",
-                DefaultPageSize,
-                paginationData => UsersClient.GetUsersAsync(paginationData, ConvertFilter()),
-                errorMessage => { _loadErrorMessage = errorMessage; StateHasChanged(); }
-            );
+            await UsersClient
+                .GetUsersAsync(request.CreatePagination(DefaultPageSize), ConvertFilter())
+                .HandleGridRequestAsync
+                (
+                    appState: AppState,
+                    loaderMessage: "Fetching users...",
+                    onError: errorMessage => { _loadErrorMessage = errorMessage; StateHasChanged(); }
+                );
     }
 }
