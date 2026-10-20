@@ -12,8 +12,7 @@
 @inject QuizState QuizState
 @inject NavigationManager NavigationManager
 
-<PageTitle>Home</PageTitle>
-<SectionContent SectionName="pageTitle">Home</SectionContent>
+<PageHeader Title="@PageTitle" />
 
 @if (_loadErrorMessage is not null)
 {
@@ -119,6 +118,7 @@ else
 }
 
 @code {
+    private const string PageTitle = "Home";
     private const int DefaultPageSize = 6;
     private const int FirstPageNumber = 1;
 

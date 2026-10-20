@@ -5,8 +5,7 @@
 @inject IAppState AppState
 @inject OrganizerClient OrganizerClient
 
-<PageTitle>Home</PageTitle>
-<SectionContent SectionName="pageTitle">Home</SectionContent>
+<PageHeader Title="@PageTitle" />
 
 @if (_loadErrorMessage is not null)
 {
@@ -52,6 +51,8 @@ else
 }
 
 @code {
+    private const string PageTitle = "Home";
+
     private OrganizerHomeSummaryDTO? _summary;
     private string? _loadErrorMessage;
 

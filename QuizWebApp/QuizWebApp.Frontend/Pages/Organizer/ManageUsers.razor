@@ -6,7 +6,7 @@
 @inject UsersClient UsersClient
 @inject IAppState AppState
 
-<SectionContent SectionName="pageTitle">Manage Users</SectionContent>
+<PageHeader Title="@PageTitle" />
 
 @if (_loadErrorMessage is not null)
 {
@@ -47,6 +47,7 @@
 </div>
 
 @code {
+    private const string PageTitle = "Manage Users";
     private const string ApprovedValue = "approved";
     private const string NotApprovedValue = "not-approved";
     private const int DefaultPageSize = 10;

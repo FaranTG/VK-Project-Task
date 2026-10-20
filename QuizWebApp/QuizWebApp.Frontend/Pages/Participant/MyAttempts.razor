@@ -6,7 +6,7 @@
 @inject AttemptsClient AttemptsClient
 @inject IAppState AppState
 
-<SectionContent SectionName="pageTitle">My Attempts</SectionContent>
+<PageHeader Title="@PageTitle" />
 
 @if (_loadErrorMessage is not null)
 {
@@ -35,6 +35,7 @@
 </div>
 
 @code {
+    private const string PageTitle = "My Attempts";
     private const string DateFormat = "dd.MM.yyyy HH:mm";
     private const int DefaultPageSize = 10;
 
