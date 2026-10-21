@@ -6,7 +6,7 @@ using QuizWebApp.Core.UseCases;
 
 namespace QuizWebApp.Core;
 
-public static class Extensions
+public static class ConfigurationExtensions
 {
     public static IServiceCollection AddCore(this IServiceCollection serviceCollection)
     {

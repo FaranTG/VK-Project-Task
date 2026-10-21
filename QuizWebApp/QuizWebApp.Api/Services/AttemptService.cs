@@ -9,6 +9,7 @@ using QuizWebApp.Shared.DTOs.Attempt;
 using QuizWebApp.Shared.DTOs.Common;
 using QuizWebApp.Shared.DTOs.Question;
 using QuizWebApp.Api.Configuration;
+using QuizWebApp.Infrastructure.Extensions;
 
 namespace QuizWebApp.Api.Services;
 
