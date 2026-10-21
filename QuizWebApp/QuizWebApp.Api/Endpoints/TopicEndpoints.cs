@@ -1,4 +1,4 @@
-﻿using QuizWebApp.Api.Services.Interfaces;
+﻿using QuizWebApp.Core.Interfaces.Services;
 using QuizWebApp.Shared.ApiResponses;
 using QuizWebApp.Shared.DTOs.Common;
 using QuizWebApp.Shared.DTOs.Topic;

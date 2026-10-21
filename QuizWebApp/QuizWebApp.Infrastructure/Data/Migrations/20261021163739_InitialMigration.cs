@@ -4,10 +4,10 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace QuizWebApp.Api.Data.Migrations
+namespace QuizWebApp.Infrastructure.Data.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class InitialMigration : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -51,7 +51,7 @@ namespace QuizWebApp.Api.Data.Migrations
                     Name = table.Column<string>(type: "text", nullable: false),
                     TopicId = table.Column<int>(type: "integer", nullable: false),
                     QuestionsNumber = table.Column<int>(type: "integer", nullable: false),
-                    Time = table.Column<int>(type: "integer", nullable: false),
+                    TimeInMinutes = table.Column<int>(type: "integer", nullable: false),
                     IsActive = table.Column<bool>(type: "boolean", nullable: false)
                 },
                 constraints: table =>
@@ -73,6 +73,7 @@ namespace QuizWebApp.Api.Data.Migrations
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     ParticipantId = table.Column<int>(type: "integer", nullable: false),
                     QuizId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Status = table.Column<string>(type: "text", nullable: false),
                     StartTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     EndTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     Score = table.Column<int>(type: "integer", nullable: false)
@@ -135,9 +136,38 @@ namespace QuizWebApp.Api.Data.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
+            migrationBuilder.CreateTable(
+                name: "AttemptQuestions",
+                columns: table => new
+                {
+                    AttemptId = table.Column<int>(type: "integer", nullable: false),
+                    QuestionId = table.Column<int>(type: "integer", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_AttemptQuestions", x => new { x.AttemptId, x.QuestionId });
+                    table.ForeignKey(
+                        name: "FK_AttemptQuestions_Attempts_AttemptId",
+                        column: x => x.AttemptId,
+                        principalTable: "Attempts",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_AttemptQuestions_Questions_QuestionId",
+                        column: x => x.QuestionId,
+                        principalTable: "Questions",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
             migrationBuilder.CreateIndex(
                 name: "IX_AnswerOptions_QuestionId",
                 table: "AnswerOptions",
+                column: "QuestionId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AttemptQuestions_QuestionId",
+                table: "AttemptQuestions",
                 column: "QuestionId");
 
             migrationBuilder.CreateIndex(
@@ -166,6 +196,9 @@ namespace QuizWebApp.Api.Data.Migrations
         {
             migrationBuilder.DropTable(
                 name: "AnswerOptions");
+
+            migrationBuilder.DropTable(
+                name: "AttemptQuestions");
 
             migrationBuilder.DropTable(
                 name: "Attempts");

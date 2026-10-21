@@ -2,21 +2,18 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
-using QuizWebApp.Api.Data;
+using QuizWebApp.Infrastructure.Data;
 
 #nullable disable
 
-namespace QuizWebApp.Api.Data.Migrations
+namespace QuizWebApp.Infrastructure.Data.Migrations
 {
     [DbContext(typeof(QuizContext))]
-    [Migration("20260810103137_InitialCreate")]
-    partial class InitialCreate
+    partial class QuizContextModelSnapshot : ModelSnapshot
     {
-        /// <inheritdoc />
-        protected override void BuildTargetModel(ModelBuilder modelBuilder)
+        protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -25,7 +22,7 @@ namespace QuizWebApp.Api.Data.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("QuizWebApp.Api.Data.Models.AnswerOption", b =>
+            modelBuilder.Entity("QuizWebApp.Core.Entities.AnswerOption", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -50,7 +47,7 @@ namespace QuizWebApp.Api.Data.Migrations
                     b.ToTable("AnswerOptions");
                 });
 
-            modelBuilder.Entity("QuizWebApp.Api.Data.Models.Attempt", b =>
+            modelBuilder.Entity("QuizWebApp.Core.Entities.Attempt", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -73,6 +70,10 @@ namespace QuizWebApp.Api.Data.Migrations
                     b.Property<DateTime>("StartTime")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.HasKey("Id");
 
                     b.HasIndex("ParticipantId");
@@ -82,7 +83,22 @@ namespace QuizWebApp.Api.Data.Migrations
                     b.ToTable("Attempts");
                 });
 
-            modelBuilder.Entity("QuizWebApp.Api.Data.Models.Question", b =>
+            modelBuilder.Entity("QuizWebApp.Core.Entities.AttemptQuestion", b =>
+                {
+                    b.Property<int>("AttemptId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("QuestionId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("AttemptId", "QuestionId");
+
+                    b.HasIndex("QuestionId");
+
+                    b.ToTable("AttemptQuestions");
+                });
+
+            modelBuilder.Entity("QuizWebApp.Core.Entities.Question", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -104,7 +120,7 @@ namespace QuizWebApp.Api.Data.Migrations
                     b.ToTable("Questions");
                 });
 
-            modelBuilder.Entity("QuizWebApp.Api.Data.Models.Quiz", b =>
+            modelBuilder.Entity("QuizWebApp.Core.Entities.Quiz", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -120,7 +136,7 @@ namespace QuizWebApp.Api.Data.Migrations
                     b.Property<int>("QuestionsNumber")
                         .HasColumnType("integer");
 
-                    b.Property<int>("Time")
+                    b.Property<int>("TimeInMinutes")
                         .HasColumnType("integer");
 
                     b.Property<int>("TopicId")
@@ -133,7 +149,7 @@ namespace QuizWebApp.Api.Data.Migrations
                     b.ToTable("Quizzes");
                 });
 
-            modelBuilder.Entity("QuizWebApp.Api.Data.Models.Topic", b =>
+            modelBuilder.Entity("QuizWebApp.Core.Entities.Topic", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -150,7 +166,7 @@ namespace QuizWebApp.Api.Data.Migrations
                     b.ToTable("Topics");
                 });
 
-            modelBuilder.Entity("QuizWebApp.Api.Data.Models.User", b =>
+            modelBuilder.Entity("QuizWebApp.Core.Entities.User", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -186,9 +202,9 @@ namespace QuizWebApp.Api.Data.Migrations
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("QuizWebApp.Api.Data.Models.AnswerOption", b =>
+            modelBuilder.Entity("QuizWebApp.Core.Entities.AnswerOption", b =>
                 {
-                    b.HasOne("QuizWebApp.Api.Data.Models.Question", "Question")
+                    b.HasOne("QuizWebApp.Core.Entities.Question", "Question")
                         .WithMany("Options")
                         .HasForeignKey("QuestionId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -197,15 +213,15 @@ namespace QuizWebApp.Api.Data.Migrations
                     b.Navigation("Question");
                 });
 
-            modelBuilder.Entity("QuizWebApp.Api.Data.Models.Attempt", b =>
+            modelBuilder.Entity("QuizWebApp.Core.Entities.Attempt", b =>
                 {
-                    b.HasOne("QuizWebApp.Api.Data.Models.User", "Participant")
+                    b.HasOne("QuizWebApp.Core.Entities.User", "Participant")
                         .WithMany()
                         .HasForeignKey("ParticipantId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("QuizWebApp.Api.Data.Models.Quiz", "Quiz")
+                    b.HasOne("QuizWebApp.Core.Entities.Quiz", "Quiz")
                         .WithMany()
                         .HasForeignKey("QuizId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -216,9 +232,28 @@ namespace QuizWebApp.Api.Data.Migrations
                     b.Navigation("Quiz");
                 });
 
-            modelBuilder.Entity("QuizWebApp.Api.Data.Models.Question", b =>
+            modelBuilder.Entity("QuizWebApp.Core.Entities.AttemptQuestion", b =>
                 {
-                    b.HasOne("QuizWebApp.Api.Data.Models.Quiz", "Quiz")
+                    b.HasOne("QuizWebApp.Core.Entities.Attempt", "Attempt")
+                        .WithMany("AttemptQuestions")
+                        .HasForeignKey("AttemptId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("QuizWebApp.Core.Entities.Question", "Question")
+                        .WithMany()
+                        .HasForeignKey("QuestionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Attempt");
+
+                    b.Navigation("Question");
+                });
+
+            modelBuilder.Entity("QuizWebApp.Core.Entities.Question", b =>
+                {
+                    b.HasOne("QuizWebApp.Core.Entities.Quiz", "Quiz")
                         .WithMany("Questions")
                         .HasForeignKey("QuizId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -227,9 +262,9 @@ namespace QuizWebApp.Api.Data.Migrations
                     b.Navigation("Quiz");
                 });
 
-            modelBuilder.Entity("QuizWebApp.Api.Data.Models.Quiz", b =>
+            modelBuilder.Entity("QuizWebApp.Core.Entities.Quiz", b =>
                 {
-                    b.HasOne("QuizWebApp.Api.Data.Models.Topic", "Topic")
+                    b.HasOne("QuizWebApp.Core.Entities.Topic", "Topic")
                         .WithMany()
                         .HasForeignKey("TopicId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -238,12 +273,17 @@ namespace QuizWebApp.Api.Data.Migrations
                     b.Navigation("Topic");
                 });
 
-            modelBuilder.Entity("QuizWebApp.Api.Data.Models.Question", b =>
+            modelBuilder.Entity("QuizWebApp.Core.Entities.Attempt", b =>
+                {
+                    b.Navigation("AttemptQuestions");
+                });
+
+            modelBuilder.Entity("QuizWebApp.Core.Entities.Question", b =>
                 {
                     b.Navigation("Options");
                 });
 
-            modelBuilder.Entity("QuizWebApp.Api.Data.Models.Quiz", b =>
+            modelBuilder.Entity("QuizWebApp.Core.Entities.Quiz", b =>
                 {
                     b.Navigation("Questions");
                 });

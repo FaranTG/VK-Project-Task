@@ -1,37 +1,36 @@
-using QuizWebApp.Api.Configuration;
-using QuizWebApp.Api.Data;
+using QuizWebApp.Api.Extensions;
+using QuizWebApp.Core;
+using QuizWebApp.Core.Configuration;
+using QuizWebApp.Infrastructure.Extensions;
 
-var builder = WebApplication.CreateBuilder(args);
+WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddValidation();
+builder.Services
+    .Configure<JwtOptions>(builder.Configuration.GetSection("Jwt"))
+    .Configure<InitialAdminOptions>(builder.Configuration.GetSection("InitialAdmin"))
+    .AddValidation()
+    .AddCore()
+    .AddInfrastructure(builder.Configuration)
+    .AddJwtAuthentication(builder.Configuration)
+    .AddQuizCors(builder.Configuration)
+    .AddAuthorization()
+    .AddSwagger();
 
-builder.Services.AddQuizServices();
-
-builder.AddQuizDatabase();
-
-builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection("Jwt"));
-builder.AddJwtAuthentication();
-builder.AddQuizCors();
-
-builder.Services.AddAuthorization();
-
-builder.AddQuizSwagger();
-
-var app = builder.Build();
+WebApplication app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
-    app.MigrateQuizDatabase();
-    app.SeedQuizDatabase();
+    app.InitializeDatabase();
 
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    app
+        .UseSwagger()
+        .UseSwaggerUI();
 }
 
-app.UseAuthentication();
-app.UseCors();
-
-app.UseAuthorization();
+app
+    .UseAuthentication()
+    .UseCors()
+    .UseAuthorization();
 
 app.MapAllQuizEndpoints();
 

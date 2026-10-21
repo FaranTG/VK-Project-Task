@@ -1,4 +1,4 @@
-﻿using QuizWebApp.Api.Services.Interfaces;
+﻿using QuizWebApp.Core.Interfaces.Services;
 using QuizWebApp.Shared.Enums;
 
 namespace QuizWebApp.Api.Endpoints;

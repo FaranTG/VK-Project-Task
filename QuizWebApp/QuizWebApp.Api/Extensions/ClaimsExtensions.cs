@@ -1,6 +1,6 @@
 ﻿using System.Security.Claims;
 
-namespace QuizWebApp.Api.Configuration;
+namespace QuizWebApp.Api.Extensions;
 
 public static class ClaimsExtensions
 {

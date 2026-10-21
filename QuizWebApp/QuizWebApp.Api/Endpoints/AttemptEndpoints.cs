@@ -1,6 +1,6 @@
 ﻿using System.Security.Claims;
-using QuizWebApp.Api.Configuration;
-using QuizWebApp.Api.Services.Interfaces;
+using QuizWebApp.Api.Extensions;
+using QuizWebApp.Core.Interfaces.Services;
 using QuizWebApp.Shared.ApiResponses;
 using QuizWebApp.Shared.DTOs.Common;
 using QuizWebApp.Shared.DTOs.Question;

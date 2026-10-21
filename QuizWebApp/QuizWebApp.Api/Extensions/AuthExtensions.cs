@@ -1,17 +1,18 @@
 ﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using QuizWebApp.Core.Configuration;
 
-namespace QuizWebApp.Api.Configuration;
+namespace QuizWebApp.Api.Extensions;
 
 public static class AuthExtensions
 {
-    public static void AddJwtAuthentication(this WebApplicationBuilder builder)
+    public static IServiceCollection AddJwtAuthentication(this IServiceCollection services, IConfiguration configuration)
     {
         string jwtOptionsSectionName = "Jwt";
-        JwtOptions jwtOptions = builder.Configuration.GetSection(jwtOptionsSectionName).Get<JwtOptions>()
+        JwtOptions jwtOptions = configuration.GetSection(jwtOptionsSectionName).Get<JwtOptions>()
             ?? throw new InvalidOperationException($"Configuration section with name '{jwtOptionsSectionName}' does not exist");
         
-        builder.Services
+        services
             .AddAuthentication(
                 options =>
                 {
@@ -34,11 +35,13 @@ public static class AuthExtensions
                     };
                 }
             );
+        
+        return services;
     }
 
-    public static void AddQuizCors(this WebApplicationBuilder builder)
+    public static IServiceCollection AddQuizCors(this IServiceCollection services, IConfiguration configuration)
     {
-        builder.Services.AddCors(
+        services.AddCors(
             options =>
             {
                 options.AddDefaultPolicy
@@ -46,7 +49,7 @@ public static class AuthExtensions
                     policy =>
                     {
                         string allowedOriginsName = "AllowedOrigins";
-                        string allowedOrigins = builder.Configuration.GetValue<string>(allowedOriginsName)
+                        string allowedOrigins = configuration.GetValue<string>(allowedOriginsName)
                             ?? throw new InvalidOperationException($"Configuration value with name '{allowedOriginsName}' does not exist");
 
                         string[] allowedOriginsArray = allowedOrigins.Split(';', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
@@ -58,5 +61,7 @@ public static class AuthExtensions
                 );
             } 
         );
+
+        return services;
     }
 }
