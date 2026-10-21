@@ -42,6 +42,7 @@ public class AttemptService : IAttemptService
                         attempt.Id,
                         attempt.ParticipantId,
                         attempt.Participant!.Name,
+                        attempt.Participant.Email,
                         attempt.Status,
                         attempt.StartTime,
                         attempt.EndTime,

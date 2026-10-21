@@ -8,6 +8,8 @@ public record AttemptParticipantInfoDTO
 
     string ParticipantName,
 
+    string ParticipantEmail,
+
     string Status,
 
     DateTime StartTime,

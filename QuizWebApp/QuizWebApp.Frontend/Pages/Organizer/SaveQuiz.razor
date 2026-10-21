@@ -81,11 +81,19 @@ else
                                 </li>
                             }
                         </ol>
-                        <div class="mt-3 d-flex justify-content-end">
+                        <div class="mt-3 d-flex justify-content-between align-items-center">
                             <button type="button" class="btn btn-sm btn-primary" 
                                 @onclick="() => question.Options.Add(new AnswerOptionModel() { Text = string.Empty })">
                                 Add new option
                             </button>
+
+                            @if (!IsEditCase)
+                            {
+                                <button type="button" class="btn btn-sm btn-danger" 
+                                    @onclick="() => RemoveQuestion(question)">
+                                    Delete Question
+                                </button>
+                            }
                         </div>
                     </li>
                 }
@@ -195,6 +203,19 @@ else
                 onError: errorMessage => AppState.ShowError(errorMessage)
             );
 
+    private void RemoveQuestion(QuestionModel question)
+    {
+        ArgumentNullException.ThrowIfNull(_quizModel);
+
+        if (_quizModel.Questions.Count <= 1)
+        {
+            AppState.ShowError("A quiz must have at least one question.");
+            return;
+        }
+
+        _quizModel.Questions.Remove(question);
+    }
+
     private void SetCorrectOption(QuestionModel question, AnswerOptionModel correctOption)
     {
         foreach (AnswerOptionModel option in question.Options)
@@ -205,17 +226,7 @@ else
         correctOption.IsCorrect = true;
     }
 
-    private void CreateEmptyQuiz()
-    {
-        _quizModel = new QuizModel()
-        {
-            Name = string.Empty,
-            Questions = new List<QuestionModel>()
-            {
-                CreateEmptyQuestion()
-            }
-        };
-    }
+    
 
     private Task<bool> FillQuizAsync()
         => QuizzesClient
@@ -235,6 +246,39 @@ else
             FieldIdentifier fieldIdentifier = FieldIdentifier.Create(() => _quizModel.TopicId);
             _editContext.NotifyFieldChanged(fieldIdentifier);
         }
+    }
+
+    private void CreateEmptyQuiz()
+    {
+        _quizModel = new QuizModel()
+        {
+            Name = string.Empty,
+            Questions = new List<QuestionModel>()
+            {
+                CreateEmptyQuestion()
+            }
+        };
+    }
+
+    private QuestionModel CreateEmptyQuestion()
+    {
+        return new QuestionModel()
+        {
+            Text = string.Empty,
+            Options = new List<AnswerOptionModel>()
+            {
+                new AnswerOptionModel()
+                {
+                    Text = string.Empty,
+                    IsCorrect = true
+                },
+                new AnswerOptionModel()
+                {
+                    Text = string.Empty,
+                    IsCorrect = false
+                }
+            }
+        };
     }
 
     private QuizModel CreateQuizModel(QuizInfoDTO quizInfo)
@@ -264,27 +308,6 @@ else
                     }
                 )
                 .ToList()
-        };
-    }
-
-    private QuestionModel CreateEmptyQuestion()
-    {
-        return new QuestionModel()
-        {
-            Text = string.Empty,
-            Options = new List<AnswerOptionModel>()
-            {
-                new AnswerOptionModel()
-                {
-                    Text = string.Empty,
-                    IsCorrect = true
-                },
-                new AnswerOptionModel()
-                {
-                    Text = string.Empty,
-                    IsCorrect = false
-                }
-            }
         };
     }
 

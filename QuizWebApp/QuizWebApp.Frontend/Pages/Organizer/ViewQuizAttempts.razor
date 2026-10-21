@@ -23,8 +23,9 @@
 
     <QuickGrid ItemsProvider="_attemptsProvider" Pagination="_paginationState" Class="table table-striped table-bordered table-hover mb-3">
         <PropertyColumn Property="attempt => attempt.ParticipantName" Title="Participant Name" />
+        <PropertyColumn Property="attempt => attempt.ParticipantEmail" Title="Participant Email" />
         <PropertyColumn Property="attempt => attempt.Status" />
-        <PropertyColumn Property="attempt => attempt.StartTime" Title="Start Time" Format="@DateFormat" />
+        <PropertyColumn Property="attempt => attempt.StartTime.ToLocalTime()" Title="Start Time" Format="@DateFormat" />
         <TemplateColumn Title="End Time">
             @if (context.Status == nameof(AttemptStatus.Started))
             {
@@ -32,7 +33,7 @@
             }
             else
             {
-                <span>@context.EndTime.ToString(DateFormat)</span>
+                <span>@context.EndTime.ToLocalTime().ToString(DateFormat)</span>
             }
         </TemplateColumn>
         <PropertyColumn Property="attempt => attempt.Score" Class="text-center" />

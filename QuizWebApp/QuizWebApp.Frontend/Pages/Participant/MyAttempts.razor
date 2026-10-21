@@ -18,7 +18,7 @@
         <PropertyColumn Property="attempt => attempt.QuizName" Title="Quiz Name" />
         <PropertyColumn Property="attempt => attempt.TopicName" Title="Topic Name" />
         <PropertyColumn Property="attempt => attempt.Status" />
-        <PropertyColumn Property="attempt => attempt.StartTime" Title="Start Time" Format="@DateFormat" />
+        <PropertyColumn Property="attempt => attempt.StartTime.ToLocalTime()" Title="Start Time" Format="@DateFormat" />
         <TemplateColumn Title="End Time">
             @if (context.Status == nameof(AttemptStatus.Started))
             {
@@ -26,7 +26,7 @@
             }
             else
             {
-                <span>@context.EndTime.ToString(DateFormat)</span>
+                <span>@context.EndTime.ToLocalTime().ToString(DateFormat)</span>
             }
         </TemplateColumn>
         <PropertyColumn Property="attempt => attempt.Score" Class="text-center" />
