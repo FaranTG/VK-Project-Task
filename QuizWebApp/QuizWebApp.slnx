@@ -1,5 +1,7 @@
 <Solution>
+  <Project Path="QuizWebApp.Shared/QuizWebApp.Shared.csproj" />
+  <Project Path="QuizWebApp.Core/QuizWebApp.Core.csproj" />
+  <Project Path="QuizWebApp.Infrastructure/QuizWebApp.Infrastructure.csproj" />
   <Project Path="QuizWebApp.Api/QuizWebApp.Api.csproj" />
   <Project Path="QuizWebApp.Frontend/QuizWebApp.Frontend.csproj" />
-  <Project Path="QuizWebApp.Shared/QuizWebApp.Shared.csproj" />
 </Solution>
