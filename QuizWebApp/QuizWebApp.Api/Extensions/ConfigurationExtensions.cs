@@ -15,7 +15,7 @@ public static class ConfigurationExtensions
         initializer.Initialize();
     }
 
-    public static IEndpointRouteBuilder MapAllQuizEndpoints(this IEndpointRouteBuilder app)
+    public static IEndpointRouteBuilder MapEndpoints(this IEndpointRouteBuilder app)
         => app
             .MapAuthEndpoints()
             .MapTopicEndpoints()

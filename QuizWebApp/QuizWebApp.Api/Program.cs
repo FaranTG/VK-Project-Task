@@ -32,6 +32,6 @@ app
     .UseCors()
     .UseAuthorization();
 
-app.MapAllQuizEndpoints();
+app.MapEndpoints();
 
 app.Run();

@@ -86,6 +86,9 @@ public class QuizzesRepository : IQuizzesRepository
             .CountAsync();
 
         Quiz[] quizzes = await query
+            .Include(quiz => quiz.Topic)
+            .Include(quiz => quiz.Questions)
+            .AsSplitQuery()
             .OrderBy(quiz => quiz.Id)
             .Paginate(paginationData)
             .ToArrayAsync();

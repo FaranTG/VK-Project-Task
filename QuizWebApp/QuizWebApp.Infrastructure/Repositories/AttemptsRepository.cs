@@ -1,5 +1,4 @@
-﻿using System.Linq.Expressions;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using QuizWebApp.Core.Entities;
 using QuizWebApp.Core.Interfaces.Repositories;
 using QuizWebApp.Infrastructure.Data;
@@ -66,25 +65,40 @@ public class AttemptsRepository : IAttemptsRepository
     }
 
     public Task<PagedInfo<Attempt>> GetQuizAttemptsAsync(Guid quizId, PaginationDTO paginationData)
-        => CoreGetAttemptsAsync(attempt => attempt.QuizId == quizId, paginationData);
+        => CoreGetAttemptsAsync
+        (
+            query => query
+                .Where(attempt => attempt.QuizId == quizId)
+                .Include(attempt => attempt.Participant),
+            paginationData
+        );
 
     public Task<PagedInfo<Attempt>> GetParticipantAttemptsAsync(int participantId, PaginationDTO paginationData)
-        => CoreGetAttemptsAsync(attempt => attempt.ParticipantId == participantId, paginationData);
+        => CoreGetAttemptsAsync
+        (
+            query => query
+                .Where(attempt => attempt.ParticipantId == participantId)
+                .Include(attempt => attempt.Quiz)     
+                    .ThenInclude(quiz => quiz!.Topic)
+                .AsSplitQuery(),
+            paginationData
+        );
 
     private async Task<PagedInfo<Attempt>> CoreGetAttemptsAsync
     (
-        Expression<Func<Attempt, bool>> predicate,
+        Func<IQueryable<Attempt>, IQueryable<Attempt>> queryBuilder,
         PaginationDTO paginationData
     )
     {
         IQueryable<Attempt> query = _dbContext.Attempts
-            .AsNoTracking()
-            .Where(predicate);
+            .AsNoTracking();
+
+        query = queryBuilder(query);
 
         int totalCount = await query
             .CountAsync();
 
-        Attempt[] attempts = await query
+        Attempt[] attempts = await query    
             .OrderByDescending(attempt => attempt.StartTime)
             .Paginate(paginationData)
             .ToArrayAsync();
