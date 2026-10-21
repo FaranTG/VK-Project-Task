@@ -4,6 +4,7 @@ using QuizWebApp.Api.Data;
 using QuizWebApp.Api.Data.Models;
 using QuizWebApp.Api.Services.Interfaces;
 using QuizWebApp.Api.Validation;
+using QuizWebApp.Core.Validation;
 using QuizWebApp.Shared.ApiResponses;
 using QuizWebApp.Shared.DTOs.AnswerOption;
 using QuizWebApp.Shared.DTOs.Common;
