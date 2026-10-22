@@ -2,13 +2,11 @@
 using System.Text.Json;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 using QuizWebApp.Core.Configuration;
 using QuizWebApp.Core.Entities;
 using QuizWebApp.Core.Validation;
 using QuizWebApp.Shared.DTOs.Quiz;
 using QuizWebApp.Shared.DTOs.Topic;
-using QuizWebApp.Shared.Enums;
 
 namespace QuizWebApp.Infrastructure.Data;
 
@@ -16,18 +14,17 @@ public class DatabaseInitializer
 {
     private readonly QuizContext _dbContext;
     private readonly IPasswordHasher<User> _passwordHasher;
-    private readonly InitialAdminOptions _adminOptions;
+    private readonly string _seedFolder;
 
     public DatabaseInitializer
     (
         QuizContext dbContext, 
-        IPasswordHasher<User> passwordHasher, 
-        IOptions<InitialAdminOptions> adminOptions
+        IPasswordHasher<User> passwordHasher
     )
     {
         _dbContext = dbContext;
         _passwordHasher = passwordHasher;
-        _adminOptions = adminOptions.Value;
+        _seedFolder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Data", "Seed");
     }
 
     public void Initialize()
@@ -51,32 +48,52 @@ public class DatabaseInitializer
             return;
         }
 
-        User initialAdmin = new ()
-        {
-            Name = _adminOptions.Name,
-            Phone = _adminOptions.Phone,
-            Email = _adminOptions.Email,
-            PasswordHash = string.Empty,
-            Role = nameof(UserRole.Organizer),
-            IsApproved = true
-        };
-        
-        initialAdmin.PasswordHash = _passwordHasher
-            .HashPassword(initialAdmin, _adminOptions.Password);
-
-        _dbContext.Users.Add(initialAdmin);
-        
-        string baseDir = AppDomain.CurrentDomain.BaseDirectory;
-
-        SeedTopics(baseDir);
-        SeedQuizzes(baseDir);
+        SeedUsers();
+        SeedTopics();
+        SeedQuizzes();
 
         _dbContext.SaveChanges();
     }
 
-    private void SeedTopics(string baseDir)
+    private void SeedUsers()
     {
-        string topicsPath = Path.Combine(baseDir, "Data", "Seed", "topics.json");
+        string usersPath = Path.Combine(_seedFolder, "users.json");
+
+        if (!File.Exists(usersPath))
+        {
+            return;
+        }
+
+        string usersJson = File.ReadAllText(usersPath);
+        List<QuizUserOptions>? seedUsers = JsonSerializer.Deserialize<List<QuizUserOptions>>(usersJson);
+
+        if (seedUsers is null || seedUsers.Count == 0)
+        {
+            return;
+        }
+
+        foreach (QuizUserOptions options in seedUsers)
+        {
+            User newUser = new()
+            {
+                Name = options.Name,
+                Phone = options.Phone,
+                Email = options.Email,
+                PasswordHash = string.Empty,
+                Role = options.Role,
+                IsApproved = true
+            };
+
+            newUser.PasswordHash = _passwordHasher.HashPassword(newUser, options.Password);
+            _dbContext.Users.Add(newUser);
+        }
+
+        _dbContext.SaveChanges();
+    }
+
+    private void SeedTopics()
+    {
+        string topicsPath = Path.Combine(_seedFolder, "topics.json");
         
         if (!File.Exists(topicsPath))
         {
@@ -111,9 +128,9 @@ public class DatabaseInitializer
         _dbContext.SaveChanges();
     }
 
-    private void SeedQuizzes(string baseDir)
+    private void SeedQuizzes()
     {
-        string quizzesPath = Path.Combine(baseDir, "Data", "Seed", "quizzes.json");
+        string quizzesPath = Path.Combine(_seedFolder, "quizzes.json");
         
         if (!File.Exists(quizzesPath))
         {

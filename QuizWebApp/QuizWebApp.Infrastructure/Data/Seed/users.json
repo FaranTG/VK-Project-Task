@@ -1,0 +1,23 @@
+[
+  {
+    "Name": "InitialAdmin",
+    "Phone": "111111111111",
+    "Email": "initialadmin@quiz.ru",
+    "Role": "Organizer",
+    "Password": "12345"
+  },
+  {
+    "Name": "InitialStudent",
+    "Phone": "+79994445566",
+    "Email": "ivan@mail.ru",
+    "Role": "Participant",
+    "Password": "123"
+  },
+  {
+    "Name": "InitialTester",
+    "Phone": "+79997778899",
+    "Email": "anna@mail.ru",
+    "Role": "Participant",
+    "Password": "123"
+  }
+]

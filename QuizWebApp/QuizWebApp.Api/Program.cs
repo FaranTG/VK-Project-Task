@@ -7,7 +7,6 @@ WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 builder.Services
     .Configure<JwtOptions>(builder.Configuration.GetSection("Jwt"))
-    .Configure<InitialAdminOptions>(builder.Configuration.GetSection("InitialAdmin"))
     .AddValidation()
     .AddCore()
     .AddInfrastructure(builder.Configuration)
