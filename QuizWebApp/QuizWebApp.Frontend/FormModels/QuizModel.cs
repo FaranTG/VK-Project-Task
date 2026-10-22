@@ -4,7 +4,7 @@ namespace QuizWebApp.Frontend.FormModels;
 
 public class QuizModel
 {
-    [Required][StringLength(100)]
+    [Required][StringLength(25)]
     public required string Name { get; set; }
 
     [Range(1, int.MaxValue, ErrorMessage = "The correct Topic name is required.")]
@@ -15,7 +15,7 @@ public class QuizModel
 
     public bool IsActive { get; set; }
 
-    [Required][MinLength(1)][MaxLength(50)]
+    [Required][MinLength(1)][MaxLength(20)]
     public required List<QuestionModel> Questions { get; set; }
 
     public string? Validate()

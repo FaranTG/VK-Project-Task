@@ -8,6 +8,31 @@ public static class QuizSaveDTOValidator
 {
     public static string? Validate(this QuizSaveDTO quizData)
     {
+        if (string.IsNullOrWhiteSpace(quizData.Name))
+        {
+            return "Quiz name is required.";
+        }
+
+        if (quizData.Name.Length > 25)
+        {
+            return "Quiz name cannot exceed 25 characters.";
+        }
+
+        if (quizData.TopicId < 1)
+        {
+            return "Topic id must be a positive integer.";
+        }
+
+        if (quizData.TimeInMinutes < 1 || quizData.TimeInMinutes > 120)
+        {
+            return "Time limit must be between 1 and 120 minutes.";
+        }
+
+        if (quizData.Questions is null || quizData.Questions.Count < 1 || quizData.Questions.Count > 20)
+        {
+            return "The number of questions in a quiz must be between 1 and 20.";
+        }
+        
         foreach (QuestionSaveDTO question in quizData.Questions)
         {
             string? validationResult = question.Validate();

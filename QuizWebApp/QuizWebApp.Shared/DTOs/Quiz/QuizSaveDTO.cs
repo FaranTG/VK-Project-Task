@@ -5,7 +5,7 @@ namespace QuizWebApp.Shared.DTOs.Quiz;
 
 public record QuizSaveDTO
 (
-    [Required][StringLength(100)]
+    [Required][StringLength(25)]
     string Name,
 
     [Range(1, int.MaxValue)]
@@ -16,6 +16,6 @@ public record QuizSaveDTO
 
     bool IsActive,
 
-    [Required][MinLength(1)][MaxLength(50)]
+    [Required][MinLength(1)][MaxLength(20)]
     List<QuestionSaveDTO> Questions
 );

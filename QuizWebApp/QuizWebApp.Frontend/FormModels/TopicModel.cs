@@ -4,6 +4,6 @@ namespace QuizWebApp.Frontend.FormModels;
 
 public class TopicModel
 {
-    [Required][StringLength(30)]
+    [Required][StringLength(20)]
     public required string Name { get; set; }
 }

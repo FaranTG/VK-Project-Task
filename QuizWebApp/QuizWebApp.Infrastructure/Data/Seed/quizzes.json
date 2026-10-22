@@ -1,0 +1,350 @@
+[
+  {
+    "Name": "Базовый C# и типы",
+    "TopicId": 1,
+    "TimeInMinutes": 15,
+    "IsActive": true,
+    "Questions": [
+      {
+        "Text": "Какой тип данных является значимым (Value Type) в C#?",
+        "Options": [
+          { "Text": "int", "IsCorrect": true },
+          { "Text": "string", "IsCorrect": false }
+        ]
+      },
+      {
+        "Text": "Что из перечисленного является ссылочным типом (Reference Type)?",
+        "Options": [
+          { "Text": "class", "IsCorrect": true },
+          { "Text": "struct", "IsCorrect": false }
+        ]
+      },
+      {
+        "Text": "Какое значение по умолчанию имеет тип bool?",
+        "Options": [
+          { "Text": "false", "IsCorrect": true },
+          { "Text": "true", "IsCorrect": false }
+        ]
+      }
+    ]
+  },
+  {
+    "Name": "ООП и SOLID в C#",
+    "TopicId": 1,
+    "TimeInMinutes": 20,
+    "IsActive": true,
+    "Questions": [
+      {
+        "Text": "Что означает буква 'S' в аббревиатуре SOLID?",
+        "Options": [
+          { "Text": "Single Responsibility Principle", "IsCorrect": true },
+          { "Text": "Interface Segregation Principle", "IsCorrect": false }
+        ]
+      },
+      {
+        "Text": "Какой принцип SOLID призывает расширять код без его изменения?",
+        "Options": [
+          { "Text": "Open/Closed Principle", "IsCorrect": true },
+          { "Text": "Liskov Substitution Principle", "IsCorrect": false }
+        ]
+      },
+      {
+        "Text": "Какое ключевое слово запрещает наследование класса в C#?",
+        "Options": [
+          { "Text": "sealed", "IsCorrect": true },
+          { "Text": "static", "IsCorrect": false }
+        ]
+      }
+    ]
+  },
+  {
+    "Name": "Слои Чистой Архитектуры",
+    "TopicId": 2,
+    "TimeInMinutes": 15,
+    "IsActive": true,
+    "Questions": [
+      {
+        "Text": "Какому слою принадлежат интерфейсы репозиториев?",
+        "Options": [
+          { "Text": "Core", "IsCorrect": true },
+          { "Text": "Infrastructure", "IsCorrect": false }
+        ]
+      },
+      {
+        "Text": "Где должна находиться чистая бизнес-логика приложения?",
+        "Options": [
+          { "Text": "В слое Core", "IsCorrect": true },
+          { "Text": "В слое API", "IsCorrect": false }
+        ]
+      },
+      {
+        "Text": "Может ли слой Core напрямую использовать типы из Infrastructure?",
+        "Options": [
+          { "Text": "Нет, это нарушает Dependency Rule", "IsCorrect": true },
+          { "Text": "Да, без ограничений", "IsCorrect": false }
+        ]
+      }
+    ]
+  },
+  {
+    "Name": "Проектирование БД и SQL",
+    "TopicId": 3,
+    "TimeInMinutes": 25,
+    "IsActive": true,
+    "Questions": [
+      {
+        "Text": "Какой SQL-оператор используется для фильтрации групп?",
+        "Options": [
+          { "Text": "HAVING", "IsCorrect": true },
+          { "Text": "WHERE", "IsCorrect": false }
+        ]
+      },
+      {
+        "Text": "Какой тип связи реализуется через промежуточную таблицу?",
+        "Options": [
+          { "Text": "Многие ко многим (Many-to-Many)", "IsCorrect": true },
+          { "Text": "Один ко многим (One-to-Many)", "IsCorrect": false }
+        ]
+      },
+      {
+        "Text": "Какая команда полностью удаляет таблицу вместе со структурой?",
+        "Options": [
+          { "Text": "DROP TABLE", "IsCorrect": true },
+          { "Text": "DELETE FROM", "IsCorrect": false }
+        ]
+      }
+    ]
+  },
+  {
+    "Name": "Основы React и Hooks",
+    "TopicId": 4,
+    "TimeInMinutes": 15,
+    "IsActive": true,
+    "Questions": [
+      {
+        "Text": "Какой хук используется для управления состоянием?",
+        "Options": [
+          { "Text": "useState", "IsCorrect": true },
+          { "Text": "useEffect", "IsCorrect": false }
+        ]
+      },
+      {
+        "Text": "Какой хук отвечает за выполнение побочных эффектов?",
+        "Options": [
+          { "Text": "useEffect", "IsCorrect": true },
+          { "Text": "useMemo", "IsCorrect": false }
+        ]
+      },
+      {
+        "Text": "Какое свойство используется для передачи данных от родителя к дочернему компоненту?",
+        "Options": [
+          { "Text": "props", "IsCorrect": true },
+          { "Text": "state", "IsCorrect": false }
+        ]
+      }
+    ]
+  },
+  {
+    "Name": "Контейнеризация Docker",
+    "TopicId": 5,
+    "TimeInMinutes": 15,
+    "IsActive": true,
+    "Questions": [
+      {
+        "Text": "Какая команда собирает образ из Dockerfile?",
+        "Options": [
+          { "Text": "docker build", "IsCorrect": true },
+          { "Text": "docker run", "IsCorrect": false }
+        ]
+      },
+      {
+        "Text": "Какая инструкция в Dockerfile задает базовый образ?",
+        "Options": [
+          { "Text": "FROM", "IsCorrect": true },
+          { "Text": "WORKDIR", "IsCorrect": false }
+        ]
+      },
+      {
+        "Text": "Что используется для сохранения данных контейнера на хост-машине?",
+        "Options": [
+          { "Text": "Volumes", "IsCorrect": true },
+          { "Text": "Ports", "IsCorrect": false }
+        ]
+      }
+    ]
+  },
+  {
+    "Name": "Работа с ветками в Git",
+    "TopicId": 6,
+    "TimeInMinutes": 10,
+    "IsActive": true,
+    "Questions": [
+      {
+        "Text": "Какая команда создает новую ветку и переключается на нее?",
+        "Options": [
+          { "Text": "git checkout -b", "IsCorrect": true },
+          { "Text": "git branch", "IsCorrect": false }
+        ]
+      },
+      {
+        "Text": "Какая команда скачивает изменения из удаленного репозитория и сливает их?",
+        "Options": [
+          { "Text": "git pull", "IsCorrect": true },
+          { "Text": "git fetch", "IsCorrect": false }
+        ]
+      },
+      {
+        "Text": "Какая команда отменяет индексацию файла, сохраняя изменения в коде?",
+        "Options": [
+          { "Text": "git reset", "IsCorrect": true },
+          { "Text": "git clean", "IsCorrect": false }
+        ]
+      }
+    ]
+  },
+  {
+    "Name": "Сложность алгоритмов",
+    "TopicId": 7,
+    "TimeInMinutes": 30,
+    "IsActive": true,
+    "Questions": [
+      {
+        "Text": "Какова средняя скорость поиска в хэш-таблице?",
+        "Options": [
+          { "Text": "O(1)", "IsCorrect": true },
+          { "Text": "O(n)", "IsCorrect": false }
+        ]
+      },
+      {
+        "Text": "Какую худшую временную сложность имеет быстрая сортировка (Quick Sort)?",
+        "Options": [
+          { "Text": "O(n^2)", "IsCorrect": true },
+          { "Text": "O(n log n)", "IsCorrect": false }
+        ]
+      },
+      {
+        "Text": "Какую сложность имеет бинарный поиск в отсортированном массиве?",
+        "Options": [
+          { "Text": "O(log n)", "IsCorrect": true },
+          { "Text": "O(n)", "IsCorrect": false }
+        ]
+      }
+    ]
+  },
+  {
+    "Name": "Виды тестирования и QA",
+    "TopicId": 8,
+    "TimeInMinutes": 15,
+    "IsActive": true,
+    "Questions": [
+      {
+        "Text": "Как называется тестирование без доступа к исходному коду?",
+        "Options": [
+          { "Text": "Черный ящик", "IsCorrect": true },
+          { "Text": "Белый ящик", "IsCorrect": false }
+        ]
+      },
+      {
+        "Text": "Какое тестирование проверяет, что старый функционал не сломался после изменений?",
+        "Options": [
+          { "Text": "Регрессионное", "IsCorrect": true },
+          { "Text": "Санитарное", "IsCorrect": false }
+        ]
+      },
+      {
+        "Text": "Кто проверяет корректность интеграции отдельных модулей системы?",
+        "Options": [
+          { "Text": "Интеграционное тестирование", "IsCorrect": true },
+          { "Text": "Модульное тестирование", "IsCorrect": false }
+        ]
+      }
+    ]
+  },
+  {
+    "Name": "Паттерны: Фабрика и ООП",
+    "TopicId": 10,
+    "TimeInMinutes": 20,
+    "IsActive": true,
+    "Questions": [
+      {
+        "Text": "Какой паттерн гарантирует существование только одного экземпляра класса?",
+        "Options": [
+          { "Text": "Singleton (Одиночка)", "IsCorrect": true },
+          { "Text": "Factory (Фабрика)", "IsCorrect": false }
+        ]
+      },
+      {
+        "Text": "Какой паттерн создает объекты через общий интерфейс, позволяя подклассам менять тип объекта?",
+        "Options": [
+          { "Text": "Фабричный метод", "IsCorrect": true },
+          { "Text": "Строитель (Builder)", "IsCorrect": false }
+        ]
+      },
+      {
+        "Text": "К какой группе паттернов относится Стратегия (Strategy)?",
+        "Options": [
+          { "Text": "Поведенческие", "IsCorrect": true },
+          { "Text": "Порождающие", "IsCorrect": false }
+        ]
+      }
+    ]
+  },
+  {
+    "Name": "Управление State в React",
+    "TopicId": 4,
+    "TimeInMinutes": 20,
+    "IsActive": true,
+    "Questions": [
+      {
+        "Text": "Какой хук предоставляет доступ к Context API?",
+        "Options": [
+          { "Text": "useContext", "IsCorrect": true },
+          { "Text": "useReducer", "IsCorrect": false }
+        ]
+      },
+      {
+        "Text": "Что рассчитывает новое состояние в Redux?",
+        "Options": [
+          { "Text": "Reducer", "IsCorrect": true },
+          { "Text": "Action", "IsCorrect": false }
+        ]
+      },
+      {
+        "Text": "Какая библиотека используется для стейта?",
+        "Options": [
+          { "Text": "Zustand", "IsCorrect": true },
+          { "Text": "Axios", "IsCorrect": false }
+        ]
+      }
+    ]
+  },
+  {
+    "Name": "Атаки OWASP Top 10",
+    "TopicId": 9,
+    "TimeInMinutes": 15,
+    "IsActive": true,
+    "Questions": [
+      {
+        "Text": "Какая атака внедряет вредоносный JS на страницу?",
+        "Options": [
+          { "Text": "XSS", "IsCorrect": true },
+          { "Text": "SQL Injection", "IsCorrect": false }
+        ]
+      },
+      {
+        "Text": "Как защитить базу данных от SQL-инъекций в C#?",
+        "Options": [
+          { "Text": "Использовать ORM и параметры", "IsCorrect": true },
+          { "Text": "Конкатенировать строки", "IsCorrect": false }
+        ]
+      },
+      {
+        "Text": "Какая атака подделывает HTTP-запросы от юзера?",
+        "Options": [
+          { "Text": "CSRF", "IsCorrect": true },
+          { "Text": "DDOS", "IsCorrect": false }
+        ]
+      }
+    ]
+  }
+]

@@ -1,0 +1,16 @@
+[
+  { "Name": "C# & .NET Core" },
+  { "Name": "Clean Architecture" },
+  { "Name": "Базы данных & SQL" },
+  { "Name": "Frontend & React" },
+  { "Name": "DevOps & Docker" },
+  { "Name": "Git & GitHub" },
+  { "Name": "Алгоритмы" },
+  { "Name": "Тестирование & QA" },
+  { "Name": "Безопасность web" },
+  { "Name": "Паттерны ООП" },
+  { "Name": "Облачные сервисы" },
+  { "Name": "Linux & Bash" },
+  { "Name": "Микросервисы" },
+  { "Name": "RabbitMQ" }
+]
