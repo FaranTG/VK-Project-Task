@@ -63,7 +63,7 @@ public class QuizExpirationWorker : BackgroundService
         return await dbContext.Attempts
             .AsNoTracking()
             .Where(attempt => attempt.Status == nameof(AttemptStatus.Started) 
-                && attempt.StartTime.AddMinutes(attempt.Quiz!.TimeInMinutes) <= DateTime.UtcNow)
+                && attempt.StartTime.AddMinutes(attempt.Quiz!.TimeInMinutes) <= DateTimeOffset.UtcNow)
             .OrderBy(attempt => attempt.Id)
             .Select
             (
@@ -102,5 +102,5 @@ public class QuizExpirationWorker : BackgroundService
         _logger.LogInformation("Successfully auto-submitted expired attempts. Cleaned up {CacheCount} questions from temporary cache.", deletedQuestionsCacheCount);
     }
 
-    private record ReadOnlyAttemptMeta(int Id, DateTime Deadline);
+    private record ReadOnlyAttemptMeta(int Id, DateTimeOffset Deadline);
 }

@@ -234,7 +234,7 @@ public class QuizService : IQuizService
             CreateQuestionInfoDTOList(quiz.Questions)
         );
 
-    private List<QuestionInfoDTO> CreateQuestionInfoDTOList(ICollection<Question> questions)
+    private List<QuestionInfoDTO> CreateQuestionInfoDTOList(List<Question> questions)
         => questions
             .Select
             (
@@ -257,7 +257,7 @@ public class QuizService : IQuizService
             )
             .ToList();
 
-    private ICollection<Question> CreateQuestionModelsList(List<QuestionSaveDTO> saveDTOList)
+    private List<Question> CreateQuestionModelsList(List<QuestionSaveDTO> saveDTOList)
         => saveDTOList
             .Select
             (

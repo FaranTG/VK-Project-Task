@@ -12,9 +12,9 @@ public record AttemptParticipantInfoDTO
 
     string Status,
 
-    DateTime StartTime,
+    DateTimeOffset StartTime,
 
-    DateTime EndTime,
+    DateTimeOffset EndTime,
 
     int Score
 );

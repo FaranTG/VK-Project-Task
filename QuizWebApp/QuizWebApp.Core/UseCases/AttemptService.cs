@@ -72,7 +72,7 @@ public class AttemptService : IAttemptService
                 ParticipantId = participantId,
                 QuizId = quizId,
                 Status = nameof(AttemptStatus.Started),
-                StartTime = DateTime.UtcNow
+                StartTime = DateTimeOffset.UtcNow
             };
 
             await _attemptsRepository
@@ -206,10 +206,10 @@ public class AttemptService : IAttemptService
                 return QuizApiResponse.Fail("Quiz has already been submitted.");
             }
 
-            attempt.EndTime = DateTime.UtcNow;
+            attempt.EndTime = DateTimeOffset.UtcNow;
             attempt.Status = quitStatus.ToString();
 
-            List<AttemptQuestion> usedQuestions = attempt.AttemptQuestions!.ToList();
+            List<AttemptQuestion> usedQuestions = attempt.AttemptQuestions!;
             
             await _attemptsRepository
                 .RemoveAttemptQuestionsRangeAsync(usedQuestions);

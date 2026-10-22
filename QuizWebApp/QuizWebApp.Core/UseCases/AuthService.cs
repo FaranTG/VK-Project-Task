@@ -117,13 +117,15 @@ public class AuthService : IAuthService
         SymmetricSecurityKey signingSymmetricKey = new (System.Text.Encoding.UTF8.GetBytes(_jwtOptions.Secret));
         SigningCredentials signingCredentials = new (signingSymmetricKey, SecurityAlgorithms.HmacSha256);
 
+        DateTimeOffset expirationTimeOffset = DateTimeOffset.UtcNow.AddMinutes(_jwtOptions.ExpireInMinutes);
+
         JwtSecurityToken jwtToken = new
         (
             issuer: _jwtOptions.Issuer, 
             audience: _jwtOptions.Audience, 
             claims: claims,
             notBefore: null, 
-            expires: DateTime.UtcNow.AddMinutes(_jwtOptions.ExpireInMinutes),
+            expires: expirationTimeOffset.UtcDateTime, 
             signingCredentials: signingCredentials
         );
 

@@ -17,12 +17,12 @@
     private string? _totalTimeDisplay;
     private string? _currentTimeDisplay;
     private string _timeDisplayColorClass = "";
-    private DateTime _totalTime;
+    private DateTimeOffset _totalTime;
     private bool _isDanger;
 
     protected override void OnInitialized()
     {
-        _totalTime = DateTime.UtcNow.AddMinutes(TotalMinutes).AddSeconds(1);
+        _totalTime = DateTimeOffset.UtcNow.AddMinutes(TotalMinutes).AddSeconds(1);
         _timer = new PeriodicTimer(TimeSpan.FromSeconds(1));
         _totalTimeDisplay = $"{TotalMinutes.ToString().PadLeft(2, '0')}:00";
         _currentTimeDisplay = _totalTimeDisplay;
@@ -36,7 +36,7 @@
 
         while (await _timer.WaitForNextTickAsync())
         {
-            TimeSpan timeDifference = _totalTime - DateTime.UtcNow;
+            TimeSpan timeDifference = _totalTime - DateTimeOffset.UtcNow;
 
             if (timeDifference <= TimeSpan.Zero)
             {

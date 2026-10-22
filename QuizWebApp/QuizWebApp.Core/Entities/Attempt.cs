@@ -23,11 +23,12 @@ public class Attempt
     )]
     public required string Status { get; set; }
 
-    public DateTime StartTime { get; set; }
+    public DateTimeOffset StartTime { get; set; }
 
-    public DateTime EndTime { get; set; }
+    public DateTimeOffset EndTime { get; set; }
 
+    [Range(0, 20)]
     public int Score { get; set; }
 
-    public ICollection<AttemptQuestion>? AttemptQuestions { get; set; } 
+    public List<AttemptQuestion>? AttemptQuestions { get; set; } 
 }

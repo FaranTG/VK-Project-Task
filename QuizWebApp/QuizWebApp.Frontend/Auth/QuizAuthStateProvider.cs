@@ -118,8 +118,8 @@ public class QuizAuthStateProvider : AuthenticationStateProvider
         }
 
         long expirationTime = long.Parse(expirationClaim.Value);
-        DateTime expirationUTCDateTime = DateTimeOffset.FromUnixTimeSeconds(expirationTime).UtcDateTime;
+        DateTimeOffset expirationUTCDateTime = DateTimeOffset.FromUnixTimeSeconds(expirationTime);
 
-        return expirationUTCDateTime > DateTime.UtcNow;
+        return expirationUTCDateTime > DateTimeOffset.UtcNow;
     }
 }
