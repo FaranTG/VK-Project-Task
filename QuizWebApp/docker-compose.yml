@@ -11,6 +11,45 @@ services:
       - "5432:5432"
     volumes:
       - quiz_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d quiz_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: .
+      dockerfile: QuizWebApp.Api/Dockerfile
+    container_name: nesterov-quiz-backend
+    restart: always
+    ports:
+      - "5179:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__QuizDatabase=Host=db;Port=5432;Database=quiz_db;Username=user;Password=pass;
+      - Jwt__Secret=fgjaliuhuh#hfalgfwoifjw^djwaifu#hvfuwaehlgr;jnalega%^&^dafw
+      - Jwt__Issuer=http://localhost:5179
+      - Jwt__Audience=http://localhost:5253
+      - Jwt__ExpireInMinutes=480
+      - AllowedOrigins=http://localhost:5253
+    volumes:
+      - quiz_dataprotection:/root/.aspnet/DataProtection-Keys
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: .
+      dockerfile: QuizWebApp.Frontend/Dockerfile
+    container_name: nesterov-quiz-frontend
+    restart: always
+    ports:
+      - "5253:80"
+    depends_on:
+      - api
 
 volumes:
   quiz_pgdata:
+  quiz_dataprotection:
