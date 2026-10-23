@@ -1,7 +1,7 @@
 ﻿namespace QuizWebApp.Shared.ApiResponses;
 
-public record PagedInfo<TInfoDTO>
+public record PagedInfo<TData>
 (
-    TInfoDTO[] DTOs,
+    TData[] Data,
     int TotalCount
 );

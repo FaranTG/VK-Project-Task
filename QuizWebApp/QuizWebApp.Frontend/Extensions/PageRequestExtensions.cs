@@ -31,7 +31,7 @@ public static class PageRequestExtensions
             if (response.IsSuccess)
             {
                 PagedInfo<TData> pagedInfo = response.Data!;
-                return GridItemsProviderResult.From(pagedInfo.DTOs, pagedInfo.TotalCount);
+                return GridItemsProviderResult.From(pagedInfo.Data, pagedInfo.TotalCount);
             }
 
             onError?.Invoke(response.ErrorMessage!);

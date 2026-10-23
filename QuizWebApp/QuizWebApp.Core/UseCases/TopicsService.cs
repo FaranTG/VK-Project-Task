@@ -29,7 +29,7 @@ public class TopicsService : ITopicsService
             PagedInfo<Topic> pagedTopics = await _topicsRepository
                 .GetTopicsAsync(paginationData);
 
-            TopicInfoDTO[] topicDTOs = pagedTopics.DTOs
+            TopicInfoDTO[] topicDTOs = pagedTopics.Data
                 .Select(CreateTopicInfoDTO)
                 .ToArray();
             

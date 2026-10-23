@@ -145,7 +145,7 @@ else
             (
                 appState: AppState,
                 loaderMessage: "Fetching topics...",
-                onSuccess: data => _topics = data.DTOs,
+                onSuccess: data => _topics = data.Data,
                 onError: errorMessage => _loadErrorMessage = errorMessage
             );
 
@@ -177,7 +177,7 @@ else
             (
                 appState: AppState,
                 loaderMessage: "Fetching quizzes...",
-                onSuccess: data => { _quizzes = data.DTOs; _totalItemsCount = data.TotalCount; },
+                onSuccess: data => { _quizzes = data.Data; _totalItemsCount = data.TotalCount; },
                 onError: errorMessage => { _loadErrorMessage = errorMessage; StateHasChanged(); }
             );
     }

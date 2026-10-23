@@ -28,7 +28,7 @@ public class QuizzesService : IQuizzesService
             PagedInfo<Quiz> pagedQuizzes = await _quizzesRepository
                 .GetQuizzesAsync(paginationData, topicFilterId);
 
-            QuizSummaryInfoDTO[] quizzes = pagedQuizzes.DTOs
+            QuizSummaryInfoDTO[] quizzes = pagedQuizzes.Data
                 .Select(CreateQuizSummaryInfoDTO)
                 .ToArray();
             
@@ -49,7 +49,7 @@ public class QuizzesService : IQuizzesService
             PagedInfo<Quiz> pagedQuizzes = await _quizzesRepository
                 .GetAvailableQuizzesAsync(paginationData, topicFilterId);
 
-            QuizBriefInfoDTO[] quizzes = pagedQuizzes.DTOs
+            QuizBriefInfoDTO[] quizzes = pagedQuizzes.Data
                 .Select(CreateQuizBriefInfoDTO)
                 .ToArray();
             

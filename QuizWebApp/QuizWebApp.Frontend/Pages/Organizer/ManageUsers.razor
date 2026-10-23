@@ -13,14 +13,24 @@
     <p class="h5 text-center text-danger mb-3"><em>Error: @_loadErrorMessage</em></p>
 }
 
-<div class="row">
-    <div class="col-sm-4 ms-auto mb-3">
+<div class="row mb-3">
+    <div class="col-sm-5">
+        <label class="form-label" for="search">Search users: </label>
+        <div class="input-group">
+            <span class="input-group-text"><i class="bi bi-search"></i></span>
+            <input class="form-control" type="text" id="search" placeholder="Type name, phone or email..."
+                   @bind="_searchTerm" @bind:after="OnFilterChanged" />
+            @if (!string.IsNullOrWhiteSpace(_searchTerm))
+            {
+                <button class="btn btn-outline-secondary" type="button" @onclick="ClearSearch">✕</button>
+            }
+        </div>
+    </div>
+    <div class="col-sm-4 ms-auto">
         <label class="form-label" for="filter">Approved status filter: </label>
         <select class="form-select" @bind="_isApprovedFilter" id="filter" @bind:after="OnFilterChanged">
             <option value="">Select status...</option>
-            
             <option value="@ApprovedValue">Approved</option>
-            
             <option value="@NotApprovedValue">Not Approved</option>
         </select>
     </div>
@@ -56,8 +66,8 @@
     private QuickGrid<UserInfoDTO>? _grid;
     private GridItemsProvider<UserInfoDTO>? _usersProvider;
     private string? _loadErrorMessage;
+    private string? _searchTerm;
     private string _isApprovedFilter = string.Empty;
-
     private PaginationState _paginationState = new PaginationState { ItemsPerPage = DefaultPageSize };
 
     protected override void OnInitialized()
@@ -79,6 +89,12 @@
                 },
                 onError: errorMessage => { _loadErrorMessage = errorMessage; StateHasChanged(); }
             );
+    
+    private async Task ClearSearch()
+    {
+        _searchTerm = null;
+        await OnFilterChanged();
+    }
 
     private async Task OnFilterChanged()
     {
@@ -102,7 +118,7 @@
     {
         _usersProvider = async request =>
             await UsersClient
-                .GetUsersAsync(request.CreatePagination(DefaultPageSize), ConvertFilter())
+                .GetUsersAsync(request.CreatePagination(DefaultPageSize), _searchTerm, ConvertFilter())
                 .HandleGridRequestAsync
                 (
                     appState: AppState,

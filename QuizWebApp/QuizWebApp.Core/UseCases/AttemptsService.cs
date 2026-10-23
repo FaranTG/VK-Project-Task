@@ -28,7 +28,7 @@ public class AttemptsService : IAttemptsService
             PagedInfo<Attempt> pagedAttempts = await _attemptsRepository
                 .GetQuizAttemptsAsync(quizId, paginationData);
 
-            AttemptParticipantInfoDTO[] participants = pagedAttempts.DTOs
+            AttemptParticipantInfoDTO[] participants = pagedAttempts.Data
                 .Select(CreateAttemptParticipantInfoDTO)
                 .ToArray();
 
@@ -49,7 +49,7 @@ public class AttemptsService : IAttemptsService
             PagedInfo<Attempt> pagedAttempts = await _attemptsRepository
                 .GetParticipantAttemptsAsync(participantId, paginationData);
 
-            AttemptQuizInfoDTO[] attempts = pagedAttempts.DTOs
+            AttemptQuizInfoDTO[] attempts = pagedAttempts.Data
                 .Select(CreateAttemptQuizInfoDTO)
                 .ToArray();
             

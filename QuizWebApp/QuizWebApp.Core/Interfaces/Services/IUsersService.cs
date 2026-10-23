@@ -8,7 +8,7 @@ public interface IUsersService
 {
     public const string NotFoundMessage = "User not found.";
 
-    Task<QuizApiResponse<PagedInfo<UserInfoDTO>>> GetUsersAsync(PaginationDTO paginationData, bool? isApprovedFilter);
+    Task<QuizApiResponse<PagedInfo<UserInfoDTO>>> GetUsersAsync(PaginationDTO paginationData, string? searchFilter, bool? isApprovedFilter);
 
     Task<QuizApiResponse> ToggleUserApprovedStatusAsync(int userId);
 }

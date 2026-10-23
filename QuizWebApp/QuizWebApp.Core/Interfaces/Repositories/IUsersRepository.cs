@@ -12,7 +12,7 @@ public interface IUsersRepository
     
     Task AddAsync(User user);
 
-    Task<PagedInfo<User>> GetUsersAsync(PaginationDTO paginationData, bool? isApprovedFilter);
+    Task<PagedInfo<User>> GetUsersAsync(PaginationDTO paginationData, string? searchFilter, bool? isApprovedFilter);
 
     Task<User?> GetByIdAsync(int id);
 

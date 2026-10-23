@@ -16,14 +16,14 @@ public class UsersService : IUsersService
         _usersRepository = usersRepository;
     }
 
-    public async Task<QuizApiResponse<PagedInfo<UserInfoDTO>>> GetUsersAsync(PaginationDTO paginationData, bool? isApprovedFilter)
+    public async Task<QuizApiResponse<PagedInfo<UserInfoDTO>>> GetUsersAsync(PaginationDTO paginationData, string? searchFilter, bool? isApprovedFilter)
     {
         try
         {
             PagedInfo<User> pagedUsers = await _usersRepository
-                .GetUsersAsync(paginationData, isApprovedFilter);
+                .GetUsersAsync(paginationData, searchFilter, isApprovedFilter);
 
-            UserInfoDTO[] userDTOs = pagedUsers.DTOs
+            UserInfoDTO[] userDTOs = pagedUsers.Data
                 .Select(CreateUserInfoDTO)
                 .ToArray();
             

@@ -146,7 +146,7 @@ else
             (
                 appState: AppState,
                 loaderMessage: "Fetching topics...",
-                onSuccess: data => _topics = data.DTOs,
+                onSuccess: data => _topics = data.Data,
                 onError: errorMessage => _loadErrorMessage = errorMessage
             );
 

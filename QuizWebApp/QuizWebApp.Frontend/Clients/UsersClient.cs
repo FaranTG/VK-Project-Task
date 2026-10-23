@@ -9,9 +9,9 @@ public class UsersClient(HttpClient httpClient)
 {
     private const string ApiRoute = "/api/users";
 
-    public Task<QuizApiResponse<PagedInfo<UserInfoDTO>>> GetUsersAsync(PaginationDTO paginationData, bool? isApprovedFilter)
+    public Task<QuizApiResponse<PagedInfo<UserInfoDTO>>> GetUsersAsync(PaginationDTO paginationData, string? searchFilter, bool? isApprovedFilter)
         => httpClient
-            .GetAsync(CreateRequestUrl(paginationData, isApprovedFilter))
+            .GetAsync(CreateGetUsersRequestUrl(paginationData, searchFilter, isApprovedFilter))
             .ExtractQuizApiResponse<PagedInfo<UserInfoDTO>>();
 
     public Task<QuizApiResponse> ToggleUserApprovedStatusAsync(int id)
@@ -19,8 +19,20 @@ public class UsersClient(HttpClient httpClient)
             .PatchAsync($"{ApiRoute}/{id}/toggle-status", null)
             .ExtractQuizApiResponse();
 
-    private static string CreateRequestUrl(PaginationDTO paginationData, bool? isApprovedFilter)
-        => isApprovedFilter is null 
-            ? $"{ApiRoute}?{paginationData.CreatePaginationParameters()}"
-            : $"{ApiRoute}?isApprovedFilter={isApprovedFilter}&{paginationData.CreatePaginationParameters()}";
+    private static string CreateGetUsersRequestUrl(PaginationDTO paginationData, string? searchFilter, bool? isApprovedFilter)
+    {
+        string url = $"{ApiRoute}?{paginationData.CreatePaginationParameters()}";
+
+        if (isApprovedFilter is not null)
+        {
+            url += $"&isApprovedFilter={isApprovedFilter.Value.ToString().ToLower()}";
+        }
+
+        if (!string.IsNullOrWhiteSpace(searchFilter))
+        {
+            url += $"&searchFilter={Uri.EscapeDataString(searchFilter.Trim())}";
+        }
+
+        return url;
+    }
 }

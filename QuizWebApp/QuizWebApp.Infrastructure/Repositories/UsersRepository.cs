@@ -33,7 +33,7 @@ public class UsersRepository : IUsersRepository
         await _dbContext.SaveChangesAsync();
     }
 
-    public async Task<PagedInfo<User>> GetUsersAsync(PaginationDTO paginationData, bool? isApprovedFilter)
+    public async Task<PagedInfo<User>> GetUsersAsync(PaginationDTO paginationData, string? searchFilter, bool? isApprovedFilter)
     {
         IQueryable<User> query = _dbContext.Users
             .AsNoTracking();
@@ -42,6 +42,16 @@ public class UsersRepository : IUsersRepository
         {
             query = query
                 .Where(user => user.IsApproved == isApprovedFilter);
+        }
+
+        if (!string.IsNullOrWhiteSpace(searchFilter))
+        {
+            string lowerSearch = searchFilter.Trim().ToLower();
+            
+             query = query
+                .Where(user => user.Name.ToLower().Contains(lowerSearch) 
+                    || user.Email.ToLower().Contains(lowerSearch)
+                    || user.Phone.ToLower().Contains(lowerSearch));
         }
 
         int totalCount = await query
