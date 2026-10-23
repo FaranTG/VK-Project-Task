@@ -4,7 +4,7 @@ using QuizWebApp.Shared.DTOs.Quiz;
 
 namespace QuizWebApp.Core.Interfaces.Services;
 
-public interface IQuizService
+public interface IQuizzesService
 {
     public const string NotFoundMessage = "Quiz not found.";
 

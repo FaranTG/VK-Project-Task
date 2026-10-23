@@ -6,13 +6,13 @@ using QuizWebApp.Shared.Enums;
 
 namespace QuizWebApp.Api.Endpoints;
 
-public static class QuizEndpoints
+public static class QuizzesEndpoints
 {
     private const string GetQuizEndpointName = "GetQuiz";
     private const string GetQuizTitleEndpointName = "GetQuizTitle";
     private const string ApiRoute = "/api/quizzes";
 
-    public static IEndpointRouteBuilder MapQuizEndpoints(this IEndpointRouteBuilder app)
+    public static IEndpointRouteBuilder MapQuizzesEndpoints(this IEndpointRouteBuilder app)
     {
         RouteGroupBuilder commonRouteGroup = app
             .MapGroup(ApiRoute)
@@ -35,21 +35,21 @@ public static class QuizEndpoints
 
     private static void MapQuizGetEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapGet("/", async (int topicFilterId, [AsParameters] PaginationDTO paginationData, IQuizService quizService) =>
+        app.MapGet("/", async (int topicFilterId, [AsParameters] PaginationDTO paginationData, IQuizzesService quizService) =>
             Results.Ok(await quizService.GetQuizzesAsync(paginationData, topicFilterId))
         );
     }
 
     private static void MapBriefQuizGetActiveEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapGet("/active/brief", async (int topicFilterId, [AsParameters] PaginationDTO paginationData, IQuizService quizService) =>
+        app.MapGet("/active/brief", async (int topicFilterId, [AsParameters] PaginationDTO paginationData, IQuizzesService quizService) =>
             Results.Ok(await quizService.GetAvailableQuizzesAsync(paginationData, topicFilterId))
         );
     }
 
     private static void MapQuizGetByIdEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapGet("/{id:guid}", async (Guid id, IQuizService quizService) =>
+        app.MapGet("/{id:guid}", async (Guid id, IQuizzesService quizService) =>
         {
             QuizApiResponse<QuizInfoDTO> response = await quizService.GetQuizByIdAsync(id);
 
@@ -62,7 +62,7 @@ public static class QuizEndpoints
 
     private static void MapQuizGetTitleByIdEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapGet("/{id:guid}/title", async (Guid id, IQuizService quizService) =>
+        app.MapGet("/{id:guid}/title", async (Guid id, IQuizzesService quizService) =>
         {
             QuizApiResponse<QuizTitleInfoDTO> response = await quizService.GetQuizTitleByIdAsync(id);
 
@@ -75,7 +75,7 @@ public static class QuizEndpoints
 
     private static void MapQuizPostEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapPost("/", async (QuizSaveDTO newQuizData, IQuizService quizService) => 
+        app.MapPost("/", async (QuizSaveDTO newQuizData, IQuizzesService quizService) => 
         {
             QuizApiResponse<QuizInfoDTO> response = await quizService.CreateQuizAsync(newQuizData);
 
@@ -87,13 +87,13 @@ public static class QuizEndpoints
 
     private static void MapQuizUpdateEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapPut("/{id:guid}", async (Guid id, QuizSaveDTO newQuizData, IQuizService quizService) =>
+        app.MapPut("/{id:guid}", async (Guid id, QuizSaveDTO newQuizData, IQuizzesService quizService) =>
         {
             QuizApiResponse response = await quizService.UpdateQuizAsync(id, newQuizData);
             
             if (response.IsFailure)
             {
-                return response.ErrorMessage == IQuizService.NotFoundMessage
+                return response.ErrorMessage == IQuizzesService.NotFoundMessage
                     ? Results.NotFound(response)
                     : Results.BadRequest(response);
             }

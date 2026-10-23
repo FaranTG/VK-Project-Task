@@ -4,7 +4,7 @@ using QuizWebApp.Shared.DTOs.User;
 
 namespace QuizWebApp.Core.Interfaces.Services;
 
-public interface IUserService
+public interface IUsersService
 {
     public const string NotFoundMessage = "User not found.";
 

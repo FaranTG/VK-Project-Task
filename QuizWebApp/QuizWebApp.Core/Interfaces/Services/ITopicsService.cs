@@ -4,7 +4,7 @@ using QuizWebApp.Shared.DTOs.Topic;
 
 namespace QuizWebApp.Core.Interfaces.Services;
 
-public interface ITopicService
+public interface ITopicsService
 {
     public const string NotFoundMessage = "Topic not found.";
 

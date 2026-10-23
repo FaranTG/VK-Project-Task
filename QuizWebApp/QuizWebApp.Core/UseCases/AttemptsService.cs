@@ -10,13 +10,13 @@ using QuizWebApp.Shared.Enums;
 
 namespace QuizWebApp.Core.UseCases;
 
-public class AttemptService : IAttemptService
+public class AttemptsService : IAttemptsService
 {
     private const string NoAccessMessage = "You do not have the user rights for this attempt.";
 
     private readonly IAttemptsRepository _attemptsRepository;
 
-    public AttemptService(IAttemptsRepository attemptsRepository)
+    public AttemptsService(IAttemptsRepository attemptsRepository)
     {
         _attemptsRepository = attemptsRepository;
     }
@@ -95,7 +95,7 @@ public class AttemptService : IAttemptService
 
             if (attempt is null)
             {
-                return QuizApiResponse<QuestionInfoDTO>.Fail(IAttemptService.NotFoundMessage);
+                return QuizApiResponse<QuestionInfoDTO>.Fail(IAttemptsService.NotFoundMessage);
             }
 
             if (attempt.ParticipantId != participantId)
@@ -135,7 +135,7 @@ public class AttemptService : IAttemptService
 
             if (attempt is null)
             {
-                return QuizApiResponse.Fail(IAttemptService.NotFoundMessage);
+                return QuizApiResponse.Fail(IAttemptsService.NotFoundMessage);
             }
 
             if (attempt.ParticipantId != participantId)
@@ -193,7 +193,7 @@ public class AttemptService : IAttemptService
 
             if (attempt is null)
             {
-                return QuizApiResponse.Fail(IAttemptService.NotFoundMessage);
+                return QuizApiResponse.Fail(IAttemptsService.NotFoundMessage);
             }
 
             if (attempt.ParticipantId != participantId)

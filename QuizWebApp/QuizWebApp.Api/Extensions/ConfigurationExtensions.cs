@@ -18,9 +18,9 @@ public static class ConfigurationExtensions
     public static IEndpointRouteBuilder MapEndpoints(this IEndpointRouteBuilder app)
         => app
             .MapAuthEndpoints()
-            .MapTopicEndpoints()
-            .MapQuizEndpoints()
-            .MapAttemptEndpoints()
-            .MapUserEndpoints()
+            .MapTopicsEndpoints()
+            .MapQuizzesEndpoints()
+            .MapAttemptsEndpoints()
+            .MapUsersEndpoints()
             .MapOrganizerEndpoints();
 }

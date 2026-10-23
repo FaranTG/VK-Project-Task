@@ -13,10 +13,10 @@ public static class ConfigurationExtensions
         serviceCollection
             .AddScoped<IPasswordHasher<User>, PasswordHasher<User>>()
             .AddScoped<IAuthService, AuthService>()
-            .AddScoped<ITopicService, TopicService>()
-            .AddScoped<IQuizService, QuizService>()
-            .AddScoped<IAttemptService, AttemptService>()
-            .AddScoped<IUserService, UserService>()
+            .AddScoped<ITopicsService, TopicsService>()
+            .AddScoped<IQuizzesService, QuizzesService>()
+            .AddScoped<IAttemptsService, AttemptsService>()
+            .AddScoped<IUsersService, UsersService>()
             .AddScoped<IOrganizerService, OrganizerService>();
         
         return serviceCollection;

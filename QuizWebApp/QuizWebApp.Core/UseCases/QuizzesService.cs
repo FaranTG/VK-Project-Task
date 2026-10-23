@@ -10,13 +10,13 @@ using QuizWebApp.Shared.DTOs.Quiz;
 
 namespace QuizWebApp.Core.UseCases;
 
-public class QuizService : IQuizService
+public class QuizzesService : IQuizzesService
 {
     private const string DuplicateMessage = "A quiz with this name already exists.";
 
     private readonly IQuizzesRepository _quizzesRepository;
 
-    public QuizService(IQuizzesRepository quizzesRepository)
+    public QuizzesService(IQuizzesRepository quizzesRepository)
     {
         _quizzesRepository = quizzesRepository;
     }
@@ -71,7 +71,7 @@ public class QuizService : IQuizService
                 .GetByIdWithQuestionsAndOptionsAsync(id);
             
             return quiz is null
-                ? QuizApiResponse<QuizInfoDTO>.Fail(IQuizService.NotFoundMessage)
+                ? QuizApiResponse<QuizInfoDTO>.Fail(IQuizzesService.NotFoundMessage)
                 : QuizApiResponse<QuizInfoDTO>.Success(CreateQuizInfoDTO(quiz));
         }
         catch (Exception exception)
@@ -89,7 +89,7 @@ public class QuizService : IQuizService
 
             if (quiz is null)
             {
-                return QuizApiResponse<QuizTitleInfoDTO>.Fail(IQuizService.NotFoundMessage);
+                return QuizApiResponse<QuizTitleInfoDTO>.Fail(IQuizzesService.NotFoundMessage);
             }
             
             QuizTitleInfoDTO quizTitle = new (quiz.Id, quiz.Name, quiz.Topic!.Name);
@@ -148,7 +148,7 @@ public class QuizService : IQuizService
 
             if (quiz is null)
             {
-                return QuizApiResponse.Fail(IQuizService.NotFoundMessage);
+                return QuizApiResponse.Fail(IQuizzesService.NotFoundMessage);
             }
 
             bool isNameDuplicate = await _quizzesRepository

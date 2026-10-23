@@ -6,7 +6,7 @@ using QuizWebApp.Shared.DTOs.Question;
 
 namespace QuizWebApp.Core.Interfaces.Services;
 
-public interface IAttemptService
+public interface IAttemptsService
 {
     public const string NotFoundMessage = "Attempt not found.";
 

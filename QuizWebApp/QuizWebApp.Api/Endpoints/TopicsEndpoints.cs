@@ -6,12 +6,12 @@ using QuizWebApp.Shared.Enums;
 
 namespace QuizWebApp.Api.Endpoints;
 
-public static class TopicEndpoints
+public static class TopicsEndpoints
 {
     private const string GetTopicEndpointName = "GetTopic";
     private const string ApiRoute = "/api/topics";
 
-    public static IEndpointRouteBuilder MapTopicEndpoints(this IEndpointRouteBuilder app)
+    public static IEndpointRouteBuilder MapTopicsEndpoints(this IEndpointRouteBuilder app)
     {
         RouteGroupBuilder commonRouteGroup = app
             .MapGroup(ApiRoute)
@@ -32,7 +32,7 @@ public static class TopicEndpoints
 
     private static void MapTopicGetEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapGet("/", async (int? pageNumber, int? pageSize, ITopicService topicService) =>
+        app.MapGet("/", async (int? pageNumber, int? pageSize, ITopicsService topicService) =>
         {
             PaginationDTO? paginationData = (pageNumber.HasValue && pageSize.HasValue)
                 ? new PaginationDTO(pageNumber.Value, pageSize.Value)
@@ -44,7 +44,7 @@ public static class TopicEndpoints
 
     private static void MapTopicGetByIdEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapGet("/{id:int}", async (int id, ITopicService topicService) =>
+        app.MapGet("/{id:int}", async (int id, ITopicsService topicService) =>
         {
             QuizApiResponse<TopicInfoDTO> response = await topicService.GetTopicByIdAsync(id);
 
@@ -57,7 +57,7 @@ public static class TopicEndpoints
 
     private static void MapTopicPostEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapPost("/", async (TopicSaveDTO newTopicData, ITopicService topicService) => 
+        app.MapPost("/", async (TopicSaveDTO newTopicData, ITopicsService topicService) => 
         {
             QuizApiResponse<TopicInfoDTO> response = await topicService.CreateTopicAsync(newTopicData);
 
@@ -69,13 +69,13 @@ public static class TopicEndpoints
 
     private static void MapTopicUpdateEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapPut("/{id:int}", async (int id, TopicSaveDTO newTopicData, ITopicService topicService) =>
+        app.MapPut("/{id:int}", async (int id, TopicSaveDTO newTopicData, ITopicsService topicService) =>
         {
             QuizApiResponse response = await topicService.UpdateTopicAsync(id, newTopicData);
 
             if (response.IsFailure)
             {
-                return response.ErrorMessage == ITopicService.NotFoundMessage
+                return response.ErrorMessage == ITopicsService.NotFoundMessage
                     ? Results.NotFound(response)
                     : Results.BadRequest(response);
             }

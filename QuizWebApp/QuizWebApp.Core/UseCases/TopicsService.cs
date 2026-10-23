@@ -7,7 +7,7 @@ using QuizWebApp.Shared.DTOs.Topic;
 
 namespace QuizWebApp.Core.UseCases;
 
-public class TopicService : ITopicService
+public class TopicsService : ITopicsService
 {
     private const string DuplicateMessage = "A topic with this name already exists.";
     private const int DefaultPageNumber = 1;
@@ -15,7 +15,7 @@ public class TopicService : ITopicService
 
     private readonly ITopicsRepository _topicsRepository;
 
-    public TopicService(ITopicsRepository topicsRepository)
+    public TopicsService(ITopicsRepository topicsRepository)
     {
         _topicsRepository = topicsRepository;
     }
@@ -51,7 +51,7 @@ public class TopicService : ITopicService
                 .GetByIdAsync(id);
 
             return topic is null
-                ? QuizApiResponse<TopicInfoDTO>.Fail(ITopicService.NotFoundMessage)
+                ? QuizApiResponse<TopicInfoDTO>.Fail(ITopicsService.NotFoundMessage)
                 : QuizApiResponse<TopicInfoDTO>.Success(CreateTopicInfoDTO(topic));
         }
         catch (Exception exception)
@@ -94,7 +94,7 @@ public class TopicService : ITopicService
 
             if (topic is null)
             {
-                return QuizApiResponse.Fail(ITopicService.NotFoundMessage);
+                return QuizApiResponse.Fail(ITopicsService.NotFoundMessage);
             }
 
             bool isNameDuplicate = await _topicsRepository

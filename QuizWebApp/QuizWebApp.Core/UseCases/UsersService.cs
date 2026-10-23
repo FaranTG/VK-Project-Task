@@ -7,11 +7,11 @@ using QuizWebApp.Shared.DTOs.User;
 
 namespace QuizWebApp.Core.UseCases;
 
-public class UserService : IUserService
+public class UsersService : IUsersService
 {
     private readonly IUsersRepository _usersRepository;
 
-    public UserService(IUsersRepository usersRepository)
+    public UsersService(IUsersRepository usersRepository)
     {
         _usersRepository = usersRepository;
     }
@@ -46,7 +46,7 @@ public class UserService : IUserService
 
             if (user is null)
             {
-                return QuizApiResponse.Fail(IUserService.NotFoundMessage);
+                return QuizApiResponse.Fail(IUsersService.NotFoundMessage);
             }
 
             user.IsApproved = !user.IsApproved;
