@@ -2,11 +2,11 @@
 using System.Text.Json;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using QuizWebApp.Core.Configuration;
 using QuizWebApp.Core.Entities;
 using QuizWebApp.Core.Validation;
 using QuizWebApp.Shared.DTOs.Quiz;
 using QuizWebApp.Shared.DTOs.Topic;
+using QuizWebApp.Shared.DTOs.User;
 
 namespace QuizWebApp.Infrastructure.Data;
 
@@ -65,26 +65,46 @@ public class DatabaseInitializer
         }
 
         string usersJson = File.ReadAllText(usersPath);
-        List<QuizUserOptions>? seedUsers = JsonSerializer.Deserialize<List<QuizUserOptions>>(usersJson);
+        List<JsonElement>? seedElements = JsonSerializer.Deserialize<List<JsonElement>>(usersJson);
 
-        if (seedUsers is null || seedUsers.Count == 0)
+        if (seedElements is null || seedElements.Count == 0)
         {
             return;
         }
 
-        foreach (QuizUserOptions options in seedUsers)
+        foreach (JsonElement element in seedElements)
         {
+            UserSaveDTO? dto = JsonSerializer.Deserialize<UserSaveDTO>(element.GetRawText());
+            
+            if (dto is null)
+            {
+                continue;
+            }
+
+            if (!element.TryGetProperty("Role", out JsonElement roleElement) || string.IsNullOrWhiteSpace(roleElement.GetString()))
+            {
+                throw new KeyNotFoundException($"Seed Validation Failed! User '{dto.Email}' is missing a valid 'Role' property in users.json.");
+            }
+
+            string role = roleElement.GetString()!;
+
+            string? validationError = dto.Validate(role);
+            if (validationError is not null)
+            {
+                throw new ValidationException($"Seed User Domain Validation Failed: {validationError}");
+            }
+
             User newUser = new()
             {
-                Name = options.Name,
-                Phone = options.Phone,
-                Email = options.Email,
+                Name = dto.Name,
+                Phone = dto.Phone,
+                Email = dto.Email,
                 PasswordHash = string.Empty,
-                Role = options.Role,
+                Role = role,
                 IsApproved = true
             };
 
-            newUser.PasswordHash = _passwordHasher.HashPassword(newUser, options.Password);
+            newUser.PasswordHash = _passwordHasher.HashPassword(newUser, dto.Password);
             _dbContext.Users.Add(newUser);
         }
 
@@ -118,10 +138,7 @@ public class DatabaseInitializer
                 throw new ValidationException($"Seed Topic Domain Validation Failed: {validationError}");
             }
 
-            realTopics.Add(new Topic 
-            { 
-                Name = dto.Name 
-            });
+            realTopics.Add(new Topic { Name = dto.Name });
         }
         
         _dbContext.Topics.AddRange(realTopics);
