@@ -15,11 +15,6 @@ public class TopicsClient(HttpClient httpClient)
             .GetAsync(paginationData is null ? ApiRoute : $"{ApiRoute}?{paginationData.CreatePaginationParameters()}")
             .ExtractQuizApiResponse<PagedInfo<TopicInfoDTO>>();
     
-    public Task<QuizApiResponse<TopicInfoDTO>> GetTopicByIdAsync(int id)
-        => httpClient
-            .GetAsync($"{ApiRoute}/{id}")
-            .ExtractQuizApiResponse<TopicInfoDTO>();
-    
     public Task<QuizApiResponse<TopicInfoDTO>> AddTopicAsync(TopicSaveDTO newTopic)
         => httpClient
             .PostAsJsonAsync(ApiRoute, newTopic)

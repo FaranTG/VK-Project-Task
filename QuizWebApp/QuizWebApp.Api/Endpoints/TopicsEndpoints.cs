@@ -8,7 +8,6 @@ namespace QuizWebApp.Api.Endpoints;
 
 public static class TopicsEndpoints
 {
-    private const string GetTopicEndpointName = "GetTopic";
     private const string ApiRoute = "/api/topics";
 
     public static IEndpointRouteBuilder MapTopicsEndpoints(this IEndpointRouteBuilder app)
@@ -17,17 +16,25 @@ public static class TopicsEndpoints
             .MapGroup(ApiRoute)
             .RequireAuthorization();
 
-        MapTopicGetEndpoint(commonRouteGroup);
-        MapTopicGetByIdEndpoint(commonRouteGroup);
+        MapCommonEndpoints(commonRouteGroup);
+        MapOrganizerEndpoints(commonRouteGroup);
 
-        RouteGroupBuilder organizerRouteGroup = commonRouteGroup
+        return app;
+    }
+
+    private static void MapCommonEndpoints(IEndpointRouteBuilder app)
+    {
+        MapTopicGetEndpoint(app);
+    }
+
+    private static void MapOrganizerEndpoints(IEndpointRouteBuilder app)
+    {
+       RouteGroupBuilder organizerRouteGroup = app
             .MapGroup("/")
             .RequireAuthorization(policy => policy.RequireRole(nameof(UserRole.Organizer)));
 
         MapTopicPostEndpoint(organizerRouteGroup);
         MapTopicUpdateEndpoint(organizerRouteGroup);
-
-        return app;
     }
 
     private static void MapTopicGetEndpoint(IEndpointRouteBuilder app)
@@ -42,19 +49,6 @@ public static class TopicsEndpoints
         });
     }
 
-    private static void MapTopicGetByIdEndpoint(IEndpointRouteBuilder app)
-    {
-        app.MapGet("/{id:int}", async (int id, ITopicsService topicService) =>
-        {
-            QuizApiResponse<TopicInfoDTO> response = await topicService.GetTopicByIdAsync(id);
-
-            return response.IsSuccess 
-                ? Results.Ok(response)
-                : Results.NotFound(response);
-        })
-        .WithName(GetTopicEndpointName);
-    }
-
     private static void MapTopicPostEndpoint(IEndpointRouteBuilder app)
     {
         app.MapPost("/", async (TopicSaveDTO newTopicData, ITopicsService topicService) => 
@@ -62,7 +56,7 @@ public static class TopicsEndpoints
             QuizApiResponse<TopicInfoDTO> response = await topicService.CreateTopicAsync(newTopicData);
 
             return response.IsSuccess 
-                ? Results.CreatedAtRoute(GetTopicEndpointName, new { id = response.Data!.Id }, response)
+                ? Results.Json(response, statusCode: 201)
                 : Results.BadRequest(response); 
         });
     }

@@ -18,19 +18,28 @@ public static class QuizzesEndpoints
             .MapGroup(ApiRoute)
             .RequireAuthorization();
 
-        MapQuizGetEndpoint(commonRouteGroup);
-        MapBriefQuizGetActiveEndpoint(commonRouteGroup);
-        MapQuizGetByIdEndpoint(commonRouteGroup);
-        MapQuizGetTitleByIdEndpoint(commonRouteGroup);
+        MapCommonEndpoints(commonRouteGroup);
+        MapOrganizerEndpoints(commonRouteGroup);
 
-        RouteGroupBuilder organizerRouteGroup = commonRouteGroup
+        return app;
+    }
+
+    private static void MapCommonEndpoints(IEndpointRouteBuilder app)
+    {
+        MapQuizGetAvailableEndpoint(app);
+    }
+
+    private static void MapOrganizerEndpoints(IEndpointRouteBuilder app)
+    {
+        RouteGroupBuilder organizerRouteGroup = app
             .MapGroup("/")
             .RequireAuthorization(policy => policy.RequireRole(nameof(UserRole.Organizer)));
 
+        MapQuizGetEndpoint(organizerRouteGroup);
         MapQuizPostEndpoint(organizerRouteGroup);
         MapQuizUpdateEndpoint(organizerRouteGroup);
-
-        return app;
+        MapQuizGetByIdEndpoint(organizerRouteGroup);
+        MapQuizGetTitleByIdEndpoint(organizerRouteGroup);
     }
 
     private static void MapQuizGetEndpoint(IEndpointRouteBuilder app)
@@ -40,9 +49,9 @@ public static class QuizzesEndpoints
         );
     }
 
-    private static void MapBriefQuizGetActiveEndpoint(IEndpointRouteBuilder app)
+    private static void MapQuizGetAvailableEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapGet("/active/brief", async (int topicFilterId, [AsParameters] PaginationDTO paginationData, IQuizzesService quizService) =>
+        app.MapGet("/available", async (int topicFilterId, [AsParameters] PaginationDTO paginationData, IQuizzesService quizService) =>
             Results.Ok(await quizService.GetAvailableQuizzesAsync(paginationData, topicFilterId))
         );
     }

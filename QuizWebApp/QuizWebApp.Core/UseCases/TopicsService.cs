@@ -43,23 +43,6 @@ public class TopicsService : ITopicsService
         }
     }
 
-    public async Task<QuizApiResponse<TopicInfoDTO>> GetTopicByIdAsync(int id)
-    {
-        try
-        {
-            Topic? topic = await _topicsRepository
-                .GetByIdAsync(id);
-
-            return topic is null
-                ? QuizApiResponse<TopicInfoDTO>.Fail(ITopicsService.NotFoundMessage)
-                : QuizApiResponse<TopicInfoDTO>.Success(CreateTopicInfoDTO(topic));
-        }
-        catch (Exception exception)
-        {
-            return QuizApiResponse<TopicInfoDTO>.Fail(exception.Message);
-        }
-    }
-
     public async Task<QuizApiResponse<TopicInfoDTO>> CreateTopicAsync(TopicSaveDTO newTopicData)
     {
         try

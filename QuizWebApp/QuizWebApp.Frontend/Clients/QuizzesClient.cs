@@ -17,7 +17,7 @@ public class QuizzesClient(HttpClient httpClient)
 
     public Task<QuizApiResponse<PagedInfo<QuizBriefInfoDTO>>> GetActiveBriefQuizzesAsync(int topicFilterId, PaginationDTO paginationData)
         => httpClient
-            .GetAsync($"{ApiRoute}/active/brief?{CreateFilterParameter(topicFilterId)}&{paginationData.CreatePaginationParameters()}")
+            .GetAsync($"{ApiRoute}/available?{CreateFilterParameter(topicFilterId)}&{paginationData.CreatePaginationParameters()}")
             .ExtractQuizApiResponse<PagedInfo<QuizBriefInfoDTO>>();
 
     public Task<QuizApiResponse<QuizInfoDTO>> GetQuizByIdAsync(Guid id)

@@ -14,27 +14,36 @@ public static class AttemptsEndpoints
 
     public static IEndpointRouteBuilder MapAttemptsEndpoints(this IEndpointRouteBuilder app)
     {
+        MapOrganizerEndpoints(app);
+        MapParticipantEndpoints(app);
+
+        return app;
+    }
+
+    private static void MapOrganizerEndpoints(IEndpointRouteBuilder app)
+    {
         RouteGroupBuilder organizerRouteGroup = app
             .MapGroup($"{ApiRoute}/organizer")
             .RequireAuthorization(policy => policy.RequireRole(nameof(UserRole.Organizer)));
 
         MapQuizAttemptsGetEndpoint(organizerRouteGroup);
+    }
 
+    private static void MapParticipantEndpoints(IEndpointRouteBuilder app)
+    {
         RouteGroupBuilder participantRouteGroup = app
             .MapGroup($"{ApiRoute}/participant")
             .RequireAuthorization(policy => policy.RequireRole(nameof(UserRole.Participant)));
 
         MapParticipantAttemptsGetEndpoint(participantRouteGroup);
 
-        RouteGroupBuilder quizRouteGroup = participantRouteGroup
+        RouteGroupBuilder takeQuizRouteGroup = participantRouteGroup
             .MapGroup("/take-quiz");
         
-        MapQuizStartEndpoint(quizRouteGroup);
-        MapQuizNextQuestionGetEndpoint(quizRouteGroup);
-        MapQuizResponsePostEndpoint(quizRouteGroup);
-        MapAllQuizSubmitEndpoints(quizRouteGroup);
-
-        return app;
+        MapQuizStartEndpoint(takeQuizRouteGroup);
+        MapQuizNextQuestionGetEndpoint(takeQuizRouteGroup);
+        MapQuizResponsePostEndpoint(takeQuizRouteGroup);
+        MapAllQuizSubmitEndpoints(takeQuizRouteGroup);
     }
 
     private static void MapQuizAttemptsGetEndpoint(IEndpointRouteBuilder app)

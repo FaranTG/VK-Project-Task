@@ -11,9 +11,17 @@ public static class AuthEndpoints
 
     public static IEndpointRouteBuilder MapAuthEndpoints(this IEndpointRouteBuilder app)
     {
-        RouteGroupBuilder authRouteGroup = app.MapGroup(ApiRoute);
+        RouteGroupBuilder routeGroup = app.MapGroup(ApiRoute);
 
-        authRouteGroup.MapPost("/login", async (UserLoginDTO data, IAuthService authService) =>
+        MapAuthLogin(routeGroup);
+        MapAuthRegister(routeGroup);
+
+        return app;
+    }
+
+    private static void MapAuthLogin(IEndpointRouteBuilder app)
+    {
+        app.MapPost("/login", async (UserLoginDTO data, IAuthService authService) =>
         {
             QuizApiResponse<LoggedInUserInfo> response = await authService.LoginAsync(data);
 
@@ -21,8 +29,11 @@ public static class AuthEndpoints
                 ? Results.Ok(response)
                 : Results.BadRequest(response);
         });
+    }
 
-        authRouteGroup.MapPost("/register", async (UserSaveDTO data, IAuthService authService) =>
+    private static void MapAuthRegister(IEndpointRouteBuilder app)
+    {
+        app.MapPost("/register", async (UserSaveDTO data, IAuthService authService) =>
         {
             QuizApiResponse response = await authService.RegisterAsync(data);
 
@@ -30,7 +41,5 @@ public static class AuthEndpoints
                 ? Results.Ok(response)
                 : Results.BadRequest(response);
         });
-
-        return app;
     }
 }
