@@ -1,0 +1,32 @@
+﻿<label class="form-label" for="search">@Label</label>
+<div class="input-group">
+    <span class="input-group-text"><i class="bi bi-search"></i></span>
+    <input class="form-control" type="text" id="search" placeholder="@Placeholder"
+           @bind="Value" @bind:after="OnValueChanged" />
+    @if (!string.IsNullOrWhiteSpace(Value))
+    {
+        <button class="btn btn-outline-secondary" type="button" @onclick="ClearSearch">✕</button>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired] public string Label { get; set; }
+    [Parameter, EditorRequired] public string Placeholder { get; set; }
+
+    [Parameter] 
+    public string? Value { get; set; }
+
+    [Parameter] 
+    public EventCallback<string?> ValueChanged { get; set; }
+
+    private async Task OnValueChanged()
+    {
+        await ValueChanged.InvokeAsync(Value);
+    }
+
+    private async Task ClearSearch()
+    {
+        Value = null;
+        await ValueChanged.InvokeAsync(Value);
+    }
+}

@@ -10,7 +10,7 @@ public class TopicsClient(HttpClient httpClient)
 {
     private const string ApiRoute = "/api/topics";
 
-    public Task<QuizApiResponse<PagedInfo<TopicInfoDTO>>> GetTopicsAsync(PaginationDTO? paginationData = null)
+    public Task<QuizApiResponse<PagedInfo<TopicInfoDTO>>> GetTopicsAsync(PaginationDTO? paginationData)
         => httpClient
             .GetAsync(paginationData is null ? ApiRoute : $"{ApiRoute}?{paginationData.CreatePaginationParameters()}")
             .ExtractQuizApiResponse<PagedInfo<TopicInfoDTO>>();

@@ -1,14 +1,15 @@
 ﻿using QuizWebApp.Core.Entities;
 using QuizWebApp.Shared.ApiResponses;
 using QuizWebApp.Shared.DTOs.Common;
+using QuizWebApp.Shared.DTOs.Filter;
 
 namespace QuizWebApp.Core.Interfaces.Repositories;
 
 public interface IQuizzesRepository
 {
-    Task<PagedInfo<Quiz>> GetQuizzesAsync(PaginationDTO paginationData, int topicFilterId);
+    Task<PagedInfo<Quiz>> GetQuizzesAsync(PaginationDTO paginationData, QuizFilterDTO filterData);
     
-    Task<PagedInfo<Quiz>> GetAvailableQuizzesAsync(PaginationDTO paginationData, int topicFilterId);
+    Task<PagedInfo<Quiz>> GetAvailableQuizzesAsync(PaginationDTO paginationData, QuizFilterDTO filterData);
     
     Task<Quiz?> GetByIdWithQuestionsAndOptionsAsync(Guid id);
     

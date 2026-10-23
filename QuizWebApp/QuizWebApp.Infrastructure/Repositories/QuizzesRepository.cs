@@ -5,6 +5,7 @@ using QuizWebApp.Infrastructure.Data;
 using QuizWebApp.Infrastructure.Extensions;
 using QuizWebApp.Shared.ApiResponses;
 using QuizWebApp.Shared.DTOs.Common;
+using QuizWebApp.Shared.DTOs.Filter;
 
 namespace QuizWebApp.Infrastructure.Repositories;
 
@@ -59,13 +60,13 @@ public class QuizzesRepository : IQuizzesRepository
         await _dbContext.SaveChangesAsync();
     }
 
-    public Task<PagedInfo<Quiz>> GetQuizzesAsync(PaginationDTO paginationData, int topicFilterId)
-        => CoreGetQuizzesAsync(paginationData, topicFilterId, null);
+    public Task<PagedInfo<Quiz>> GetQuizzesAsync(PaginationDTO paginationData, QuizFilterDTO filterData)
+        => CoreGetQuizzesAsync(paginationData, filterData, null);
     
-    public Task<PagedInfo<Quiz>> GetAvailableQuizzesAsync(PaginationDTO paginationData, int topicFilterId)
-        => CoreGetQuizzesAsync(paginationData, topicFilterId, true);
+    public Task<PagedInfo<Quiz>> GetAvailableQuizzesAsync(PaginationDTO paginationData, QuizFilterDTO filterData)
+        => CoreGetQuizzesAsync(paginationData, filterData, true);
 
-    private async Task<PagedInfo<Quiz>> CoreGetQuizzesAsync(PaginationDTO paginationData, int topicFilterId, bool? isActiveFilter)
+    private async Task<PagedInfo<Quiz>> CoreGetQuizzesAsync(PaginationDTO paginationData, QuizFilterDTO filterData, bool? isActiveFilter)
     {
         IQueryable<Quiz> query = _dbContext.Quizzes
             .AsNoTracking();
@@ -76,10 +77,18 @@ public class QuizzesRepository : IQuizzesRepository
                 .Where(quiz => quiz.IsActive == isActiveFilter);
         }
 
-        if (topicFilterId > 0)
+        if (!string.IsNullOrWhiteSpace(filterData.SearchFilter))
+        {
+            string lowerSearch = filterData.SearchFilter.Trim().ToLower();
+            
+            query = query
+                .Where(quiz => quiz.Name.ToLower().Contains(lowerSearch));
+        }
+
+        if (filterData.TopicFilterId > 0)
         {
             query = query
-                .Where(quiz => quiz.TopicId == topicFilterId);
+                .Where(quiz => quiz.TopicId == filterData.TopicFilterId);
         }
 
         int totalCount = await query

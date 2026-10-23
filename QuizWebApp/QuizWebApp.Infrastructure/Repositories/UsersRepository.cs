@@ -5,6 +5,7 @@ using QuizWebApp.Infrastructure.Data;
 using QuizWebApp.Infrastructure.Extensions;
 using QuizWebApp.Shared.ApiResponses;
 using QuizWebApp.Shared.DTOs.Common;
+using QuizWebApp.Shared.DTOs.Filter;
 
 namespace QuizWebApp.Infrastructure.Repositories;
 
@@ -33,25 +34,25 @@ public class UsersRepository : IUsersRepository
         await _dbContext.SaveChangesAsync();
     }
 
-    public async Task<PagedInfo<User>> GetUsersAsync(PaginationDTO paginationData, string? searchFilter, bool? isApprovedFilter)
+    public async Task<PagedInfo<User>> GetUsersAsync(PaginationDTO paginationData, UserFilterDTO filterData)
     {
         IQueryable<User> query = _dbContext.Users
             .AsNoTracking();
-
-        if (isApprovedFilter is not null)
+        
+        if (!string.IsNullOrWhiteSpace(filterData.SearchFilter))
         {
-            query = query
-                .Where(user => user.IsApproved == isApprovedFilter);
-        }
-
-        if (!string.IsNullOrWhiteSpace(searchFilter))
-        {
-            string lowerSearch = searchFilter.Trim().ToLower();
+            string lowerSearch = filterData.SearchFilter.Trim().ToLower();
             
              query = query
                 .Where(user => user.Name.ToLower().Contains(lowerSearch) 
                     || user.Email.ToLower().Contains(lowerSearch)
                     || user.Phone.ToLower().Contains(lowerSearch));
+        }
+
+        if (filterData.IsApprovedFilter is not null)
+        {
+            query = query
+                .Where(user => user.IsApproved == filterData.IsApprovedFilter);
         }
 
         int totalCount = await query

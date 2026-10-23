@@ -5,6 +5,7 @@ using QuizWebApp.Core.Validation;
 using QuizWebApp.Shared.ApiResponses;
 using QuizWebApp.Shared.DTOs.AnswerOption;
 using QuizWebApp.Shared.DTOs.Common;
+using QuizWebApp.Shared.DTOs.Filter;
 using QuizWebApp.Shared.DTOs.Question;
 using QuizWebApp.Shared.DTOs.Quiz;
 
@@ -21,12 +22,12 @@ public class QuizzesService : IQuizzesService
         _quizzesRepository = quizzesRepository;
     }
 
-    public async Task<QuizApiResponse<PagedInfo<QuizSummaryInfoDTO>>> GetQuizzesAsync(PaginationDTO paginationData, int topicFilterId)
+    public async Task<QuizApiResponse<PagedInfo<QuizSummaryInfoDTO>>> GetQuizzesAsync(PaginationDTO paginationData, QuizFilterDTO filterData)
     {
         try
         {
             PagedInfo<Quiz> pagedQuizzes = await _quizzesRepository
-                .GetQuizzesAsync(paginationData, topicFilterId);
+                .GetQuizzesAsync(paginationData, filterData);
 
             QuizSummaryInfoDTO[] quizzes = pagedQuizzes.Data
                 .Select(CreateQuizSummaryInfoDTO)
@@ -42,12 +43,12 @@ public class QuizzesService : IQuizzesService
         }
     }
 
-    public async Task<QuizApiResponse<PagedInfo<QuizBriefInfoDTO>>> GetAvailableQuizzesAsync(PaginationDTO paginationData, int topicFilterId)
+    public async Task<QuizApiResponse<PagedInfo<QuizBriefInfoDTO>>> GetAvailableQuizzesAsync(PaginationDTO paginationData, QuizFilterDTO filterData)
     {
         try
         {
             PagedInfo<Quiz> pagedQuizzes = await _quizzesRepository
-                .GetAvailableQuizzesAsync(paginationData, topicFilterId);
+                .GetAvailableQuizzesAsync(paginationData, filterData);
 
             QuizBriefInfoDTO[] quizzes = pagedQuizzes.Data
                 .Select(CreateQuizBriefInfoDTO)

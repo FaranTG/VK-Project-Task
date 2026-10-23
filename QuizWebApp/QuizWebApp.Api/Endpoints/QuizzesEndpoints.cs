@@ -1,6 +1,7 @@
 ﻿using QuizWebApp.Core.Interfaces.Services;
 using QuizWebApp.Shared.ApiResponses;
 using QuizWebApp.Shared.DTOs.Common;
+using QuizWebApp.Shared.DTOs.Filter;
 using QuizWebApp.Shared.DTOs.Quiz;
 using QuizWebApp.Shared.Enums;
 
@@ -44,15 +45,15 @@ public static class QuizzesEndpoints
 
     private static void MapQuizGetEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapGet("/", async (int topicFilterId, [AsParameters] PaginationDTO paginationData, IQuizzesService quizService) =>
-            Results.Ok(await quizService.GetQuizzesAsync(paginationData, topicFilterId))
+        app.MapGet("/", async ([AsParameters] PaginationDTO paginationData, [AsParameters] QuizFilterDTO filterData, IQuizzesService quizService) =>
+            Results.Ok(await quizService.GetQuizzesAsync(paginationData, filterData))
         );
     }
 
     private static void MapQuizGetAvailableEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapGet("/available", async (int topicFilterId, [AsParameters] PaginationDTO paginationData, IQuizzesService quizService) =>
-            Results.Ok(await quizService.GetAvailableQuizzesAsync(paginationData, topicFilterId))
+        app.MapGet("/available", async ([AsParameters] PaginationDTO paginationData, [AsParameters] QuizFilterDTO filterData, IQuizzesService quizService) =>
+            Results.Ok(await quizService.GetAvailableQuizzesAsync(paginationData, filterData))
         );
     }
 

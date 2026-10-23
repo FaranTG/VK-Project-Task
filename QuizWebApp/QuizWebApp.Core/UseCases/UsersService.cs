@@ -3,6 +3,7 @@ using QuizWebApp.Core.Interfaces.Repositories;
 using QuizWebApp.Core.Interfaces.Services;
 using QuizWebApp.Shared.ApiResponses;
 using QuizWebApp.Shared.DTOs.Common;
+using QuizWebApp.Shared.DTOs.Filter;
 using QuizWebApp.Shared.DTOs.User;
 
 namespace QuizWebApp.Core.UseCases;
@@ -16,12 +17,12 @@ public class UsersService : IUsersService
         _usersRepository = usersRepository;
     }
 
-    public async Task<QuizApiResponse<PagedInfo<UserInfoDTO>>> GetUsersAsync(PaginationDTO paginationData, string? searchFilter, bool? isApprovedFilter)
+    public async Task<QuizApiResponse<PagedInfo<UserInfoDTO>>> GetUsersAsync(PaginationDTO paginationData, UserFilterDTO filterData)
     {
         try
         {
             PagedInfo<User> pagedUsers = await _usersRepository
-                .GetUsersAsync(paginationData, searchFilter, isApprovedFilter);
+                .GetUsersAsync(paginationData, filterData);
 
             UserInfoDTO[] userDTOs = pagedUsers.Data
                 .Select(CreateUserInfoDTO)

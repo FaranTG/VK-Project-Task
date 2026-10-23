@@ -1,6 +1,7 @@
 ﻿using QuizWebApp.Core.Interfaces.Services;
 using QuizWebApp.Shared.ApiResponses;
 using QuizWebApp.Shared.DTOs.Common;
+using QuizWebApp.Shared.DTOs.Filter;
 using QuizWebApp.Shared.Enums;
 
 namespace QuizWebApp.Api.Endpoints;
@@ -23,9 +24,8 @@ public static class UsersEndpoints
 
     private static void MapUserGetEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapGet("/", async ([AsParameters] PaginationDTO paginationData, string? searchFilter, 
-            bool? isApprovedFilter, IUsersService userService) => 
-            Results.Ok(await userService.GetUsersAsync(paginationData, searchFilter, isApprovedFilter))
+        app.MapGet("/", async ([AsParameters] PaginationDTO paginationData, [AsParameters] UserFilterDTO filterData, IUsersService userService) => 
+            Results.Ok(await userService.GetUsersAsync(paginationData, filterData))
         );
     }
 

@@ -2,6 +2,7 @@
 using QuizWebApp.Frontend.Extensions;
 using QuizWebApp.Shared.ApiResponses;
 using QuizWebApp.Shared.DTOs.Common;
+using QuizWebApp.Shared.DTOs.Filter;
 using QuizWebApp.Shared.DTOs.Quiz;
 
 namespace QuizWebApp.Frontend.Clients;
@@ -10,14 +11,14 @@ public class QuizzesClient(HttpClient httpClient)
 {
     private const string ApiRoute = "/api/quizzes";
 
-    public Task<QuizApiResponse<PagedInfo<QuizSummaryInfoDTO>>> GetQuizzesAsync(int topicFilterId, PaginationDTO paginationData)
+    public Task<QuizApiResponse<PagedInfo<QuizSummaryInfoDTO>>> GetQuizzesAsync(PaginationDTO paginationData, QuizFilterDTO filterData)
         => httpClient
-            .GetAsync($"{ApiRoute}?{CreateFilterParameter(topicFilterId)}&{paginationData.CreatePaginationParameters()}")
+            .GetAsync($"{ApiRoute}?{CreateFilterParameters(paginationData, filterData)}")
             .ExtractQuizApiResponse<PagedInfo<QuizSummaryInfoDTO>>();
 
-    public Task<QuizApiResponse<PagedInfo<QuizBriefInfoDTO>>> GetActiveBriefQuizzesAsync(int topicFilterId, PaginationDTO paginationData)
+    public Task<QuizApiResponse<PagedInfo<QuizBriefInfoDTO>>> GetActiveBriefQuizzesAsync(PaginationDTO paginationData, QuizFilterDTO filterData)
         => httpClient
-            .GetAsync($"{ApiRoute}/available?{CreateFilterParameter(topicFilterId)}&{paginationData.CreatePaginationParameters()}")
+            .GetAsync($"{ApiRoute}/available?{CreateFilterParameters(paginationData, filterData)}")
             .ExtractQuizApiResponse<PagedInfo<QuizBriefInfoDTO>>();
 
     public Task<QuizApiResponse<QuizInfoDTO>> GetQuizByIdAsync(Guid id)
@@ -39,7 +40,18 @@ public class QuizzesClient(HttpClient httpClient)
         => httpClient
             .PutAsJsonAsync($"{ApiRoute}/{id}", newQuiz)
             .ExtractQuizApiResponse();
+    
+    private static string CreateFilterParameters(PaginationDTO paginationData, QuizFilterDTO filterData)
+    {
+        string parameters = $"{paginationData.CreatePaginationParameters()}";
 
-    private static string CreateFilterParameter(int topicFilterId)
-        => $"topicFilterId={topicFilterId}";
+        if (!string.IsNullOrWhiteSpace(filterData.SearchFilter))
+        {
+            parameters += $"&searchFilter={Uri.EscapeDataString(filterData.SearchFilter.Trim())}";
+        }
+
+        parameters += $"&topicFilterId={filterData.TopicFilterId}";
+
+        return parameters;
+    }
 }

@@ -1,6 +1,7 @@
 ﻿@page "/organizer/manage-users"
 
 @using Microsoft.AspNetCore.Components.QuickGrid
+@using QuizWebApp.Shared.DTOs.Filter
 @using QuizWebApp.Shared.DTOs.User
 
 @inject UsersClient UsersClient
@@ -15,16 +16,8 @@
 
 <div class="row mb-3">
     <div class="col-sm-5">
-        <label class="form-label" for="search">Search users: </label>
-        <div class="input-group">
-            <span class="input-group-text"><i class="bi bi-search"></i></span>
-            <input class="form-control" type="text" id="search" placeholder="Type name, phone or email..."
-                   @bind="_searchTerm" @bind:after="OnFilterChanged" />
-            @if (!string.IsNullOrWhiteSpace(_searchTerm))
-            {
-                <button class="btn btn-outline-secondary" type="button" @onclick="ClearSearch">✕</button>
-            }
-        </div>
+        <SearchFilter Label="Search users: " Placeholder="Type name, phone or email..."
+            @bind-Value="_searchFilter" @bind-Value:after="OnFilterChanged" />
     </div>
     <div class="col-sm-4 ms-auto">
         <label class="form-label" for="filter">Approved status filter: </label>
@@ -66,7 +59,7 @@
     private QuickGrid<UserInfoDTO>? _grid;
     private GridItemsProvider<UserInfoDTO>? _usersProvider;
     private string? _loadErrorMessage;
-    private string? _searchTerm;
+    private string? _searchFilter;
     private string _isApprovedFilter = string.Empty;
     private PaginationState _paginationState = new PaginationState { ItemsPerPage = DefaultPageSize };
 
@@ -89,12 +82,6 @@
                 },
                 onError: errorMessage => { _loadErrorMessage = errorMessage; StateHasChanged(); }
             );
-    
-    private async Task ClearSearch()
-    {
-        _searchTerm = null;
-        await OnFilterChanged();
-    }
 
     private async Task OnFilterChanged()
     {
@@ -104,7 +91,7 @@
         await _grid.RefreshDataAsync();
     }
 
-    private bool? ConvertFilter()
+    private bool? ConvertApprovedFilter()
     {
         return _isApprovedFilter switch
         {
@@ -118,7 +105,7 @@
     {
         _usersProvider = async request =>
             await UsersClient
-                .GetUsersAsync(request.CreatePagination(DefaultPageSize), _searchTerm, ConvertFilter())
+                .GetUsersAsync(request.CreatePagination(DefaultPageSize), new UserFilterDTO (_searchFilter, ConvertApprovedFilter()))
                 .HandleGridRequestAsync
                 (
                     appState: AppState,

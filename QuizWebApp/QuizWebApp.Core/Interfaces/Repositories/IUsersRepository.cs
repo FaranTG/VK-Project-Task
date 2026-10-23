@@ -1,6 +1,7 @@
 ﻿using QuizWebApp.Core.Entities;
 using QuizWebApp.Shared.ApiResponses;
 using QuizWebApp.Shared.DTOs.Common;
+using QuizWebApp.Shared.DTOs.Filter;
 
 namespace QuizWebApp.Core.Interfaces.Repositories;
 
@@ -12,7 +13,7 @@ public interface IUsersRepository
     
     Task AddAsync(User user);
 
-    Task<PagedInfo<User>> GetUsersAsync(PaginationDTO paginationData, string? searchFilter, bool? isApprovedFilter);
+    Task<PagedInfo<User>> GetUsersAsync(PaginationDTO paginationData, UserFilterDTO filterData);
 
     Task<User?> GetByIdAsync(int id);
 
