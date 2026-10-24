@@ -3,6 +3,7 @@ using QuizWebApp.Frontend.Extensions;
 using QuizWebApp.Shared.ApiResponses;
 using QuizWebApp.Shared.DTOs.Attempt;
 using QuizWebApp.Shared.DTOs.Common;
+using QuizWebApp.Shared.DTOs.Filter;
 using QuizWebApp.Shared.DTOs.Question;
 
 namespace QuizWebApp.Frontend.Clients;
@@ -14,14 +15,16 @@ public class AttemptsClient(HttpClient httpClient)
     private const string ParticipantApiRoute = ApiRoute + "/participant";
     private const string QuizApiRoute = ParticipantApiRoute + "/take-quiz";
 
-    public Task<QuizApiResponse<PagedInfo<AttemptParticipantInfoDTO>>> GetQuizAttemptsAsync(Guid quizId, PaginationDTO paginationData)
+    public Task<QuizApiResponse<PagedInfo<AttemptParticipantInfoDTO>>> GetQuizAttemptsAsync(Guid quizId, 
+        PaginationDTO paginationData, AttemptFilterDTO filterData)
         => httpClient
-            .GetAsync($"{OrganizerApiRoute}/quiz-info/{quizId}?{paginationData.CreatePaginationParameters()}")
+            .GetAsync($"{OrganizerApiRoute}/quiz-info/{quizId}?{filterData.CreateFilterParameters(paginationData)}")
             .ExtractQuizApiResponse<PagedInfo<AttemptParticipantInfoDTO>>();
 
-    public Task<QuizApiResponse<PagedInfo<AttemptQuizInfoDTO>>> GetParticipantAttemptsAsync(PaginationDTO paginationData)
+    public Task<QuizApiResponse<PagedInfo<AttemptQuizInfoDTO>>> GetParticipantAttemptsAsync(PaginationDTO paginationData,
+        AttemptFilterDTO filterData)
         => httpClient
-            .GetAsync($"{ParticipantApiRoute}?{paginationData.CreatePaginationParameters()}")
+            .GetAsync($"{ParticipantApiRoute}?{filterData.CreateFilterParameters(paginationData)}")
             .ExtractQuizApiResponse<PagedInfo<AttemptQuizInfoDTO>>();
 
     public Task<QuizApiResponse<int>> StartQuizAsync(Guid quizId)

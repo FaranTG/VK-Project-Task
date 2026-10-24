@@ -3,6 +3,7 @@ using QuizWebApp.Core.Interfaces.Repositories;
 using QuizWebApp.Core.Interfaces.Services;
 using QuizWebApp.Shared.ApiResponses;
 using QuizWebApp.Shared.DTOs.Common;
+using QuizWebApp.Shared.DTOs.Filter;
 using QuizWebApp.Shared.DTOs.Topic;
 
 namespace QuizWebApp.Core.UseCases;
@@ -20,14 +21,14 @@ public class TopicsService : ITopicsService
         _topicsRepository = topicsRepository;
     }
 
-    public async Task<QuizApiResponse<PagedInfo<TopicInfoDTO>>> GetTopicsAsync(PaginationDTO? paginationData)
+    public async Task<QuizApiResponse<PagedInfo<TopicInfoDTO>>> GetTopicsAsync(PaginationDTO? paginationData, TopicFilterDTO filterData)
     {
         try
         {
             paginationData ??= new PaginationDTO(DefaultPageNumber, DefaultPageSize);
 
             PagedInfo<Topic> pagedTopics = await _topicsRepository
-                .GetTopicsAsync(paginationData);
+                .GetTopicsAsync(paginationData, filterData);
 
             TopicInfoDTO[] topicDTOs = pagedTopics.Data
                 .Select(CreateTopicInfoDTO)

@@ -5,6 +5,7 @@ using QuizWebApp.Shared.ApiResponses;
 using QuizWebApp.Shared.DTOs.AnswerOption;
 using QuizWebApp.Shared.DTOs.Attempt;
 using QuizWebApp.Shared.DTOs.Common;
+using QuizWebApp.Shared.DTOs.Filter;
 using QuizWebApp.Shared.DTOs.Question;
 using QuizWebApp.Shared.Enums;
 
@@ -21,12 +22,15 @@ public class AttemptsService : IAttemptsService
         _attemptsRepository = attemptsRepository;
     }
 
-    public async Task<QuizApiResponse<PagedInfo<AttemptParticipantInfoDTO>>> GetQuizAttemptsAsync(Guid quizId, PaginationDTO paginationData)
+    public async Task<QuizApiResponse<PagedInfo<AttemptParticipantInfoDTO>>> GetQuizAttemptsAsync
+    (
+        Guid quizId, PaginationDTO paginationData, AttemptFilterDTO filterData
+    )
     {
         try
         {
             PagedInfo<Attempt> pagedAttempts = await _attemptsRepository
-                .GetQuizAttemptsAsync(quizId, paginationData);
+                .GetQuizAttemptsAsync(quizId, paginationData, filterData);
 
             AttemptParticipantInfoDTO[] participants = pagedAttempts.Data
                 .Select(CreateAttemptParticipantInfoDTO)
@@ -42,12 +46,15 @@ public class AttemptsService : IAttemptsService
         }
     }
     
-    public async Task<QuizApiResponse<PagedInfo<AttemptQuizInfoDTO>>> GetParticipantAttemptsAsync(int participantId, PaginationDTO paginationData)
+    public async Task<QuizApiResponse<PagedInfo<AttemptQuizInfoDTO>>> GetParticipantAttemptsAsync
+    (
+        int participantId, PaginationDTO paginationData, AttemptFilterDTO filterData
+    )
     {
         try
         {
             PagedInfo<Attempt> pagedAttempts = await _attemptsRepository
-                .GetParticipantAttemptsAsync(participantId, paginationData);
+                .GetParticipantAttemptsAsync(participantId, paginationData, filterData);
 
             AttemptQuizInfoDTO[] attempts = pagedAttempts.Data
                 .Select(CreateAttemptQuizInfoDTO)

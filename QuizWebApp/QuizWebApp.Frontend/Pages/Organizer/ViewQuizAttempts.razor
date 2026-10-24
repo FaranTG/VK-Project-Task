@@ -2,6 +2,7 @@
 
 @using Microsoft.AspNetCore.Components.QuickGrid
 @using QuizWebApp.Shared.DTOs.Attempt
+@using QuizWebApp.Shared.DTOs.Filter
 
 @inject QuizzesClient QuizzesClient
 @inject AttemptsClient AttemptsClient
@@ -9,18 +10,23 @@
 
 <PageHeader Title="@PageTitle" />
 
+<div class="mb-3 col-sm-12 d-flex gap-5 h5">
+    <p><strong>Quiz:</strong> @_quizName</p>
+    <p><strong>Topic:</strong> @_topicName</p>
+</div>
+
 @if (_loadErrorMessage is not null)
 {
     <p class="h5 text-center text-danger mb-3"><em>Error: @_loadErrorMessage</em></p>
 }
+else
+{
+    <AttemptsFilterPanel Placeholder="Type participant name or email..." 
+        @bind-Filter="_filterData" @bind-Filter:after="OnFilterChanged" />
+}
 
 <div class="row">
-    <div class="mb-3 col-sm-12 d-flex gap-5 h5">
-        <p><strong>Quiz:</strong> @_quizName</p>
-        <p><strong>Topic:</strong> @_topicName</p>
-    </div>
-
-    <QuickGrid ItemsProvider="_attemptsProvider" Pagination="_paginationState" Class="table table-striped table-bordered table-hover mb-3">
+    <QuickGrid ItemsProvider="_attemptsProvider" Pagination="_paginationState" Class="table table-striped table-bordered table-hover mb-3" @ref="_grid">
         <PropertyColumn Property="attempt => attempt.ParticipantName" Title="Participant Name" />
         <PropertyColumn Property="attempt => attempt.ParticipantEmail" Title="Participant Email" />
         <PropertyColumn Property="attempt => attempt.Status" />
@@ -43,11 +49,13 @@
 @code {
     [Parameter]
     public Guid? Id { get; set; }
-
+    
     private const string PageTitle = "View Quiz Attempts";
     private const string DateFormat = "dd.MM.yyyy HH:mm";
     private const int DefaultPageSize = 10;
+    private const int FirstPageIndex = 0;
 
+    private QuickGrid<AttemptParticipantInfoDTO>? _grid;
     private GridItemsProvider<AttemptParticipantInfoDTO>? _attemptsProvider;
     private string? _loadErrorMessage;
     private string? _quizName;
@@ -55,6 +63,7 @@
     private Guid? _previousId;
 
     private PaginationState _paginationState = new PaginationState { ItemsPerPage = DefaultPageSize };
+    private AttemptFilterDTO _filterData = new AttemptFilterDTO(SearchFilter: null, StatusFilter: null);
 
     protected override void OnInitialized()
     {
@@ -77,11 +86,19 @@
             );
     }
 
+    private async Task OnFilterChanged()
+    {
+        ArgumentNullException.ThrowIfNull(_grid);
+
+        await _paginationState.SetCurrentPageIndexAsync(FirstPageIndex);
+        await _grid.RefreshDataAsync();
+    }
+
     private void ConfigureAttemptsProvider()
     {
         _attemptsProvider = async request =>
             await AttemptsClient
-                .GetQuizAttemptsAsync(Id!.Value, request.CreatePagination(DefaultPageSize))
+                .GetQuizAttemptsAsync(Id!.Value, request.CreatePagination(DefaultPageSize), _filterData)
                 .HandleGridRequestAsync
                 (
                     appState: AppState,

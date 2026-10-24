@@ -1,12 +1,13 @@
 ﻿using QuizWebApp.Core.Entities;
 using QuizWebApp.Shared.ApiResponses;
 using QuizWebApp.Shared.DTOs.Common;
+using QuizWebApp.Shared.DTOs.Filter;
 
 namespace QuizWebApp.Core.Interfaces.Repositories;
 
 public interface ITopicsRepository
 {
-    Task<PagedInfo<Topic>> GetTopicsAsync(PaginationDTO paginationData);
+    Task<PagedInfo<Topic>> GetTopicsAsync(PaginationDTO paginationData, TopicFilterDTO filterData);
     
     Task<Topic?> GetByIdAsync(int id);
     

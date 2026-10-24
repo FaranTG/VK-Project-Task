@@ -13,12 +13,12 @@ public class QuizzesClient(HttpClient httpClient)
 
     public Task<QuizApiResponse<PagedInfo<QuizSummaryInfoDTO>>> GetQuizzesAsync(PaginationDTO paginationData, QuizFilterDTO filterData)
         => httpClient
-            .GetAsync($"{ApiRoute}?{CreateFilterParameters(paginationData, filterData)}")
+            .GetAsync($"{ApiRoute}?{filterData.CreateFilterParameters(paginationData)}")
             .ExtractQuizApiResponse<PagedInfo<QuizSummaryInfoDTO>>();
 
     public Task<QuizApiResponse<PagedInfo<QuizBriefInfoDTO>>> GetActiveBriefQuizzesAsync(PaginationDTO paginationData, QuizFilterDTO filterData)
         => httpClient
-            .GetAsync($"{ApiRoute}/available?{CreateFilterParameters(paginationData, filterData)}")
+            .GetAsync($"{ApiRoute}/available?{filterData.CreateFilterParameters(paginationData)}")
             .ExtractQuizApiResponse<PagedInfo<QuizBriefInfoDTO>>();
 
     public Task<QuizApiResponse<QuizInfoDTO>> GetQuizByIdAsync(Guid id)
@@ -40,18 +40,4 @@ public class QuizzesClient(HttpClient httpClient)
         => httpClient
             .PutAsJsonAsync($"{ApiRoute}/{id}", newQuiz)
             .ExtractQuizApiResponse();
-    
-    private static string CreateFilterParameters(PaginationDTO paginationData, QuizFilterDTO filterData)
-    {
-        string parameters = $"{paginationData.CreatePaginationParameters()}";
-
-        if (!string.IsNullOrWhiteSpace(filterData.SearchFilter))
-        {
-            parameters += $"&searchFilter={Uri.EscapeDataString(filterData.SearchFilter.Trim())}";
-        }
-
-        parameters += $"&topicFilterId={filterData.TopicFilterId}";
-
-        return parameters;
-    }
 }

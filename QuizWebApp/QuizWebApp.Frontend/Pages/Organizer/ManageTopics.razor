@@ -2,6 +2,7 @@
 
 @using Microsoft.AspNetCore.Components.QuickGrid
 @using QuizWebApp.Frontend.FormModels
+@using QuizWebApp.Shared.DTOs.Filter
 @using QuizWebApp.Shared.DTOs.Topic
 
 @inject TopicsClient TopicsClient
@@ -47,6 +48,13 @@ else
             </EditForm>
         </div>
         <div class="col-sm-7 ms-auto">
+            <div class="row mb-3">
+                <div class="col-12">
+                    <SearchFilter Label="Search topics: " Placeholder="Type topic name..."
+                        @bind-Value="_searchFilter" @bind-Value:after="OnFilterChanged" />
+                </div>
+            </div>
+            
             <QuickGrid ItemsProvider="_topicsProvider" Pagination="_paginationState" 
                 Class="table table-striped table-bordered table-hover" @ref="_grid">
                 <PropertyColumn Property="topic => topic.Id" />
@@ -69,12 +77,14 @@ else
     private const string PageTitle = "Manage Topics";
     private const string SaveTopicLoaderMessage = "Saving topic...";
     private const int DefaultPageSize = 10;
+    private const int FirstPageIndex = 0;
 
     private TopicModel? TopicModel { get; set; }
 
     private QuickGrid<TopicInfoDTO>? _grid;
     private GridItemsProvider<TopicInfoDTO>? _topicsProvider;
     private string? _loadErrorMessage;
+    private string? _searchFilter;
     private int? _id;
 
     private PaginationState _paginationState = new PaginationState { ItemsPerPage = DefaultPageSize };
@@ -86,14 +96,6 @@ else
         TopicModel = new () { Name = string.Empty };
 
         ConfigureTopicsProvider();
-    }
-
-    private void SetTopic(TopicInfoDTO topicData)
-    {
-        ArgumentNullException.ThrowIfNull(TopicModel);
-
-        _id = topicData.Id;
-        TopicModel.Name = topicData.Name;
     }
 
     private async Task SaveTopicAsync()
@@ -123,6 +125,14 @@ else
                 onError: errorMessage => AppState.ShowError(errorMessage)
             );
 
+    private void SetTopic(TopicInfoDTO topicData)
+    {
+        ArgumentNullException.ThrowIfNull(TopicModel);
+
+        _id = topicData.Id;
+        TopicModel.Name = topicData.Name;
+    }
+
     private void ClearModel()
     {
         ArgumentNullException.ThrowIfNull(TopicModel);
@@ -131,11 +141,19 @@ else
         TopicModel.Name = string.Empty;
     }
 
+    private async Task OnFilterChanged()
+    {
+        ArgumentNullException.ThrowIfNull(_grid);
+
+        await _paginationState.SetCurrentPageIndexAsync(FirstPageIndex);
+        await _grid.RefreshDataAsync();
+    }
+
     private void ConfigureTopicsProvider()
     {
         _topicsProvider = async request =>
             await TopicsClient
-                .GetTopicsAsync(request.CreatePagination(DefaultPageSize))
+                .GetTopicsAsync(request.CreatePagination(DefaultPageSize), new TopicFilterDTO(_searchFilter))
                 .HandleGridRequestAsync
                 (
                     appState: AppState,

@@ -23,18 +23,7 @@ else if (_topics is null)
 }
 else
 {
-    <div class="row mb-3">
-        <div class="col-sm-5">
-            <SearchFilter Label="Search quizzes: " Placeholder="Type quiz name..."
-                @bind-Value="_searchFilter" @bind-Value:after="OnFilterChanged" />
-        </div>
-        <div class="col-sm-3 ms-auto">
-            <TopicFilter Topics="_topics" Label="Topic filter: "
-                Placeholder="Type to filter by topic..." IsFilterRequired="false"
-                @bind-TopicFilterId="_topicFilterId" 
-                @bind-TopicFilterId:after="OnFilterChanged" />
-        </div>
-    </div>
+    <QuizzesFilterPanel Topics="_topics" @bind-Filter="_filterData" @bind-Filter:after="OnFilterChanged" />
     <div class="row">
         <QuickGrid ItemsProvider="_quizzesProvider" Pagination="_paginationState"
             Class="table table-striped table-bordered table-hover" @ref="_grid">
@@ -89,16 +78,15 @@ else
     private TopicInfoDTO[]? _topics;
     private string[]? _viewingQuestions;
     private string? _loadErrorMessage;
-    private string? _searchFilter;
 
     private PaginationState _paginationState = new PaginationState { ItemsPerPage = DefaultPageSize };
-    private int _topicFilterId;
+    private QuizFilterDTO _filterData = new QuizFilterDTO(SearchFilter: null, TopicFilterId: 0);
     private bool _showQuestionsModal;
 
     protected override async Task OnInitializedAsync()
     {
         bool areTopicsReceived = await TopicsClient
-            .GetTopicsAsync(null)
+            .GetTopicsAsync()
             .HandleRequestAsync
             (
                 appState: AppState,
@@ -130,13 +118,13 @@ else
     {
         _quizzesProvider = async request =>
         {
-            if (_topicFilterId.ToTopicFilterStatus() == TopicFilterStatus.Invalid)
+            if (_filterData.TopicFilterId.ToTopicFilterStatus() == TopicFilterStatus.Invalid)
             {
                 return GridItemsProviderResult.From(Array.Empty<QuizSummaryInfoDTO>(), 0);
             }
 
             return await QuizzesClient
-                .GetQuizzesAsync(request.CreatePagination(DefaultPageSize), new QuizFilterDTO (_searchFilter, _topicFilterId))
+                .GetQuizzesAsync(request.CreatePagination(DefaultPageSize), _filterData)
                 .HandleGridRequestAsync
                 (
                     appState: AppState,

@@ -3,6 +3,7 @@ using QuizWebApp.Api.Extensions;
 using QuizWebApp.Core.Interfaces.Services;
 using QuizWebApp.Shared.ApiResponses;
 using QuizWebApp.Shared.DTOs.Common;
+using QuizWebApp.Shared.DTOs.Filter;
 using QuizWebApp.Shared.DTOs.Question;
 using QuizWebApp.Shared.Enums;
 
@@ -48,15 +49,17 @@ public static class AttemptsEndpoints
 
     private static void MapQuizAttemptsGetEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapGet("/quiz-info/{quizId:guid}", async (Guid quizId, [AsParameters] PaginationDTO paginationData, IAttemptsService attemptService) =>
-            Results.Ok(await attemptService.GetQuizAttemptsAsync(quizId, paginationData))
+        app.MapGet("/quiz-info/{quizId:guid}", async (Guid quizId, [AsParameters] PaginationDTO paginationData, 
+            [AsParameters] AttemptFilterDTO filterData, IAttemptsService attemptService) =>
+            Results.Ok(await attemptService.GetQuizAttemptsAsync(quizId, paginationData, filterData))
         );
     }
 
     private static void MapParticipantAttemptsGetEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapGet("/", async ([AsParameters] PaginationDTO paginationData, ClaimsPrincipal principal, IAttemptsService attemptService) =>
-            Results.Ok(await attemptService.GetParticipantAttemptsAsync(principal.GetParticipantId(), paginationData))
+        app.MapGet("/", async ([AsParameters] PaginationDTO paginationData, [AsParameters] AttemptFilterDTO filterData,
+            ClaimsPrincipal principal, IAttemptsService attemptService) =>
+            Results.Ok(await attemptService.GetParticipantAttemptsAsync(principal.GetParticipantId(), paginationData, filterData))
         );
     }
 

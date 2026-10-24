@@ -2,6 +2,7 @@
 
 @using Microsoft.AspNetCore.Components.QuickGrid
 @using QuizWebApp.Shared.DTOs.Attempt
+@using QuizWebApp.Shared.DTOs.Filter
 
 @inject AttemptsClient AttemptsClient
 @inject IAppState AppState
@@ -12,9 +13,14 @@
 {
     <p class="h5 text-center text-danger mb-3"><em>Error: @_loadErrorMessage</em></p>
 }
+else
+{
+    <AttemptsFilterPanel Placeholder="Type quiz name or topic..." 
+        @bind-Filter="_filterData" @bind-Filter:after="OnFilterChanged" />
+}
 
 <div class="row">
-    <QuickGrid ItemsProvider="_attemptsProvider" Pagination="_paginationState" Class="table table-striped table-bordered table-hover mb-3">
+    <QuickGrid ItemsProvider="_attemptsProvider" Pagination="_paginationState" Class="table table-striped table-bordered table-hover mb-3" @ref="_grid">
         <PropertyColumn Property="attempt => attempt.QuizName" Title="Quiz Name" />
         <PropertyColumn Property="attempt => attempt.TopicName" Title="Topic Name" />
         <PropertyColumn Property="attempt => attempt.Status" />
@@ -38,22 +44,33 @@
     private const string PageTitle = "My Attempts";
     private const string DateFormat = "dd.MM.yyyy HH:mm";
     private const int DefaultPageSize = 10;
+    private const int FirstPageIndex = 0;
 
+    private QuickGrid<AttemptQuizInfoDTO>? _grid;
     private GridItemsProvider<AttemptQuizInfoDTO>? _attemptsProvider;
     private string? _loadErrorMessage;
 
     private PaginationState _paginationState = new PaginationState { ItemsPerPage = DefaultPageSize };
+    private AttemptFilterDTO _filterData = new AttemptFilterDTO(SearchFilter: null, StatusFilter: null);
 
     protected override void OnInitialized()
     {
         ConfigureAttemptsProvider();
     }
 
+    private async Task OnFilterChanged()
+    {
+        ArgumentNullException.ThrowIfNull(_grid);
+
+        await _paginationState.SetCurrentPageIndexAsync(FirstPageIndex);
+        await _grid.RefreshDataAsync();
+    }
+
     private void ConfigureAttemptsProvider()
     {
         _attemptsProvider = async request =>
             await AttemptsClient
-                .GetParticipantAttemptsAsync(request.CreatePagination(DefaultPageSize))
+                .GetParticipantAttemptsAsync(request.CreatePagination(DefaultPageSize), _filterData)
                 .HandleGridRequestAsync
                 (
                     appState: AppState,

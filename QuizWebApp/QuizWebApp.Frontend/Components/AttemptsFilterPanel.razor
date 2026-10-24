@@ -1,0 +1,60 @@
+﻿@using QuizWebApp.Shared.DTOs.Filter
+@using QuizWebApp.Shared.Enums
+
+<div class="row mb-3">
+    <div class="col-sm-5">
+        <SearchFilter Label="Search attempts: " Placeholder="@Placeholder"
+            @bind-Value="_searchFilter" @bind-Value:after="OnFilterChanged" />
+    </div>
+    <div class="col-sm-4 ms-auto">
+        <label class="form-label" for="statusFilter">Submission status filter: </label>
+        <select class="form-select" @bind="_statusFilter" id="statusFilter" @bind:after="OnFilterChanged">
+            <option value="">Select status...</option>
+            <option value="@StartedValue">Started</option>
+            <option value="@CompletedValue">Completed</option>
+            <option value="@ExitedValue">Exited</option>
+            <option value="@AutoSubmittedValue">AutoSubmitted</option>
+        </select>
+    </div>
+</div>
+
+@code {
+    private const string StartedValue = "started";
+    private const string CompletedValue = "completed";
+    private const string ExitedValue = "exited";
+    private const string AutoSubmittedValue = "autosubmitted";
+
+    [Parameter, EditorRequired] 
+    public string Placeholder { get; set; }
+
+    [Parameter] 
+    public AttemptFilterDTO Filter { get; set; } = new AttemptFilterDTO(SearchFilter: null, StatusFilter: null);
+
+    [Parameter] 
+    public EventCallback<AttemptFilterDTO> FilterChanged { get; set; }
+
+    private string? _searchFilter;
+    private string? _statusFilter;
+
+    protected override void OnParametersSet()
+    {
+        _searchFilter = Filter.SearchFilter;
+        _statusFilter = Filter.StatusFilter?.ToString().ToLower();
+    }
+
+    private async Task OnFilterChanged()
+    {
+        AttemptStatus? status = _statusFilter switch
+        {
+            StartedValue => AttemptStatus.Started,
+            CompletedValue => AttemptStatus.Completed,
+            ExitedValue => AttemptStatus.Exited,
+            AutoSubmittedValue => AttemptStatus.AutoSubmitted,
+            _ => null
+        };
+
+        AttemptFilterDTO newFilter = new AttemptFilterDTO(_searchFilter, status);
+        
+        await FilterChanged.InvokeAsync(newFilter);
+    }
+}

@@ -2,6 +2,7 @@
 using QuizWebApp.Frontend.Extensions;
 using QuizWebApp.Shared.ApiResponses;
 using QuizWebApp.Shared.DTOs.Common;
+using QuizWebApp.Shared.DTOs.Filter;
 using QuizWebApp.Shared.DTOs.Topic;
 
 namespace QuizWebApp.Frontend.Clients;
@@ -10,9 +11,9 @@ public class TopicsClient(HttpClient httpClient)
 {
     private const string ApiRoute = "/api/topics";
 
-    public Task<QuizApiResponse<PagedInfo<TopicInfoDTO>>> GetTopicsAsync(PaginationDTO? paginationData)
+    public Task<QuizApiResponse<PagedInfo<TopicInfoDTO>>> GetTopicsAsync(PaginationDTO? paginationData = null, TopicFilterDTO? filterData = null)
         => httpClient
-            .GetAsync(paginationData is null ? ApiRoute : $"{ApiRoute}?{paginationData.CreatePaginationParameters()}")
+            .GetAsync($"{ApiRoute}?{filterData.CreateFilterParameters(paginationData)}")
             .ExtractQuizApiResponse<PagedInfo<TopicInfoDTO>>();
     
     public Task<QuizApiResponse<TopicInfoDTO>> AddTopicAsync(TopicSaveDTO newTopic)

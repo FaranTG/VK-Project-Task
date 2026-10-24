@@ -1,0 +1,42 @@
+﻿@using QuizWebApp.Shared.DTOs.Filter
+@using QuizWebApp.Shared.DTOs.Topic
+
+<div class="row mb-3">
+    <div class="col-sm-5">
+        <SearchFilter Label="Search quizzes: " Placeholder="Type quiz name..."
+            @bind-Value="_searchFilter" @bind-Value:after="OnFilterChanged" />
+    </div>
+    <div class="col-sm-3 ms-auto">
+        <TopicFilter Topics="Topics" Label="Topic filter: "
+            Placeholder="Type to filter by topic..." IsFilterRequired="false"
+            @bind-TopicFilterId="_topicFilterId" 
+            @bind-TopicFilterId:after="OnFilterChanged" />
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired] 
+    public TopicInfoDTO[] Topics { get; set; }
+
+    [Parameter] 
+    public QuizFilterDTO Filter { get; set; } = new QuizFilterDTO(SearchFilter: null, TopicFilterId: 0);
+
+    [Parameter] 
+    public EventCallback<QuizFilterDTO> FilterChanged { get; set; }
+
+    private string? _searchFilter;
+    private int _topicFilterId;
+
+    protected override void OnParametersSet()
+    {
+        _searchFilter = Filter.SearchFilter;
+        _topicFilterId = Filter.TopicFilterId;
+    }
+
+    private async Task OnFilterChanged()
+    {
+        QuizFilterDTO newFilter = new QuizFilterDTO(_searchFilter, _topicFilterId);
+        
+        await FilterChanged.InvokeAsync(newFilter);
+    }
+}

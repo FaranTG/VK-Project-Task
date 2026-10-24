@@ -141,7 +141,7 @@ else
 
     protected override Task OnInitializedAsync()
         => TopicsClient
-            .GetTopicsAsync(null)
+            .GetTopicsAsync()
             .HandleRequestAsync
             (
                 appState: AppState,

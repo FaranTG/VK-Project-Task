@@ -25,18 +25,7 @@ else if (_topics is null || _quizzes is null)
 }
 else
 {
-    <div class="row mb-3">
-        <div class="col-sm-5">
-            <SearchFilter Label="Search quizzes: " Placeholder="Type quiz name..."
-                @bind-Value="_searchFilter" @bind-Value:after="OnFilterChanged" />
-        </div>
-        <div class="col-sm-3 ms-auto">
-            <TopicFilter Topics="_topics" Label="Topic filter: "
-                Placeholder="Type to filter by topic..." IsFilterRequired="false"
-                @bind-TopicFilterId="_topicFilterId" 
-                @bind-TopicFilterId:after="OnFilterChanged" />
-        </div>
-    </div>
+    <QuizzesFilterPanel Topics="_topics" @bind-Filter="_filterData" @bind-Filter:after="OnFilterChanged" />
     <div class="row">
         @if (_quizzes.Length == 0)
         {
@@ -131,12 +120,11 @@ else
     private TopicInfoDTO[]? _topics;
     private QuizBriefInfoDTO? _selectedQuiz;
     private string? _loadErrorMessage;
-    private string? _searchFilter;
-    private int _topicFilterId;
     private int _currentPage = FirstPageNumber;
     private int _totalItemsCount = 0;
 
-    private string NoFoundMessage => _topicFilterId.ToTopicFilterStatus() == TopicFilterStatus.Valid 
+    private QuizFilterDTO _filterData = new QuizFilterDTO(SearchFilter: null, TopicFilterId: 0);
+    private string NoFoundMessage => _filterData.TopicFilterId.ToTopicFilterStatus() == TopicFilterStatus.Valid 
         ? "No active quizzes found for the selected topic."
         : "No active quizzes found.";
     private int TotalPages => (int)Math.Ceiling((double)_totalItemsCount / DefaultPageSize);
@@ -146,7 +134,7 @@ else
     protected override async Task OnInitializedAsync()
     {
         bool areTopicsReceived = await TopicsClient
-            .GetTopicsAsync(null)
+            .GetTopicsAsync()
             .HandleRequestAsync
             (
                 appState: AppState,
@@ -168,7 +156,7 @@ else
 
     private Task FetchQuizzesAsync()
     {
-        if (_topicFilterId.ToTopicFilterStatus() == TopicFilterStatus.Invalid)
+        if (_filterData.TopicFilterId.ToTopicFilterStatus() == TopicFilterStatus.Invalid)
         {
             _quizzes = [];
             _totalItemsCount = 0;
@@ -178,7 +166,7 @@ else
         PaginationDTO paginationData = new PaginationDTO(_currentPage, DefaultPageSize);
 
         return QuizzesClient
-            .GetActiveBriefQuizzesAsync(paginationData, new QuizFilterDTO(_searchFilter, _topicFilterId))
+            .GetActiveBriefQuizzesAsync(paginationData, _filterData)
             .HandleRequestAsync
             (
                 appState: AppState,

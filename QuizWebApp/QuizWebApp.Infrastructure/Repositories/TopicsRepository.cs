@@ -5,6 +5,7 @@ using QuizWebApp.Infrastructure.Data;
 using QuizWebApp.Infrastructure.Extensions;
 using QuizWebApp.Shared.ApiResponses;
 using QuizWebApp.Shared.DTOs.Common;
+using QuizWebApp.Shared.DTOs.Filter;
 
 namespace QuizWebApp.Infrastructure.Repositories;
 
@@ -17,10 +18,18 @@ public class TopicsRepository : ITopicsRepository
         _dbContext = dbContext;
     }
 
-    public async Task<PagedInfo<Topic>> GetTopicsAsync(PaginationDTO paginationData)
+    public async Task<PagedInfo<Topic>> GetTopicsAsync(PaginationDTO paginationData, TopicFilterDTO filterData)
     {
         IQueryable<Topic> query = _dbContext.Topics
             .AsNoTracking();
+
+        if (!string.IsNullOrWhiteSpace(filterData.SearchFilter))
+        {
+            string lowerSearch = filterData.SearchFilter.Trim().ToLower();
+            
+            query = query
+                .Where(quiz => quiz.Name.ToLower().Contains(lowerSearch));
+        }
 
         int totalCount = await query
             .CountAsync();
