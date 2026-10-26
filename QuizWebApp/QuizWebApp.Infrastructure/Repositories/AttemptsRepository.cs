@@ -133,6 +133,16 @@ public class AttemptsRepository : IAttemptsRepository
                 .Where(attempt => attempt.Status == filterData.StatusFilter.ToString());
         }
 
+        if (filterData.FromDate is not null)
+        {
+            query = query.Where(attempt => attempt.StartTime >= filterData.FromDate.Value);
+        }
+
+        if (filterData.ToDate is not null)
+        {
+            query = query.Where(attempt => attempt.StartTime <= filterData.ToDate.Value);
+        }
+
         int totalCount = await query
             .CountAsync();
 

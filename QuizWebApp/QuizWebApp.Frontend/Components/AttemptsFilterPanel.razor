@@ -13,8 +13,21 @@
             <option value="@StartedValue">Started</option>
             <option value="@CompletedValue">Completed</option>
             <option value="@ExitedValue">Exited</option>
-            <option value="@AutoSubmittedValue">AutoSubmitted</option>
+            <option value="@AutoSubmittedValue">Auto-submitted</option>
         </select>
+    </div>
+</div>
+
+<div class="row mb-3">
+    <div class="col-sm-3">
+        <label class="form-label" for="fromDate">Start date from: </label>
+        <input type="date" class="form-line form-control" id="fromDate" 
+               @bind="_fromDate" @bind:after="OnFilterChanged" />
+    </div>
+    <div class="col-sm-3">
+        <label class="form-label" for="toDate">Start date to: </label>
+        <input type="date" class="form-line form-control" id="toDate" 
+               @bind="_toDate" @bind:after="OnFilterChanged" />
     </div>
 </div>
 
@@ -25,7 +38,7 @@
     private const string AutoSubmittedValue = "autosubmitted";
 
     [Parameter, EditorRequired] 
-    public string Placeholder { get; set; }
+    public string Placeholder { get; set; } = string.Empty;
 
     [Parameter] 
     public AttemptFilterDTO Filter { get; set; } = new AttemptFilterDTO(SearchFilter: null, StatusFilter: null);
@@ -35,11 +48,16 @@
 
     private string? _searchFilter;
     private string? _statusFilter;
+    private DateTime? _fromDate;
+    private DateTime? _toDate;
 
     protected override void OnParametersSet()
     {
         _searchFilter = Filter.SearchFilter;
         _statusFilter = Filter.StatusFilter?.ToString().ToLower();
+        
+        _fromDate = Filter.FromDate?.DateTime;
+        _toDate = Filter.ToDate?.DateTime;
     }
 
     private async Task OnFilterChanged()
@@ -53,7 +71,10 @@
             _ => null
         };
 
-        AttemptFilterDTO newFilter = new AttemptFilterDTO(_searchFilter, status);
+        DateTimeOffset? fromDateOffset = _fromDate is null ? null : (DateTimeOffset)_fromDate.Value;
+        DateTimeOffset? toDateOffset = _toDate is null ? null : (DateTimeOffset)_toDate.Value;
+
+        AttemptFilterDTO newFilter = new AttemptFilterDTO(_searchFilter, status, fromDateOffset, toDateOffset);
         
         await FilterChanged.InvokeAsync(newFilter);
     }

@@ -8,5 +8,9 @@ public record AttemptFilterDTO
     [StringLength(100)]
     string? SearchFilter,
 
-    AttemptStatus? StatusFilter
+    AttemptStatus? StatusFilter,
+
+    DateTimeOffset? FromDate = null,
+    
+    DateTimeOffset? ToDate = null
 );

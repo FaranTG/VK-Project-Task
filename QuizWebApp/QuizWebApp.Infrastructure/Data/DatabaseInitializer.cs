@@ -7,6 +7,7 @@ using QuizWebApp.Core.Validation;
 using QuizWebApp.Shared.DTOs.Quiz;
 using QuizWebApp.Shared.DTOs.Topic;
 using QuizWebApp.Shared.DTOs.User;
+using QuizWebApp.Shared.Enums;
 
 namespace QuizWebApp.Infrastructure.Data;
 
@@ -51,6 +52,10 @@ public class DatabaseInitializer
         SeedUsers();
         SeedTopics();
         SeedQuizzes();
+
+        _dbContext.SaveChanges();
+
+        SeedAttempts();
 
         _dbContext.SaveChanges();
     }
@@ -199,6 +204,87 @@ public class DatabaseInitializer
             };
 
             _dbContext.Quizzes.Add(realQuiz);
+        }
+    }
+
+    private void SeedAttempts()
+    {
+        List<User> participants = _dbContext.Users
+            .AsNoTracking()
+            .Where(u => u.Role == "Participant")
+            .ToList();
+
+        if (participants.Count == 0)
+        {
+            return;
+        }
+
+        List<Quiz> quizzes = _dbContext.Quizzes
+            .AsNoTracking()
+            .ToList();
+
+        if (quizzes.Count == 0)
+        {
+            return;
+        }
+
+        Random random = new();
+        
+        DateTimeOffset baseDate = DateTimeOffset.UtcNow;
+
+        foreach (User participant in participants)
+        {
+            foreach (Quiz quiz in quizzes)
+            {
+                int maxQuestions = quiz.QuestionsNumber;
+
+                int daysAgoCompleted = random.Next(3, 8); 
+                DateTimeOffset startTimeCompleted = baseDate.AddDays(-daysAgoCompleted).AddHours(random.Next(-5, 5));
+                
+                int durationMinutes = random.Next(1, quiz.TimeInMinutes + 1); 
+                DateTimeOffset endTimeCompleted = startTimeCompleted.AddMinutes(durationMinutes);
+
+                _dbContext.Attempts.Add(new Attempt
+                {
+                    ParticipantId = participant.Id,
+                    QuizId = quiz.Id,
+                    Status = nameof(AttemptStatus.Completed),
+                    Score = random.Next(0, maxQuestions + 1),
+                    StartTime = startTimeCompleted,
+                    EndTime = endTimeCompleted    
+                });
+
+                int daysAgoAuto = random.Next(1, 3);
+                DateTimeOffset startTimeAuto = baseDate.AddDays(-daysAgoAuto).AddHours(random.Next(-5, 5));
+                
+                DateTimeOffset endTimeAuto = startTimeAuto.AddMinutes(quiz.TimeInMinutes);
+
+                _dbContext.Attempts.Add(new Attempt
+                {
+                    ParticipantId = participant.Id,
+                    QuizId = quiz.Id,
+                    Status = nameof(AttemptStatus.AutoSubmitted),
+                    Score = random.Next(0, maxQuestions + 1),
+                    StartTime = startTimeAuto, 
+                    EndTime = endTimeAuto   
+                });
+
+                int minutesAgoStarted = random.Next(0, quiz.TimeInMinutes);
+                int secondsAgoStarted = random.Next(0, 60); 
+                
+                DateTimeOffset startTimeStarted = baseDate
+                    .AddMinutes(-minutesAgoStarted)
+                    .AddSeconds(-secondsAgoStarted);
+
+                _dbContext.Attempts.Add(new Attempt
+                {
+                    ParticipantId = participant.Id,
+                    QuizId = quiz.Id,
+                    Status = nameof(AttemptStatus.Started),
+                    Score = random.Next(0, maxQuestions),
+                    StartTime = startTimeStarted
+                });
+            }
         }
     }
 }

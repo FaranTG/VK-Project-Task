@@ -15,3 +15,7 @@ WORKDIR /usr/share/nginx/html
 COPY --from=build /app/publish/wwwroot .
 COPY QuizWebApp.Frontend/nginx.conf /etc/nginx/nginx.conf
 EXPOSE 80
+
+ARG API_URL
+
+RUN echo "{\"ConnectionStrings\":{\"QuizApiUrl\":\"${API_URL}\"}}" > appsettings.json

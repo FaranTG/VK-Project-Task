@@ -16,6 +16,16 @@ public static class FilterExtensions
             parameters += $"&statusFilter={filterData.StatusFilter}";
         }
 
+        if (filterData.FromDate is not null)
+        {
+            parameters += $"&fromDate={filterData.FromDate.Value.ToUniversalTime():yyyy-MM-ddTHH:mm:ssZ}";
+        }
+
+        if (filterData.ToDate is not null)
+        {
+            parameters += $"&toDate={filterData.ToDate.Value.ToUniversalTime():yyyy-MM-ddTHH:mm:ssZ}";
+        }
+
         return parameters;
     }
 

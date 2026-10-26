@@ -30,7 +30,7 @@ public class AttemptsService : IAttemptsService
         try
         {
             PagedInfo<Attempt> pagedAttempts = await _attemptsRepository
-                .GetQuizAttemptsAsync(quizId, paginationData, filterData);
+                .GetQuizAttemptsAsync(quizId, paginationData, ExtendFilterDate(filterData));
 
             AttemptParticipantInfoDTO[] participants = pagedAttempts.Data
                 .Select(CreateAttemptParticipantInfoDTO)
@@ -54,7 +54,7 @@ public class AttemptsService : IAttemptsService
         try
         {
             PagedInfo<Attempt> pagedAttempts = await _attemptsRepository
-                .GetParticipantAttemptsAsync(participantId, paginationData, filterData);
+                .GetParticipantAttemptsAsync(participantId, paginationData, ExtendFilterDate(filterData));
 
             AttemptQuizInfoDTO[] attempts = pagedAttempts.Data
                 .Select(CreateAttemptQuizInfoDTO)
@@ -275,4 +275,16 @@ public class AttemptsService : IAttemptsService
                 )
                 .ToList()
         );
+    
+    private static AttemptFilterDTO ExtendFilterDate(AttemptFilterDTO filterData)
+    {
+        if (filterData.ToDate is null)
+        {
+            return filterData;
+        }
+
+        DateTimeOffset exactEndDateOffset = filterData.ToDate.Value.AddDays(1);
+
+        return filterData with { ToDate = exactEndDateOffset };
+    }
 }
