@@ -11,6 +11,8 @@ public interface ITopicsService
 
     Task<QuizApiResponse<PagedInfo<TopicInfoDTO>>> GetTopicsAsync(PaginationDTO? paginationData, TopicFilterDTO filterData);
 
+    Task<QuizApiResponse<PagedInfo<TopicInfoDTO>>> GetFilteredQuizzesTopicsAsync(PaginationDTO? paginationData, QuizFilterDTO filterData);
+
     Task<QuizApiResponse<TopicInfoDTO>> CreateTopicAsync(TopicSaveDTO newTopicData);
 
     Task<QuizApiResponse> UpdateTopicAsync(int id, TopicSaveDTO newTopicData);

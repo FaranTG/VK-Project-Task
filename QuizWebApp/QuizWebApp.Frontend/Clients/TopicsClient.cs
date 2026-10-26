@@ -16,6 +16,11 @@ public class TopicsClient(HttpClient httpClient)
             .GetAsync($"{ApiRoute}?{filterData.CreateFilterParameters(paginationData)}")
             .ExtractQuizApiResponse<PagedInfo<TopicInfoDTO>>();
     
+    public Task<QuizApiResponse<PagedInfo<TopicInfoDTO>>> GetFilteredQuizzesTopicsAsync(QuizFilterDTO filterData, PaginationDTO? paginationData = null)
+        => httpClient
+            .GetAsync($"{ApiRoute}/quizzes-usage?{filterData.CreateFilterParameters(paginationData)}")
+            .ExtractQuizApiResponse<PagedInfo<TopicInfoDTO>>();
+    
     public Task<QuizApiResponse<TopicInfoDTO>> AddTopicAsync(TopicSaveDTO newTopic)
         => httpClient
             .PostAsJsonAsync(ApiRoute, newTopic)

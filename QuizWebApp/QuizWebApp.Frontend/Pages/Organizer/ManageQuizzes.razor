@@ -8,7 +8,6 @@
 @using QuizWebApp.Shared.Extensions
 
 @inject QuizzesClient QuizzesClient
-@inject TopicsClient TopicsClient
 @inject IAppState AppState
 
 <PageHeader Title="@PageTitle" />
@@ -17,13 +16,12 @@
 {
     <p class="h5 text-center text-danger"><em>Error: @_loadErrorMessage</em></p>
 }
-else if (_topics is null)
-{
-    <p><em>Loading...</em></p>
-}
 else
 {
-    <QuizzesFilterPanel Topics="_topics" @bind-Filter="_filterData" @bind-Filter:after="OnFilterChanged" />
+    <QuizzesFilterPanel @bind-Filter="_filterData" 
+        @bind-Filter:after="OnFilterChanged" 
+        OnErrorReceived="errorMessage => _loadErrorMessage = errorMessage" />
+
     <div class="row">
         <QuickGrid ItemsProvider="_quizzesProvider" Pagination="_paginationState"
             Class="table table-striped table-bordered table-hover" @ref="_grid">
@@ -75,7 +73,6 @@ else
 
     private QuickGrid<QuizSummaryInfoDTO>? _grid;
     private GridItemsProvider<QuizSummaryInfoDTO>? _quizzesProvider;
-    private TopicInfoDTO[]? _topics;
     private string[]? _viewingQuestions;
     private string? _loadErrorMessage;
 
@@ -83,20 +80,8 @@ else
     private QuizFilterDTO _filterData = new QuizFilterDTO(SearchFilter: null, TopicFilterId: 0);
     private bool _showQuestionsModal;
 
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
-        bool areTopicsReceived = await TopicsClient
-            .GetTopicsAsync()
-            .HandleRequestAsync
-            (
-                appState: AppState,
-                loaderMessage: "Fetching topics...",
-                onSuccess: data => _topics = data.Data,
-                onError: errorMessage => _loadErrorMessage = errorMessage
-            );
-
-        if (!areTopicsReceived) return;
-
         ConfigureQuizzesProvider();
     }
 

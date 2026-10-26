@@ -26,6 +26,7 @@ public static class TopicsEndpoints
     private static void MapCommonEndpoints(IEndpointRouteBuilder app)
     {
         MapTopicGetEndpoint(app);
+        MapGetFilteredQuizzesTopicsEndpoint(app);
     }
 
     private static void MapOrganizerEndpoints(IEndpointRouteBuilder app)
@@ -47,6 +48,18 @@ public static class TopicsEndpoints
                 : null;
 
             return Results.Ok(await topicService.GetTopicsAsync(paginationData, filterData));
+        });
+    }
+
+    private static void MapGetFilteredQuizzesTopicsEndpoint(IEndpointRouteBuilder app)
+    {
+        app.MapGet("/quizzes-usage", async (int? pageNumber, int? pageSize, [AsParameters] QuizFilterDTO filterData, ITopicsService topicService) =>
+        {
+            PaginationDTO? paginationData = (pageNumber.HasValue && pageSize.HasValue)
+                ? new PaginationDTO(pageNumber.Value, pageSize.Value)
+                : null;
+
+            return Results.Ok(await topicService.GetFilteredQuizzesTopicsAsync(paginationData, filterData));
         });
     }
 

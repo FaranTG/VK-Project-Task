@@ -44,6 +44,29 @@ public class TopicsService : ITopicsService
         }
     }
 
+    public async Task<QuizApiResponse<PagedInfo<TopicInfoDTO>>> GetFilteredQuizzesTopicsAsync(PaginationDTO? paginationData, QuizFilterDTO filterData)
+    {
+        try
+        {
+            paginationData ??= new PaginationDTO(DefaultPageNumber, DefaultPageSize);
+
+            PagedInfo<Topic> pagedTopics = await _topicsRepository
+                .GetFilteredQuizzesTopicsAsync(paginationData, filterData);
+
+            TopicInfoDTO[] topicDTOs = pagedTopics.Data
+                .Select(CreateTopicInfoDTO)
+                .ToArray();
+            
+            PagedInfo<TopicInfoDTO> result = new(topicDTOs, pagedTopics.TotalCount);
+            
+            return QuizApiResponse<PagedInfo<TopicInfoDTO>>.Success(result);
+        }
+        catch (Exception exception)
+        {
+            return QuizApiResponse<PagedInfo<TopicInfoDTO>>.Fail(exception.Message);
+        }
+    }
+
     public async Task<QuizApiResponse<TopicInfoDTO>> CreateTopicAsync(TopicSaveDTO newTopicData)
     {
         try

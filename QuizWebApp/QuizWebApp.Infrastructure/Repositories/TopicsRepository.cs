@@ -42,6 +42,33 @@ public class TopicsRepository : ITopicsRepository
         return new PagedInfo<Topic>(topics, totalCount);
     }
 
+    public async Task<PagedInfo<Topic>> GetFilteredQuizzesTopicsAsync(PaginationDTO paginationData, QuizFilterDTO filterData)
+    {
+         IQueryable<Quiz> query = _dbContext.Quizzes
+            .AsNoTracking();
+
+        if (!string.IsNullOrWhiteSpace(filterData.SearchFilter))
+        {
+            string lowerSearch = filterData.SearchFilter.Trim().ToLower();
+            
+            query = query
+                .Where(quiz => quiz.Name.ToLower().Contains(lowerSearch));
+        }
+
+        IQueryable<Topic> topicQuery = query
+            .Select(quiz => quiz.Topic!)
+            .Distinct();
+
+        int totalCount = await topicQuery.CountAsync();
+
+        Topic[] topics = await topicQuery
+            .OrderBy(topic => topic.Id)
+            .Paginate(paginationData)
+            .ToArrayAsync();
+
+        return new PagedInfo<Topic>(topics, totalCount);
+    }
+
     public Task<Topic?> GetByIdAsync(int id)
         => _dbContext.Topics
             .FirstOrDefaultAsync(topic => topic.Id == id);

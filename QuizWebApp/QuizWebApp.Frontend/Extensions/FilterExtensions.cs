@@ -19,7 +19,7 @@ public static class FilterExtensions
         return parameters;
     }
 
-    public static string CreateFilterParameters(this QuizFilterDTO filterData, PaginationDTO paginationData)
+    public static string CreateFilterParameters(this QuizFilterDTO filterData, PaginationDTO? paginationData)
     {
         string parameters = CreateBaseFilterParameters(paginationData);
 

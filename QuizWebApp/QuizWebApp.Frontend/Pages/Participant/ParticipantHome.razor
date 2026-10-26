@@ -3,7 +3,6 @@
 @using QuizWebApp.Shared.DTOs.Common
 @using QuizWebApp.Shared.DTOs.Filter
 @using QuizWebApp.Shared.DTOs.Quiz
-@using QuizWebApp.Shared.DTOs.Topic
 @using QuizWebApp.Shared.Extensions
 
 @inject AttemptsClient AttemptsClient
@@ -19,13 +18,15 @@
 {
     <p class="h5 text-center text-danger"><em>Error: @_loadErrorMessage</em></p>
 }
-else if (_topics is null || _quizzes is null)
+else if (_quizzes is null)
 {
     <p><em>Loading...</em></p>
 }
 else
 {
-    <QuizzesFilterPanel Topics="_topics" @bind-Filter="_filterData" @bind-Filter:after="OnFilterChanged" />
+    <QuizzesFilterPanel @bind-Filter="_filterData" 
+        @bind-Filter:after="OnFilterChanged" 
+        OnErrorReceived="errorMessage => _loadErrorMessage = errorMessage" />
     <div class="row">
         @if (_quizzes.Length == 0)
         {
@@ -117,7 +118,6 @@ else
     private const int FirstPageNumber = 1;
 
     private QuizBriefInfoDTO[]? _quizzes;
-    private TopicInfoDTO[]? _topics;
     private QuizBriefInfoDTO? _selectedQuiz;
     private string? _loadErrorMessage;
     private int _currentPage = FirstPageNumber;
@@ -133,18 +133,6 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        bool areTopicsReceived = await TopicsClient
-            .GetTopicsAsync()
-            .HandleRequestAsync
-            (
-                appState: AppState,
-                loaderMessage: "Fetching topics...",
-                onSuccess: data => _topics = data.Data,
-                onError: errorMessage => _loadErrorMessage = errorMessage
-            );
-
-        if (!areTopicsReceived) return;
-
         await FetchQuizzesAsync();
     }
 

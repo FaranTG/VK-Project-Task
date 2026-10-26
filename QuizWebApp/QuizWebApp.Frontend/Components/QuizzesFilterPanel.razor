@@ -1,31 +1,48 @@
 ﻿@using QuizWebApp.Shared.DTOs.Filter
 @using QuizWebApp.Shared.DTOs.Topic
 
+@inject TopicsClient TopicsClient
+@inject IAppState AppState
+
 <div class="row mb-3">
     <div class="col-sm-5">
         <SearchFilter Label="Search quizzes: " Placeholder="Type quiz name..."
-            @bind-Value="_searchFilter" @bind-Value:after="OnFilterChanged" />
+            @bind-Value="_searchFilter" @bind-Value:after="OnSearchInputChanged" />
     </div>
     <div class="col-sm-3 ms-auto">
-        <TopicFilter Topics="Topics" Label="Topic filter: "
+        <TopicFilter Topics="_topics" Label="Topic filter: "
             Placeholder="Type to filter by topic..." IsFilterRequired="false"
             @bind-TopicFilterId="_topicFilterId" 
-            @bind-TopicFilterId:after="OnFilterChanged" />
+            @bind-TopicFilterId:after="OnTopicSelectorChanged" />
     </div>
 </div>
 
 @code {
-    [Parameter, EditorRequired] 
-    public TopicInfoDTO[] Topics { get; set; }
-
     [Parameter] 
     public QuizFilterDTO Filter { get; set; } = new QuizFilterDTO(SearchFilter: null, TopicFilterId: 0);
 
     [Parameter] 
     public EventCallback<QuizFilterDTO> FilterChanged { get; set; }
 
+    [Parameter] 
+    public EventCallback<string> OnErrorReceived { get; set; }
+
+    private TopicInfoDTO[]? _topics;
     private string? _searchFilter;
     private int _topicFilterId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await TopicsClient
+            .GetTopicsAsync()
+            .HandleRequestAsync
+            (
+                appState: AppState,
+                loaderMessage: "Fetching topics...",
+                onSuccess: data => _topics = data.Data,
+                onError: async errorMessage => await OnErrorReceived.InvokeAsync(errorMessage)
+            );
+    }
 
     protected override void OnParametersSet()
     {
@@ -33,10 +50,26 @@
         _topicFilterId = Filter.TopicFilterId;
     }
 
-    private async Task OnFilterChanged()
+    private async Task OnSearchInputChanged()
     {
-        QuizFilterDTO newFilter = new QuizFilterDTO(_searchFilter, _topicFilterId);
-        
+        QuizFilterDTO newFilter = CreateNewFilter();
+
         await FilterChanged.InvokeAsync(newFilter);
+
+        await TopicsClient
+            .GetFilteredQuizzesTopicsAsync(newFilter)
+            .HandleRequestAsync
+            (
+                appState: AppState,
+                loaderMessage: "Updating filters...",
+                onSuccess: data => _topics = data.Data,
+                onError: async errorMessage => await OnErrorReceived.InvokeAsync(errorMessage)
+            );
     }
+
+    private Task OnTopicSelectorChanged()
+        => FilterChanged.InvokeAsync(CreateNewFilter());
+
+    private QuizFilterDTO CreateNewFilter()
+        => new QuizFilterDTO (_searchFilter, _topicFilterId);
 }

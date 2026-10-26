@@ -8,6 +8,8 @@ namespace QuizWebApp.Core.Interfaces.Repositories;
 public interface ITopicsRepository
 {
     Task<PagedInfo<Topic>> GetTopicsAsync(PaginationDTO paginationData, TopicFilterDTO filterData);
+
+    Task<PagedInfo<Topic>> GetFilteredQuizzesTopicsAsync(PaginationDTO paginationData, QuizFilterDTO filterData);
     
     Task<Topic?> GetByIdAsync(int id);
     
