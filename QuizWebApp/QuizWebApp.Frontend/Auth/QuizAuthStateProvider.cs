@@ -80,6 +80,8 @@ public class QuizAuthStateProvider : AuthenticationStateProvider
         NotifyAuthenticationStateChanged(_authStateTask);
 
         await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", UserDataKey);
+
+        RedirectToLogin();
     }
 
     private void RedirectToLogin()

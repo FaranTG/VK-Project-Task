@@ -1,4 +1,5 @@
-﻿using System.Net.Http.Json;
+﻿using System.Net;
+using System.Net.Http.Json;
 using QuizWebApp.Shared.ApiResponses;
 
 namespace QuizWebApp.Frontend.Extensions;
@@ -21,6 +22,11 @@ public static class QuizApiResponseExtensions
         where TResponse : QuizApiResponse
     {
         HttpResponseMessage response = await messageTask;
+
+        if (response.StatusCode == HttpStatusCode.Unauthorized)
+        {
+            return failFallback;
+        }
         
         TResponse? responseData = await response.Content
             .ReadFromJsonAsync<TResponse>();

@@ -31,7 +31,8 @@ public static class AuthExtensions
                         ValidAudience = jwtOptions.Audience,
                         ValidateIssuerSigningKey = true,
                         ValidateIssuer = true,
-                        ValidateAudience = true
+                        ValidateAudience = true,
+                        ClockSkew = TimeSpan.Zero 
                     };
                 }
             );

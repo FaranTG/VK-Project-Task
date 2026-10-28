@@ -3,7 +3,6 @@
 @using QuizWebApp.Shared.Enums
 
 @inject QuizAuthStateProvider QuizAuthStateProvider
-@inject NavigationManager NavigationManager
 
 <div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
@@ -53,7 +52,7 @@
                     </div>
                     <div class="nav-item px-3">
                         <NavLink class="nav-link" href="participant/my-attempts">
-                            My Quiz Attempts
+                            My Attempts
                         </NavLink>
                     </div>
                 </AuthorizeView>
@@ -77,9 +76,6 @@
         collapseNavMenu = !collapseNavMenu;
     }
 
-    private async Task LogoutAsync() 
-    {
-        await QuizAuthStateProvider.SetLogoutAsync();
-        NavigationManager.NavigateTo("auth/login", replace: true);
-    }
+    private Task LogoutAsync()
+        => QuizAuthStateProvider.SetLogoutAsync();
 }

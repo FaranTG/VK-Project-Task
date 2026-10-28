@@ -79,41 +79,37 @@ public class DatabaseInitializer
 
         foreach (JsonElement element in seedElements)
         {
-            UserSaveDTO? dto = JsonSerializer.Deserialize<UserSaveDTO>(element.GetRawText());
-            
-            if (dto is null)
-            {
-                continue;
-            }
-
-            if (!element.TryGetProperty("Role", out JsonElement roleElement) || string.IsNullOrWhiteSpace(roleElement.GetString()))
-            {
-                throw new KeyNotFoundException($"Seed Validation Failed! User '{dto.Email}' is missing a valid 'Role' property in users.json.");
-            }
-
-            string role = roleElement.GetString()!;
-
-            string? validationError = dto.Validate(role);
-            if (validationError is not null)
-            {
-                throw new ValidationException($"Seed User Domain Validation Failed: {validationError}");
-            }
-
-            User newUser = new()
-            {
-                Name = dto.Name,
-                Phone = dto.Phone,
-                Email = dto.Email,
-                PasswordHash = string.Empty,
-                Role = role,
-                IsApproved = true
-            };
-
-            newUser.PasswordHash = _passwordHasher.HashPassword(newUser, dto.Password);
-            _dbContext.Users.Add(newUser);
+            ProcessUserElement(element);
         }
 
         _dbContext.SaveChanges();
+    }
+
+    private void ProcessUserElement(JsonElement element)
+    {
+        UserSaveDTO? dto = JsonSerializer.Deserialize<UserSaveDTO>(element.GetRawText());
+        
+        if (dto is null)
+        {
+            return;
+        }
+
+        if (!element.TryGetProperty("Role", out JsonElement roleElement) || string.IsNullOrWhiteSpace(roleElement.GetString()))
+        {
+            throw new KeyNotFoundException($"Seed Validation Failed! User '{dto.Email}' is missing a valid 'Role' property in users.json.");
+        }
+
+        string role = roleElement.GetString()!;
+
+        string? validationError = dto.Validate(role);
+        if (validationError is not null)
+        {
+            throw new ValidationException($"Seed User Domain Validation Failed: {validationError}");
+        }
+
+        User newUser = CreateUser(dto, role);
+
+        _dbContext.Users.Add(newUser);
     }
 
     private void SeedTopics()
@@ -175,33 +171,7 @@ public class DatabaseInitializer
                 throw new ValidationException($"Seed Quiz Domain Validation Failed: {validationError}");
             }
 
-            Quiz realQuiz = new()
-            {
-                Name = dto.Name,
-                TopicId = dto.TopicId,
-                QuestionsNumber = dto.Questions.Count,
-                TimeInMinutes = dto.TimeInMinutes,
-                IsActive = dto.IsActive,
-                Questions = dto.Questions
-                    .Select
-                    (
-                        q => new Question
-                        {
-                            Text = q.Text,
-                            Options = q.Options
-                                .Select
-                                (
-                                    o => new AnswerOption
-                                    {
-                                        Text = o.Text,
-                                        IsCorrect = o.IsCorrect
-                                    }
-                                )
-                                .ToList()
-                        }
-                    )
-                    .ToList()
-            };
+            Quiz realQuiz = CreateQuiz(dto);
 
             _dbContext.Quizzes.Add(realQuiz);
         }
@@ -214,77 +184,140 @@ public class DatabaseInitializer
             .Where(u => u.Role == "Participant")
             .ToList();
 
-        if (participants.Count == 0)
-        {
-            return;
-        }
+        if (participants.Count == 0) return;
 
         List<Quiz> quizzes = _dbContext.Quizzes
             .AsNoTracking()
             .ToList();
 
-        if (quizzes.Count == 0)
-        {
-            return;
-        }
+        if (quizzes.Count == 0) return;
 
         Random random = new();
-        
         DateTimeOffset baseDate = DateTimeOffset.UtcNow;
 
         foreach (User participant in participants)
         {
             foreach (Quiz quiz in quizzes)
             {
-                int maxQuestions = quiz.QuestionsNumber;
-
-                int daysAgoCompleted = random.Next(3, 8); 
-                DateTimeOffset startTimeCompleted = baseDate.AddDays(-daysAgoCompleted).AddHours(random.Next(-5, 5));
-                
-                int durationMinutes = random.Next(1, quiz.TimeInMinutes + 1); 
-                DateTimeOffset endTimeCompleted = startTimeCompleted.AddMinutes(durationMinutes);
-
-                _dbContext.Attempts.Add(new Attempt
-                {
-                    ParticipantId = participant.Id,
-                    QuizId = quiz.Id,
-                    Status = nameof(AttemptStatus.Completed),
-                    Score = random.Next(0, maxQuestions + 1),
-                    StartTime = startTimeCompleted,
-                    EndTime = endTimeCompleted    
-                });
-
-                int daysAgoAuto = random.Next(1, 3);
-                DateTimeOffset startTimeAuto = baseDate.AddDays(-daysAgoAuto).AddHours(random.Next(-5, 5));
-                
-                DateTimeOffset endTimeAuto = startTimeAuto.AddMinutes(quiz.TimeInMinutes);
-
-                _dbContext.Attempts.Add(new Attempt
-                {
-                    ParticipantId = participant.Id,
-                    QuizId = quiz.Id,
-                    Status = nameof(AttemptStatus.AutoSubmitted),
-                    Score = random.Next(0, maxQuestions + 1),
-                    StartTime = startTimeAuto, 
-                    EndTime = endTimeAuto   
-                });
-
-                int minutesAgoStarted = random.Next(0, quiz.TimeInMinutes);
-                int secondsAgoStarted = random.Next(0, 60); 
-                
-                DateTimeOffset startTimeStarted = baseDate
-                    .AddMinutes(-minutesAgoStarted)
-                    .AddSeconds(-secondsAgoStarted);
-
-                _dbContext.Attempts.Add(new Attempt
-                {
-                    ParticipantId = participant.Id,
-                    QuizId = quiz.Id,
-                    Status = nameof(AttemptStatus.Started),
-                    Score = random.Next(0, maxQuestions),
-                    StartTime = startTimeStarted
-                });
+                SeedThreeAttempts(participant, quiz, random, baseDate);
             }
         }
+    }
+
+    private void SeedThreeAttempts(User participant, Quiz quiz, Random random, DateTimeOffset baseDate)
+    {
+        SeedCompletedAttempt(participant, quiz, random, baseDate);
+        SeedAutoSubmittedAttempt(participant, quiz, random, baseDate);
+        SeedStartedAttempt(participant, quiz, random, baseDate);
+    }
+
+    private void SeedCompletedAttempt(User participant, Quiz quiz, Random random, DateTimeOffset baseDate)
+    {
+        int maxQuestions = quiz.QuestionsNumber;
+        
+        int daysAgoCompleted = random.Next(3, 8);
+        DateTimeOffset startTime = baseDate.AddDays(-daysAgoCompleted).AddHours(random.Next(-5, 5));
+        
+        int durationMinutes = random.Next(1, quiz.TimeInMinutes + 1);
+        DateTimeOffset endTime = startTime.AddMinutes(durationMinutes);
+        int score = random.Next(0, maxQuestions + 1);
+
+        CreateAttempt(participant.Id, quiz.Id, AttemptStatus.Completed, score, startTime, endTime);
+    }
+
+    private void SeedAutoSubmittedAttempt(User participant, Quiz quiz, Random random, DateTimeOffset baseDate)
+    {
+        int maxQuestions = quiz.QuestionsNumber;
+        
+        int daysAgoAuto = random.Next(1, 3);
+        DateTimeOffset startTime = baseDate.AddDays(-daysAgoAuto).AddHours(random.Next(-5, 5));
+        
+        DateTimeOffset endTime = startTime.AddMinutes(quiz.TimeInMinutes);
+        int score = random.Next(0, maxQuestions + 1);
+
+        CreateAttempt(participant.Id, quiz.Id, AttemptStatus.AutoSubmitted, score, startTime, endTime);
+    }
+
+    private void SeedStartedAttempt(User participant, Quiz quiz, Random random, DateTimeOffset baseDate)
+    {
+        int maxQuestions = quiz.QuestionsNumber;
+        
+        int minutesAgoStarted = random.Next(0, quiz.TimeInMinutes);
+        int secondsAgoStarted = random.Next(0, 60);
+        
+        DateTimeOffset startTime = baseDate
+            .AddMinutes(-minutesAgoStarted)
+            .AddSeconds(-secondsAgoStarted);
+            
+        int score = random.Next(0, maxQuestions);
+
+        CreateAttempt(participant.Id, quiz.Id, AttemptStatus.Started, score, startTime, null);
+    }
+
+    private User CreateUser(UserSaveDTO dto, string role)
+    {
+        User newUser = new()
+        {
+            Name = dto.Name,
+            Phone = dto.Phone,
+            Email = dto.Email,
+            PasswordHash = string.Empty,
+            Role = role,
+            IsApproved = true
+        };
+
+        newUser.PasswordHash = _passwordHasher.HashPassword(newUser, dto.Password);
+        
+        return newUser;
+    }
+
+    private Quiz CreateQuiz(QuizSaveDTO dto)
+    {
+        return new Quiz
+        {
+            Name = dto.Name,
+            TopicId = dto.TopicId,
+            QuestionsNumber = dto.Questions.Count,
+            TimeInMinutes = dto.TimeInMinutes,
+            IsActive = dto.IsActive,
+            Questions = dto.Questions
+                .Select(q => new Question
+                {
+                    Text = q.Text,
+                    Options = q.Options
+                        .Select(o => new AnswerOption
+                        {
+                            Text = o.Text,
+                            IsCorrect = o.IsCorrect
+                        })
+                        .ToList()
+                })
+                .ToList()
+        };
+    }
+
+    private void CreateAttempt(
+        int participantId, 
+        Guid quizId, 
+        AttemptStatus status, 
+        int score, 
+        DateTimeOffset startTime, 
+        DateTimeOffset? endTime)
+    {
+        Attempt attempt = new Attempt
+        {
+            ParticipantId = participantId,
+            QuizId = quizId,
+            Status = status.ToString(),
+            Score = score,
+            StartTime = startTime
+        };
+
+        if (endTime.HasValue)
+        {
+            attempt.EndTime = endTime.Value;
+        }
+
+        _dbContext.Attempts.Add(attempt);
     }
 }
